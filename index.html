@@ -4,145 +4,146 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="TSD Aero Systems - 드론 체험교육, FPV 기술교육 및 PID 시뮬레이터">
+<meta name="description" content="TSD Aero Systems - FPV 드론 기술, 체험교육, PID 비행 시뮬레이터">
 <title>TSD Aero Systems | FPV & Drone Education</title>
 <style>
-:root{
-  color-scheme:dark;
-  --bg:#08111f;
-  --panel:#142338;
-  --accent:#38bdf8;
-  --text:#eaf2fc;
+:root {
+  color-scheme: dark;
+  --bg: #08111f;
+  --panel: #142338;
+  --accent: #38bdf8;
+  --text: #eaf2fc;
+  --muted: #a9bbcf;
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0;
-  font-family:Arial,"Malgun Gothic",sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  line-height:1.7;
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, "Malgun Gothic", sans-serif;
+  line-height: 1.7;
 }
-header{
-  position:sticky;
-  top:0;
-  background:#08111fe8;
-  border-bottom:1px solid #28405a;
-  z-index:5;
-  padding:15px 6%;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:15px;
-  flex-wrap:wrap;
+a { color: inherit; text-decoration: none; }
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #08111ff0;
+  border-bottom: 1px solid #28405a;
+  padding: 15px 6%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
 }
-.logo{
-  font-weight:800;
-  color:var(--accent);
-  font-size:20px;
+.logo {
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--accent);
 }
-nav{
-  display:flex;
-  flex-wrap:wrap;
-  gap:15px;
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
 }
-a{
-  color:inherit;
-  text-decoration:none;
+nav a:hover { color: var(--accent); }
+section {
+  padding: 65px 7%;
+  max-width: 1200px;
+  margin: auto;
 }
-nav a:hover{color:var(--accent)}
-section{
-  padding:65px 7%;
-  max-width:1200px;
-  margin:auto;
+h1 {
+  font-size: clamp(32px, 6vw, 60px);
+  line-height: 1.2;
 }
-h1{
-  font-size:clamp(32px,6vw,60px);
-  line-height:1.2;
+h2 {
+  font-size: 29px;
+  color: var(--accent);
 }
-h2{
-  font-size:29px;
-  color:var(--accent);
-}
-.hero{
-  max-width:none;
-  min-height:480px;
-  background:radial-gradient(
+.hero {
+  max-width: none;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: radial-gradient(
     circle at 80% 20%,
     #16537a 0%,
     #08111f 55%
   );
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
 }
-.hero p{
-  font-size:19px;
-  max-width:720px;
-  color:#c5d5e8;
+.hero p {
+  font-size: 19px;
+  max-width: 720px;
+  color: #c5d5e8;
 }
-.btn{
-  display:inline-block;
-  background:var(--accent);
-  color:#06111c;
-  border:0;
-  border-radius:9px;
-  padding:12px 20px;
-  font-weight:bold;
-  cursor:pointer;
+.btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #06111c;
+  border-radius: 9px;
+  padding: 12px 20px;
+  font-weight: bold;
+  text-align: center;
+  margin: 5px 8px 5px 0;
 }
-.btn:hover{
-  background:#7dd3fc;
-  color:#06111c;
+.btn:hover { background: #7dd3fc; }
+.btn-outline {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
 }
-.cards{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:18px;
+.btn-outline:hover {
+  background: #17354c;
+  color: white;
 }
-.card{
-  background:var(--panel);
-  border:1px solid #29405c;
-  border-radius:16px;
-  padding:22px;
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+  gap: 18px;
 }
-.card h3{margin-top:0}
-.muted{color:#a9bbcf}
-.simulator-box{
-  background:var(--panel);
-  border:1px solid #29405c;
-  border-radius:16px;
-  padding:32px;
-  max-width:850px;
+.card, .simulator-box {
+  background: var(--panel);
+  border: 1px solid #29405c;
+  border-radius: 16px;
+  padding: 22px;
 }
-.simulator-box p{
-  color:#c5d5e8;
+.card h3 { margin-top: 0; }
+.muted { color: var(--muted); }
+.simulator-box {
+  max-width: 900px;
+  padding: 32px;
 }
-.simulator-features{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin:20px 0 25px;
+.simulator-box h3 {
+  font-size: 24px;
+  margin-top: 0;
 }
-.simulator-features span{
-  background:#223b55;
-  border:1px solid #365a78;
-  padding:6px 12px;
-  border-radius:20px;
-  font-size:13px;
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 22px 0;
 }
-footer{
-  text-align:center;
-  padding:35px;
-  color:#9cb1c8;
-  border-top:1px solid #28405a;
+.features span {
+  background: #223b55;
+  border: 1px solid #365a78;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 13px;
 }
-@media(max-width:600px){
-  header{padding:12px 5%}
-  nav{font-size:13px;gap:10px}
-  section{padding:45px 5%}
-  .simulator-box{padding:20px}
-  .btn{text-align:center}
+footer {
+  border-top: 1px solid #28405a;
+  text-align: center;
+  padding: 35px;
+  color: #9cb1c8;
+}
+@media (max-width: 600px) {
+  header { padding: 12px 5%; }
+  nav { font-size: 13px; gap: 10px; }
+  section { padding: 45px 5%; }
+  .simulator-box { padding: 20px; }
 }
 </style>
 </head>
@@ -154,7 +155,7 @@ footer{
     <a href="#home">홈</a>
     <a href="#education">체험교육</a>
     <a href="#technology">기술연구소</a>
-    <a href="./pid-simulator.html">PID 실습</a>
+    <a href="./fpv-flight-lab.html">PID 실습</a>
     <a href="#contact">문의</a>
   </nav>
 </header>
@@ -163,11 +164,15 @@ footer{
   <h1>드론 기술을 배우고<br>직접 경험하다.</h1>
   <p>
     FPV 드론 기술, 체험교육, 기체 조립과 정비,
-    비행제어 학습을 연결하는 TSD Aero Systems의 공간입니다.
+    비행제어 학습을 연결하는
+    TSD Aero Systems의 공간입니다.
   </p>
   <div>
-    <a class="btn" href="./pid-simulator.html">
+    <a class="btn" href="./fpv-flight-lab.html">
       FPV PID 시뮬레이터 체험
+    </a>
+    <a class="btn btn-outline" href="#education">
+      교육 프로그램 보기
     </a>
   </div>
 </section>
@@ -177,21 +182,34 @@ footer{
   <div class="cards">
     <div class="card">
       <h3>학교·청소년 체험</h3>
-      <p>드론 비행 원리와 안전을 배우는 체험형 프로그램</p>
+      <p>
+        드론 비행 원리와 안전을 배우는
+        체험형 교육 프로그램
+      </p>
     </div>
     <div class="card">
       <h3>FPV 기술 교육</h3>
-      <p>FPV 기체 구성, 조립, 정비 및 비행제어 이해</p>
+      <p>
+        FPV 기체 구성, 조립, 정비 및
+        비행제어 원리 이해
+      </p>
     </div>
     <div class="card">
       <h3>기관·행사 프로그램</h3>
-      <p>이동형 드론 전시 및 체험교육 운영</p>
+      <p>
+        이동형 드론 전시 및
+        체험교육 프로그램 운영
+      </p>
     </div>
   </div>
 </section>
 
 <section id="technology">
   <h2>FPV 기술연구소</h2>
+  <p class="muted">
+    비행제어 원리와 PID 튜닝을
+    실습으로 학습하는 공간입니다.
+  </p>
   <div class="cards">
     <div class="card">
       <h3>P · I · D</h3>
@@ -204,50 +222,55 @@ footer{
     <div class="card">
       <h3>Feedforward</h3>
       <p>
-        스틱 명령의 변화에 선제적으로 반응하는
-        제어 항목입니다.
+        스틱 명령 변화에 대한
+        선제적 제어 반응을 학습합니다.
       </p>
     </div>
     <div class="card">
-      <h3>튜닝 실습</h3>
+      <h3>비행 기동 실습</h3>
       <p>
-        Roll·Pitch·Yaw별 PID 및 FF 수치를 변경하고
-        교육용 기체 반응을 비교합니다.
+        PID 설정과 스틱 입력을 바꾸고
+        교육용 기체 반응을 관찰합니다.
       </p>
+      <a class="btn" href="./fpv-flight-lab.html">
+        PID 실습 바로가기
+      </a>
     </div>
   </div>
 </section>
 
 <section id="simulator">
-  <h2>FPV PID 시뮬레이터</h2>
+  <h2>FPV 비행 실험실</h2>
 
   <div class="simulator-box">
-    <h3>PID · Feedforward 실습</h3>
+    <h3>Codex FPV PID 비행 시뮬레이터</h3>
 
     <p>
-      Roll, Pitch, Yaw의 P/I/D/FF 값을 직접 입력하고,
-      스틱 조작에 따른 기체 움직임과
-      회전속도 반응 그래프를 확인할 수 있습니다.
+      Roll, Pitch, Yaw의 PID 및 Feedforward
+      수치를 조정하고, 다양한 비행 기동과
+      스틱 입력에 따른 기체 반응을
+      관찰할 수 있는 교육용 실험실입니다.
     </p>
 
-    <div class="simulator-features">
+    <div class="features">
       <span>Roll · Pitch · Yaw</span>
-      <span>P / I / D / FF 설정</span>
+      <span>P / I / D / FF</span>
       <span>스로틀 조절</span>
-      <span>스틱 입력 테스트</span>
-      <span>기체 움직임</span>
-      <span>반응 그래프</span>
+      <span>비행 기동</span>
+      <span>추적 카메라</span>
+      <span>FPV 카메라</span>
     </div>
 
     <p class="muted">
-      본 시뮬레이터는 PID 제어 원리를 이해하기 위한
-      교육용 근사 모델입니다.
-      실제 Betaflight 비행제어기의 계산 결과나
-      안전한 튜닝값을 보증하지 않습니다.
+      본 프로그램은 비행제어 학습을 위한
+      교육용 시뮬레이터입니다.
+      실제 Betaflight 제어 알고리즘 및
+      기체별 튜닝 결과를 정확하게
+      재현하거나 보증하는 도구는 아닙니다.
     </p>
 
-    <a class="btn" href="./pid-simulator.html">
-      FPV PID 시뮬레이터 열기
+    <a class="btn" href="./fpv-flight-lab.html">
+      FPV PID 시뮬레이터 실행
     </a>
   </div>
 </section>
@@ -255,8 +278,9 @@ footer{
 <section id="contact">
   <h2>교육·행사 문의</h2>
   <p>
-    학교·기관 대상 드론 체험교육 및
-    FPV 기술교육 관련 문의를 위한 공간입니다.
+    학교·기관 대상 드론 체험교육,
+    FPV 기술교육 및 행사 프로그램을
+    위한 안내 공간입니다.
   </p>
   <p class="muted">
     공식 연락처와 신청 기능은 추후 등록 예정입니다.
@@ -264,7 +288,7 @@ footer{
 </section>
 
 <footer>
-  © 2026 TSD Aero Systems · Educational prototype v1
+  © 2026 TSD Aero Systems
 </footer>
 
 </body>
