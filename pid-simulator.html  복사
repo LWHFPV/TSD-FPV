@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSD FPV PID Simulator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1422;color:#edf5ff;font-family:Arial,"Malgun Gothic",sans-serif}
+header{padding:18px 5%;background:#14253b;display:flex;justify-content:space-between;align-items:center;gap:15px}
+a{color:#7dd3fc;text-decoration:none}
+main{max-width:1150px;margin:auto;padding:25px 4%}
+h1{font-size:clamp(25px,4vw,38px)}
+h2{color:#7dd3fc}
+.panel{background:#17273c;border:1px solid #344a64;border-radius:15px;padding:18px;margin:20px 0}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 5px;text-align:center}
+th{font-size:13px;color:#b5c8dd}
+input[type=number]{width:100%;max-width:100px;padding:9px;background:#0b1829;color:white;border:1px solid #405b78;border-radius:6px}
+input[type=range]{width:100%;accent-color:#38bdf8}
+button{padding:11px 16px;background:#38bdf8;border:0;border-radius:8px;color:#061321;font-weight:bold;cursor:pointer;margin:4px}
+button.secondary{background:#334d68;color:white}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+#scene{height:260px;display:grid;place-items:center;perspective:700px;background:radial-gradient(circle,#254762,#101b2b 70%);border-radius:12px;overflow:hidden}
+#craft{width:170px;height:170px;position:relative;transform-style:preserve-3d;transition:transform .08s linear}
+.arm{position:absolute;width:190px;height:14px;top:78px;left:-10px;background:#7dd3fc;border-radius:10px}
+.arm.a{transform:rotate(45deg)}
+.arm.b{transform:rotate(-45deg)}
+.motor{position:absolute;width:46px;height:46px;border:6px solid #b5e9ff;border-radius:50%;background:#163048}
+.m1{top:0;left:0}.m2{top:0;right:0}.m3{bottom:0;left:0}.m4{bottom:0;right:0}
+.center{position:absolute;left:60px;top:60px;width:50px;height:50px;background:#fb923c;border-radius:12px;z-index:2}
+.nose{position:absolute;top:28px;left:77px;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:25px solid #facc15;z-index:3}
+canvas{width:100%;height:230px;background:#091522;border-radius:10px}
+small,.note{color:#a9bed4}
+@media(max-width:650px){.controls{grid-template-columns:1fr}th,td{padding:5px 2px;font-size:12px}input[type=number]{padding:6px}}
+</style>
+</head>
+<body>
+<header><strong>TSD Aero Systems</strong><a href="./index.html">홈페이지 돌아가기</a></header>
+<main>
+<h1>FPV PID · Feedforward 시뮬레이터</h1>
+<p class="note">P/I/D/FF 수치를 바꾸고 스틱 명령에 따른 기체의 반응을 비교하는 교육용 모델입니다.</p>
+<div class="panel">
+<h2>PID 설정</h2>
+<table>
+<thead><tr><th>축</th><th>P</th><th>I</th><th>D</th><th>FF</th></tr></thead>
+<tbody id="pidTable"></tbody>
+</table>
+<button id="reset">기본값 복원</button>
+</div>
+<div class="controls">
+<div class="panel">
+<h2>조종 입력</h2>
+<label>스로틀 <output id="throttleValue">50</output>%</label>
+<input id="throttle" type="range" min="0" max="100" value="50">
+<label>Roll 스틱 <output id="rollValue">0</output></label>
+<input id="roll" type="range" min="-100" max="100" value="0">
+<label>Pitch 스틱 <output id="pitchValue">0</output></label>
+<input id="pitch" type="range" min="-100" max="100" value="0">
+<label>Yaw 스틱 <output id="yawValue">0</output></label>
+<input id="yaw" type="range" min="-100" max="100" value="0">
+<button id="center">스틱 중앙</button>
+<button id="pulse">스틱 입력 테스트</button>
+</div>
+<div class="panel">
+<h2>기체 움직임</h2>
+<div id="scene"><div id="craft">
+<div class="arm a"></div><div class="arm b"></div>
+<div class="motor m1"></div><div class="motor m2"></div>
+<div class="motor m3"></div><div class="motor m4"></div>
+<div class="center"></div><div class="nose"></div>
+</div></div>
+<p id="state" class="note">기체 반응 계산 중</p>
+</div>
+</div>
+<div class="panel">
+<h2>스틱 명령 대비 회전속도 반응</h2>
+<canvas id="chart" width="900" height="230"></canvas>
+<p class="note">회색: 목표 회전속도 / 파란색: 모델의 실제 회전속도</p>
+</div>
+<p class="note">주의: 이 시뮬레이터는 Betaflight의 실제 제어기, 필터, Anti-Gravity, 모터 믹서, 기체 관성 및 공기역학을 재현하지 않습니다. 표시되는 움직임과 그래프는 교육용 근사값이며 실제 튜닝 권장값이 아닙니다.</p>
+</main>
+<script>
+const axes=["roll","pitch","yaw"];
+const defaults={roll:[50,70,35,90],pitch:[50,70,35,90],yaw:[50,70,0,90]};
+const gains=JSON.parse(JSON.stringify(defaults));
+const labels=["P","I","D","FF"];
+const tbody=document.getElementById("pidTable");
+function build(){
+ tbody.innerHTML="";
+ axes.forEach(axis=>{
+  const tr=document.createElement("tr");
+  const name=document.createElement("td");name.textContent=axis.toUpperCase();tr.append(name);
+  labels.forEach((label,j)=>{
+   const td=document.createElement("td"),input=document.createElement("input");
+   input.type="number";input.min=0;input.max=200;input.value=gains[axis][j];
+   input.setAttribute("aria-label",axis+" "+label);
+   input.addEventListener("input",()=>gains[axis][j]=Math.max(0,Math.min(200,Number(input.value)||0)));
+   td.append(input);tr.append(td);
+  });
+  tbody.append(tr);
+ });
+}
+build();
+document.getElementById("reset").onclick=()=>{
+ axes.forEach(a=>gains[a]=[...defaults[a]]);build();
+};
+const sticks={roll:0,pitch:0,yaw:0};
+let throttle=50;
+axes.forEach(a=>{
+ const el=document.getElementById(a);
+ el.addEventListener("input",()=>{
+  sticks[a]=Number(el.value);
+  document.getElementById(a+"Value").textContent=el.value;
+ });
+});
+document.getElementById("throttle").oninput=e=>{
+ throttle=Number(e.target.value);
+ document.getElementById("throttleValue").textContent=throttle;
+};
+document.getElementById("center").onclick=()=>{
+ axes.forEach(a=>{
+  sticks[a]=0;
+  document.getElementById(a).value=0;
+  document.getElementById(a+"Value").textContent=0;
+ });
+};
+document.getElementById("pulse").onclick=()=>{
+ const el=document.getElementById("roll");
+ el.value=70;el.dispatchEvent(new Event("input"));
+ setTimeout(()=>{el.value=0;el.dispatchEvent(new Event("input"))},550);
+};
+const model={};
+axes.forEach(a=>model[a]={rate:0,angle:0,integral:0,lastError:0,lastTarget:0});
+const canvas=document.getElementById("chart"),ctx=canvas.getContext("2d");
+const history=[],dt=.02;
+let last=performance.now(),accumulator=0;
+function step(){
+ axes.forEach(a=>{
+  const m=model[a],g=gains[a],target=sticks[a]*.9;
+  const error=target-m.rate;
+  m.integral=Math.max(-100,Math.min(100,m.integral+error*dt));
+  const derivative=(error-m.lastError)/dt;
+  const feed=(target-m.lastTarget)/dt;
+  const p=g[0]/50,i=g[1]/70,d=g[2]/35,ff=g[3]/90;
+  const drive=p*error*.65+i*m.integral*.045+d*derivative*.003+ff*feed*.009;
+  const accel=Math.max(-300,Math.min(300,drive-m.rate*.22));
+  m.rate+=accel*dt;
+  m.angle+=m.rate*dt;
+  m.lastError=error;m.lastTarget=target;
+ });
+ history.push([sticks.roll*.9,model.roll.rate]);
+ if(history.length>200)history.shift();
+}
+function draw(){
+ const w=canvas.width,h=canvas.height;
+ ctx.clearRect(0,0,w,h);
+ ctx.strokeStyle="#32465b";ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();
+ [[0,"#94a3b8"],[1,"#38bdf8"]].forEach(([index,color])=>{
+  ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.beginPath();
+  history.forEach((v,n)=>{
+   const x=n*w/199,y=h/2-v[index]*1.05;
+   if(n===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  });ctx.stroke();
+ });
+}
+function frame(now){
+ accumulator+=Math.min(.1,(now-last)/1000);last=now;
+ while(accumulator>=dt){step();accumulator-=dt}
+ const r=model.roll.angle,p=model.pitch.angle,y=model.yaw.angle;
+ document.getElementById("craft").style.transform=
+ "rotateX("+Math.max(-45,Math.min(45,p))+"deg) rotateY("+((y%360)+360)%360+"deg) rotateZ("+Math.max(-45,Math.min(45,r))+"deg)";
+ document.getElementById("state").textContent=
+ "스로틀 "+throttle+"% | Roll "+r.toFixed(1)+"° | Pitch "+p.toFixed(1)+"° | Yaw "+y.toFixed(1)+"°";
+ draw();requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
