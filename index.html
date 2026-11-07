@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSD Aero Systems | FPV & Drone Education</title>
+<style>
+:root{color-scheme:dark;--bg:#08111f;--panel:#142338;--accent:#38bdf8;--text:#eaf2fc}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Arial,"Malgun Gothic",sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+header{position:sticky;top:0;background:#08111fe8;border-bottom:1px solid #28405a;z-index:5;padding:15px 6%;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.logo{font-weight:800;color:var(--accent);font-size:20px}nav{display:flex;flex-wrap:wrap;gap:15px}a{color:inherit;text-decoration:none}nav a:hover{color:var(--accent)}
+section{padding:65px 7%;max-width:1200px;margin:auto}h1{font-size:clamp(32px,6vw,60px);line-height:1.2}h2{font-size:29px;color:var(--accent)}.hero{max-width:none;min-height:480px;background:radial-gradient(circle at 80% 20%,#16537a 0%,#08111f 55%);display:flex;flex-direction:column;justify-content:center}.hero p{font-size:19px;max-width:720px;color:#c5d5e8}
+.btn,button{display:inline-block;background:var(--accent);color:#06111c;border:0;border-radius:9px;padding:12px 20px;font-weight:bold;cursor:pointer}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}.card,.lab{background:var(--panel);border:1px solid #29405c;border-radius:16px;padding:22px}.muted{color:#a9bbcf}.lab{max-width:850px}.control{display:grid;grid-template-columns:75px 1fr 48px;align-items:center;gap:12px;margin:13px 0}input[type=range]{width:100%;accent-color:var(--accent)}select{padding:10px;border-radius:8px;background:#22354d;color:white;border:1px solid #46617b}
+#drone{width:190px;height:120px;margin:28px auto;position:relative;transition:transform .12s linear}#drone:before,#drone:after{content:"";position:absolute;background:#38bdf8;border-radius:20px}#drone:before{width:180px;height:12px;top:54px;left:5px}#drone:after{width:12px;height:110px;left:89px;top:5px}.motor{position:absolute;width:38px;height:38px;border:5px solid #8edcff;border-radius:50%;background:#142338;z-index:2}.m1{top:0;left:0}.m2{top:0;right:0}.m3{bottom:0;left:0}.m4{bottom:0;right:0}canvas{width:100%;background:#091522;border-radius:10px;border:1px solid #38506a}footer{text-align:center;padding:35px;color:#9cb1c8;border-top:1px solid #28405a}
+@media(max-width:600px){header{padding:12px 5%}nav{font-size:13px;gap:10px}section{padding:45px 5%}.control{grid-template-columns:55px 1fr 40px}}
+</style>
+</head>
+<body>
+<header><div class="logo">TSD Aero Systems</div><nav><a href="#home">홈</a><a href="#education">체험교육</a><a href="#technology">기술연구소</a><a href="#simulator">PID 실습</a><a href="#contact">문의</a></nav></header>
+<section class="hero" id="home"><h1>드론 기술을 배우고<br>직접 경험하다.</h1><p>FPV 드론 기술, 체험교육, 기체 조립과 정비, 비행제어 학습을 연결하는 TSD Aero Systems의 공간입니다.</p><div><a class="btn" href="#simulator">PID 시뮬레이터 체험</a></div></section>
+<section id="education"><h2>드론 체험교육</h2><div class="cards"><div class="card"><h3>학교·청소년 체험</h3><p>드론 비행 원리와 안전을 배우는 체험형 프로그램</p></div><div class="card"><h3>FPV 기술 교육</h3><p>FPV 기체 구성, 조립, 정비 및 비행제어 이해</p></div><div class="card"><h3>기관·행사 프로그램</h3><p>이동형 드론 전시 및 체험교육 운영</p></div></div></section>
+<section id="technology"><h2>FPV 기술연구소</h2><div class="cards"><div class="card"><h3>P · I · D</h3><p>P는 회전속도 오차, I는 누적 오차, D는 오차 변화에 반응합니다.</p></div><div class="card"><h3>Feedforward</h3><p>스틱 명령 변화에 선제적으로 반응하는 제어 항목입니다.</p></div><div class="card"><h3>튜닝 실습</h3><p>Roll·Pitch 값을 바꾸고 교육용 반응 그래프를 비교합니다.</p></div></div></section>
+<section id="simulator"><h2>FPV PID 시뮬레이터</h2><p class="muted">교육용 단순화 모델입니다. 실제 Betaflight PID 계산이나 비행 안정성을 검증하는 도구는 아닙니다.</p><div class="lab"><label>축 선택 <select id="axis"><option value="roll">Roll</option><option value="pitch">Pitch</option></select></label><div id="controls"></div><button id="test">스틱 입력 테스트</button> <button id="reset">기본값 복원</button><div id="drone"><span class="motor m1"></span><span class="motor m2"></span><span class="motor m3"></span><span class="motor m4"></span></div><canvas id="chart" width="800" height="240"></canvas><p id="result" class="muted">값을 조정한 뒤 스틱 입력 테스트를 누르세요.</p></div></section>
+<section id="contact"><h2>교육·행사 문의</h2><p>학교·기관 대상 드론 체험교육 및 FPV 기술교육 관련 문의를 위한 공간입니다.</p><p class="muted">공식 연락처와 신청 기능은 추후 등록 예정입니다.</p></section>
+<footer>© 2026 TSD Aero Systems · Educational prototype v1</footer>
+<script>
+const defaults={P:50,I:70,D:35,FF:90}, values={...defaults};
+const controls=document.getElementById('controls'),drone=document.getElementById('drone'),canvas=document.getElementById('chart'),ctx=canvas.getContext('2d');
+function build(){controls.innerHTML='';for(const k of Object.keys(values)){const div=document.createElement('div');div.className='control';const label=document.createElement('label');label.textContent=k;const input=document.createElement('input');input.type='range';input.min=0;input.max=150;input.value=values[k];const output=document.createElement('output');output.textContent=values[k];input.addEventListener('input',()=>{values[k]=+input.value;output.textContent=input.value});div.append(label,input,output);controls.append(div)}}
+function draw(target,actual){ctx.clearRect(0,0,800,240);ctx.strokeStyle='#33465c';ctx.beginPath();ctx.moveTo(0,120);ctx.lineTo(800,120);ctx.stroke();function line(data,color){ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=3;data.forEach((v,i)=>{const x=i*800/(data.length-1),y=120-v*3;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke()}line(target,'#94a3b8');line(actual,'#38bdf8')}
+function run(){const target=[],actual=[];let y=0,v=0,integral=0;const p=values.P/50,i=values.I/70,d=values.D/35,ff=values.FF/90;for(let n=0;n<240;n++){const command=n<25?0:n<105?24:n<155?0:n<205?-20:0;const previous=n?target[n-1]:0;const delta=command-previous;const error=command-y;integral=Math.max(-30,Math.min(30,integral+error*.012));const acceleration=(p*error*.09+i*integral*.015+ff*delta*.17-d*v*.20);v=v*.83+acceleration;y+=v*.10;target.push(command);actual.push(y)}draw(target,actual);let n=0;const axis=document.getElementById('axis').value;const timer=setInterval(()=>{if(n>=actual.length){clearInterval(timer);return}const angle=Math.max(-35,Math.min(35,actual[n]*.8));drone.style.transform=axis==='roll'?'rotate('+angle+'deg)':'perspective(300px) rotateX('+angle+'deg)';n+=2},25);document.getElementById('result').textContent='회색: 스틱 명령 / 파란색: 교육용 기체 반응. P·I·D·FF 변경 전후를 비교해 보세요.'}
+document.getElementById('test').addEventListener('click',run);document.getElementById('reset').addEventListener('click',()=>{Object.assign(values,defaults);build();run()});build();run();
+</script>
+</body></html>
