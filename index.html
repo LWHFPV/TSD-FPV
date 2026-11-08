@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="TSD Aero Systems - FPV 드론 기술, 체험교육, PID 비행 시뮬레이터">
+<meta name="description" content="TSD Aero Systems - FPV 드론 체험교육, PID 실습 및 QGroundControl 임무비행 기술연구소">
 <title>TSD Aero Systems | FPV & Drone Education</title>
 <style>
 :root {
@@ -145,6 +145,17 @@ footer {
   section { padding: 45px 5%; }
   .simulator-box { padding: 20px; }
 }
+.lab-banners { display: grid; gap: 24px; }
+.lab-banner { max-width: none; width: 100%; border-left: 4px solid var(--accent); }
+.lab-banner p { max-width: 800px; }
+.lab-label { color: var(--accent); font-size: 12px; font-weight: bold; letter-spacing: 1.6px; margin-bottom: 12px; }
+.lab-note { font-size: 13px; margin-bottom: 0; }
+.mission-banner { border-left-color: #e5c45a; }
+.mission-banner .lab-label { color: #e5c45a; }
+.mission-banner .btn { background: #e5c45a; }
+.mission-banner .btn:hover { background: #f6dc8b; }
+section[id], article[id] { scroll-margin-top: 95px; }
+.btn:focus-visible, nav a:focus-visible { outline: 3px solid white; outline-offset: 5px; }
 </style>
 </head>
 <body>
@@ -155,7 +166,6 @@ footer {
     <a href="#home">홈</a>
     <a href="#education">체험교육</a>
     <a href="#technology">기술연구소</a>
-    <a href="./fpv-flight-lab.html">PID 실습</a>
     <a href="#contact">문의</a>
   </nav>
 </header>
@@ -168,8 +178,8 @@ footer {
     TSD Aero Systems의 공간입니다.
   </p>
   <div>
-    <a class="btn" href="./fpv-flight-lab.html">
-      FPV PID 시뮬레이터 체험
+    <a class="btn" href="#technology">
+      FPV 기술 연구소 둘러보기
     </a>
     <a class="btn btn-outline" href="#education">
       교육 프로그램 보기
@@ -204,74 +214,34 @@ footer {
   </div>
 </section>
 
-<section id="technology">
-  <h2>FPV 기술연구소</h2>
-  <p class="muted">
-    비행제어 원리와 PID 튜닝을
-    실습으로 학습하는 공간입니다.
-  </p>
-  <div class="cards">
-    <div class="card">
-      <h3>P · I · D</h3>
-      <p>
-        P는 회전속도 오차에 비례해 반응하고,
-        I는 누적 오차를 보정하며,
-        D는 오차 변화에 반응합니다.
-      </p>
-    </div>
-    <div class="card">
-      <h3>Feedforward</h3>
-      <p>
-        스틱 명령 변화에 대한
-        선제적 제어 반응을 학습합니다.
-      </p>
-    </div>
-    <div class="card">
-      <h3>비행 기동 실습</h3>
-      <p>
-        PID 설정과 스틱 입력을 바꾸고
-        교육용 기체 반응을 관찰합니다.
-      </p>
-      <a class="btn" href="./fpv-flight-lab.html">
-        PID 실습 바로가기
-      </a>
-    </div>
-  </div>
-</section>
-
-<section id="simulator">
-  <h2>FPV 비행 실험실</h2>
-
-  <div class="simulator-box">
-    <h3>Codex FPV PID 비행 시뮬레이터</h3>
-
-    <p>
-      Roll, Pitch, Yaw의 PID 및 Feedforward
-      수치를 조정하고, 다양한 비행 기동과
-      스틱 입력에 따른 기체 반응을
-      관찰할 수 있는 교육용 실험실입니다.
-    </p>
-
-    <div class="features">
-      <span>Roll · Pitch · Yaw</span>
-      <span>P / I / D / FF</span>
-      <span>스로틀 조절</span>
-      <span>비행 기동</span>
-      <span>추적 카메라</span>
-      <span>FPV 카메라</span>
-    </div>
-
-    <p class="muted">
-      본 프로그램은 비행제어 학습을 위한
-      교육용 시뮬레이터입니다.
-      실제 Betaflight 제어 알고리즘 및
-      기체별 튜닝 결과를 정확하게
-      재현하거나 보증하는 도구는 아닙니다.
-    </p>
-
-    <a class="btn" href="./fpv-flight-lab.html">
-      FPV PID 시뮬레이터 실행
-    </a>
+<section id="technology" aria-labelledby="technology-title">
+  <h2 id="technology-title">FPV 기술 연구소</h2>
+  <p class="muted">비행제어 원리부터 자동 임무비행 절차까지, 두 가지 실습실에서 직접 경험하세요.</p>
+  <div class="lab-banners">
+    <article class="simulator-box lab-banner" id="simulator">
+      <div class="lab-label">01 · FPV FLIGHT LAB</div>
+      <h3>PID 비행 실습</h3>
+      <p>Roll, Pitch, Yaw의 P · I · D와 Feedforward를 조정하고,
+      스틱 입력과 비행 기동에 따른 기체 반응을 관찰해 보세요.</p>
+      <div class="features">
+        <span>P / I / D / FF</span><span>Roll · Pitch · Yaw</span>
+        <span>스로틀·스틱 입력</span><span>비행 기동</span><span>추적·FPV 카메라</span>
+      </div>
+      <a class="btn" href="./fpv-flight-lab.html">PID 실습 시작하기 <span aria-hidden="true">→</span></a>
+      <p class="muted lab-note">비행제어 학습용 모델입니다. 실제 Betaflight 알고리즘과 기체별 튜닝 결과를 그대로 재현하지 않습니다.</p>
+    </article>
+    <article class="simulator-box lab-banner mission-banner" id="mission-lab">
+      <div class="lab-label">02 · MISSION FLIGHT LAB</div>
+      <h3>QGroundControl 임무비행 실습</h3>
+      <p>지도 위에 경로를 만들고, 임무 업로드와 비행 전 점검부터
+      이륙·일시정지·복귀·착륙까지 자동비행 절차를 연습해 보세요.</p>
+      <div class="features">
+        <span>실제 지도·위성영상</span><span>웨이포인트</span><span>지형 추종</span>
+        <span>OSD·기수 방향</span><span>DMS · UTM · MGRS</span><span>비상상황 훈련</span>
+      </div>
+      <a class="btn" href="./qgc-mission-demo-v2.html">임무비행 실습 시작하기 <span aria-hidden="true">→</span></a>
+      <p class="muted lab-note">QGC의 주요 절차를 참고한 독립 교육용 데모입니다. 실제 PX4 펌웨어·기체 통신·장애물 회피를 구현한 제품은 아닙니다.</p>
+    </article>
   </div>
 </section>
 
