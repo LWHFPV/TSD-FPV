@@ -1,12 +1,5 @@
-
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="TSD Aero Systems - FPV 드론 체험교육, PID 실습 및 QGroundControl 임무비행 기술연구소">
-<title>TSD Aero Systems | FPV & Drone Education</title>
-<style>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="PID 비행 실습과 QGroundControl 임무비행 실습을 제공하는 TSD 기술 연구소"><title>TSD 기술 연구소 | TSD Aero Systems</title><style>
 :root {
   color-scheme: dark;
   --bg: #08111f;
@@ -156,70 +149,18 @@ footer {
 .mission-banner .btn:hover { background: #f6dc8b; }
 section[id], article[id] { scroll-margin-top: 95px; }
 .btn:focus-visible, nav a:focus-visible { outline: 3px solid white; outline-offset: 5px; }
-</style>
-</head>
-<body>
 
-<header>
-  <div class="logo">TSD Aero Systems</div>
-  <nav>
-    <a href="#home">홈</a>
-    <a href="#education">체험교육</a>
-    <a href="#technology">기술연구소</a>
-    <a href="#contact">문의</a>
-  </nav>
-</header>
-
-<section class="hero" id="home">
-  <h1>드론 기술을 배우고<br>직접 경험하다.</h1>
-  <p>
-    FPV 드론 기술, 체험교육, 기체 조립과 정비,
-    비행제어 학습을 연결하는
-    TSD Aero Systems의 공간입니다.
-  </p>
-  <div>
-    <a class="btn" href="#technology">
-      FPV 기술 연구소 둘러보기
-    </a>
-    <a class="btn btn-outline" href="#education">
-      교육 프로그램 보기
-    </a>
-  </div>
-</section>
-
-<section id="education">
-  <h2>드론 체험교육</h2>
-  <div class="cards">
-    <div class="card">
-      <h3>학교·청소년 체험</h3>
-      <p>
-        드론 비행 원리와 안전을 배우는
-        체험형 교육 프로그램
-      </p>
-    </div>
-    <div class="card">
-      <h3>FPV 기술 교육</h3>
-      <p>
-        FPV 기체 구성, 조립, 정비 및
-        비행제어 원리 이해
-      </p>
-    </div>
-    <div class="card">
-      <h3>기관·행사 프로그램</h3>
-      <p>
-        이동형 드론 전시 및
-        체험교육 프로그램 운영
-      </p>
-    </div>
-  </div>
-</section>
-
-<section id="technology" aria-labelledby="technology-title">
-  <h2 id="technology-title">FPV 기술 연구소</h2>
-  <p class="muted">비행제어 원리부터 자동 임무비행 절차까지, 두 가지 실습실에서 직접 경험하세요.</p>
+nav a[aria-current="page"] { color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
+.page-shell { min-height: calc(100vh - 170px); }
+.page-heading { text-align: center; margin-bottom: 34px; }
+.page-heading h1 { color: var(--accent); font-size: clamp(30px, 4vw, 42px); margin: 0 0 14px; }
+.page-heading p { margin: 0; }
+</style></head><body>
+<header><a class="logo" href="./index.html">TSD Aero Systems</a><nav aria-label="주 메뉴"><a href="./education.html">체험교육</a><a href="./index.html" aria-current="page">기술연구소</a><a href="./contact.html">문의</a></nav></header>
+<main class="page-shell"><section id="technology" aria-labelledby="technology-title">
+  <div class="page-heading"><h1 id="technology-title">TSD 기술 연구소</h1><p class="muted">비행제어 원리부터 자동 임무비행 절차까지, 두 가지 실습실에서 직접 경험하세요.</p></div>
   <div class="lab-banners">
     <article class="simulator-box lab-banner" id="simulator">
-      <div class="lab-label">01 · FPV FLIGHT LAB</div>
       <h3>PID 비행 실습</h3>
       <p>Roll, Pitch, Yaw의 P · I · D와 Feedforward를 조정하고,
       스틱 입력과 비행 기동에 따른 기체 반응을 관찰해 보세요.</p>
@@ -231,7 +172,6 @@ section[id], article[id] { scroll-margin-top: 95px; }
       <p class="muted lab-note">비행제어 학습용 모델입니다. 실제 Betaflight 알고리즘과 기체별 튜닝 결과를 그대로 재현하지 않습니다.</p>
     </article>
     <article class="simulator-box lab-banner mission-banner" id="mission-lab">
-      <div class="lab-label">02 · MISSION FLIGHT LAB</div>
       <h3>QGroundControl 임무비행 실습</h3>
       <p>지도 위에 경로를 만들고, 임무 업로드와 비행 전 점검부터
       이륙·일시정지·복귀·착륙까지 자동비행 절차를 연습해 보세요.</p>
@@ -243,23 +183,8 @@ section[id], article[id] { scroll-margin-top: 95px; }
       <p class="muted lab-note">QGC의 주요 절차를 참고한 독립 교육용 데모입니다. 실제 PX4 펌웨어·기체 통신·장애물 회피를 구현한 제품은 아닙니다.</p>
     </article>
   </div>
-</section>
-
-<section id="contact">
-  <h2>교육·행사 문의</h2>
-  <p>
-    학교·기관 대상 드론 체험교육,
-    FPV 기술교육 및 행사 프로그램을
-    위한 안내 공간입니다.
-  </p>
-  <p class="muted">
-    공식 연락처와 신청 기능은 추후 등록 예정입니다.
-  </p>
-</section>
-
+</section></main>
 <footer>
   © 2026 TSD Aero Systems
 </footer>
-
-</body>
-</html>
+</body></html>
