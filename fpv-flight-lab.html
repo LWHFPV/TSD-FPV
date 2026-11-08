@@ -6,7 +6,7 @@
 <details><summary>점검 방법 · 입력 범위와 모델 설명</summary><ul>
 <li>기준값으로 기동을 재생한 뒤 P·I·D·FF를 하나씩 바꿔 같은 기동을 비교하세요. 설정을 바꾸면 동일한 시작 상태에서 30초 전체를 다시 계산합니다.</li>
 <li>RP/RPY 모드에서 슬라이더를 조절하면 PID 표와 모든 화면에 같은 값이 적용됩니다. OFF 모드에서는 숫자를 직접 입력합니다.</li>
-<li>기동 종료 뒤에도 계산이 계속됩니다. 목표 회전은 360°지만 기체는 PID 추종 결과에 따라 오차가 남거나 회복에 실패할 수 있습니다.</li>
+<li>기동 종료 뒤에도 계산이 계속됩니다. 요 턴 목표는 180°, 백플립·롤 턴은 360°지만 기체는 PID 추종 결과에 따라 오차가 남거나 회복에 실패할 수 있습니다.</li>
 <li>0.1배 재생과 주파수 스펙트럼으로 빠른 떨림을 확인하세요. 120Hz 떨림을 일반 모니터에서 실시간으로 정확히 볼 수는 없습니다.</li>
 <li>공식 <a href="https://github.com/betaflight/betaflight-configurator/blob/2026.6.2/src/components/tabs/pid-tuning/PidSubTab.vue" target="_blank" rel="noopener noreferrer">Configurator 입력 범위</a>: P/I/D/D 최대 0–250, FF 0–2000. <a href="https://github.com/betaflight/betaflight/blob/2026.6.2/src/main/flight/pid.h" target="_blank" rel="noopener noreferrer">펌웨어 FF</a> 및 <a href="https://github.com/betaflight/betaflight/blob/2026.6.2/src/main/config/simplified_tuning.c" target="_blank" rel="noopener noreferrer">슬라이더 FF 계산</a> 한도는 1000입니다. 화면의 수동 FF 1001–2000은 교육 모델 입력이며 펌웨어 적용값을 보증하지 않습니다.</li>
 <li>실제 펌웨어·공력·필터의 정밀 복제가 아닙니다. 가상 조종사의 자세 목표와 고도 회복 보조가 있으며, 기체 위치는 추력과 중력으로 계산합니다.</li>
@@ -1572,7 +1572,9 @@ html,body{margin:0!important;background:#0b1420!important;color:#e5effa!importan
 #fpv-lab .btn[aria-pressed=true],#fpv-lab .btn-primary{background:#72d6ec!important;border-color:#72d6ec!important;color:#081a28!important;font-weight:700}
 #fpv-lab table{width:100%;border-collapse:collapse;font-size:12px}
 #fpv-lab td,#fpv-lab th{padding:8px 4px!important;border-color:#24384d!important;text-align:left}
-#fpv-lab #settings input{min-width:0;width:100%;max-width:95px}
+#fpv-lab #settings table{min-width:0!important;table-layout:fixed;width:100%!important}
+#fpv-lab #settings th,#fpv-lab #settings td{padding:7px 3px!important;overflow-wrap:anywhere}
+#fpv-lab #settings input{min-width:0!important;width:100%!important;max-width:none!important}
 #fpv-lab .bf-sliders{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
 #fpv-lab [hidden]{display:none!important}
 #fpv-lab #liveTelemetry,#fpv-lab #termTelemetry{background:#12263a;border-left:3px solid #69c9ff;padding:10px 12px!important;border-radius:5px;font-variant-numeric:tabular-nums}
@@ -1939,7 +1941,7 @@ html,body{margin:0!important;background:#0b1420!important;color:#e5effa!importan
 &lt;/section&gt;&lt;div class=&quot;viz-controls&quot;&gt;
 &lt;label class=&quot;form-label&quot;&gt;스로틀 &lt;span id=&quot;throttleval&quot;&gt;38%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;throttle&quot; max=&quot;100&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;38&quot;/&gt;&lt;/label&gt;
 &lt;label class=&quot;form-label&quot;&gt;회전 각속도 (°/초)&lt;input class=&quot;form-control&quot; id=&quot;rotationRate&quot; max=&quot;1440&quot; min=&quot;60&quot; step=&quot;1&quot; type=&quot;number&quot; value=&quot;360&quot;/&gt;&lt;/label&gt;
-&lt;/div&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;button aria-pressed=&quot;false&quot; class=&quot;btn&quot; id=&quot;audioToggle&quot;&gt;비행 소리 켜기&lt;/button&gt;&lt;label class=&quot;form-label&quot;&gt;음량 &lt;span id=&quot;volumeVal&quot;&gt;15%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;volume&quot; max=&quot;50&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;15&quot;/&gt;&lt;/label&gt;&lt;span aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;audioStatus&quot;&gt;모터·프로프워시·고주파 합성음&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;text-small text-destructive&quot; id=&quot;rateError&quot; role=&quot;alert&quot;&gt;&lt;/div&gt;&lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;routine&quot;&gt;&lt;/div&gt;&lt;details&gt;&lt;summary&gt;모터 · 배터리 · 프롭 설정&lt;/summary&gt;
+&lt;/div&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;button aria-pressed=&quot;false&quot; class=&quot;btn&quot; id=&quot;audioToggle&quot;&gt;비행 소리 켜기&lt;/button&gt;&lt;label class=&quot;form-label&quot;&gt;음량 &lt;span id=&quot;volumeVal&quot;&gt;15%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;volume&quot; max=&quot;50&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;15&quot;/&gt;&lt;/label&gt;&lt;span aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;audioStatus&quot;&gt;모터·프로프워시·고주파 합성음&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;text-small text-destructive&quot; id=&quot;rateError&quot; role=&quot;alert&quot;&gt;&lt;/div&gt;&lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;routine&quot;&gt;&lt;/div&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;label class=&quot;form-label&quot;&gt;펀치 길이 (초)&lt;input class=&quot;form-control&quot; id=&quot;punchDuration&quot; type=&quot;number&quot; min=&quot;0.1&quot; max=&quot;1.5&quot; step=&quot;0.1&quot; value=&quot;0.5&quot;&gt;&lt;/label&gt;&lt;label class=&quot;form-label&quot;&gt;펀치 추가 스로틀 (%p)&lt;input class=&quot;form-control&quot; id=&quot;punchStrength&quot; type=&quot;number&quot; min=&quot;0&quot; max=&quot;50&quot; step=&quot;1&quot; value=&quot;22&quot;&gt;&lt;/label&gt;&lt;/div&gt;&lt;div class=&quot;text-small text-muted&quot;&gt;공통 목표 고도 6m · 직진은 펀치 없는 단순 전진. 다른 기동은 20m 전진 후 시작합니다. 스플릿 S는 준비 상승 → 반 롤·하강 반 루프 → 6m 복귀·반대 방향 비행. 요 턴은 180°, 백플립·롤 턴은 360°입니다. 펀치 기본 0.5초 / +22%p이며 이륙·단순 직진에는 적용하지 않습니다. 설정 변경 시 같은 시작 상태에서 다시 계산합니다.&lt;/div&gt;&lt;details&gt;&lt;summary&gt;모터 · 배터리 · 프롭 설정&lt;/summary&gt;
 &lt;div class=&quot;viz-controls&quot;&gt;
 &lt;label class=&quot;form-label&quot;&gt;모터 4개 공통&lt;select class=&quot;form-select&quot; id=&quot;motorPreset&quot;&gt;&lt;option value=&quot;v1950&quot;&gt;T-MOTOR V2207 V3 · 1950KV&lt;/option&gt;&lt;option value=&quot;v1750&quot;&gt;T-MOTOR V2207 V3 · 1750KV&lt;/option&gt;&lt;option value=&quot;custom&quot;&gt;직접 입력 · 미검증&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
 &lt;label class=&quot;form-label&quot;&gt;배터리&lt;select class=&quot;form-select&quot; id=&quot;batteryPreset&quot;&gt;&lt;option value=&quot;c120&quot;&gt;CNHL MiniStar · 6S 1500mAh 120C&lt;/option&gt;&lt;option value=&quot;c130&quot;&gt;CNHL · 6S 1500mAh 130C&lt;/option&gt;&lt;option value=&quot;custom&quot;&gt;직접 입력 · 미검증&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
@@ -1950,11 +1952,11 @@ html,body{margin:0!important;background:#0b1420!important;color:#e5effa!importan
 &lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;specStatus&quot;&gt;&lt;/div&gt;
 &lt;div class=&quot;text-small text-muted&quot;&gt;제조사 공개 사양 확인 ≠ 조합 실측 검증. 이 모터·5050·배터리 조합의 추력 곡선 및 PID 반응은 검증되지 않았습니다. 직접 수정한 값은 미검증으로 표시합니다. 5050은 여기서 5인치 직경·5인치 피치·3엽으로 가정합니다.&lt;/div&gt;
 &lt;div class=&quot;viz-row text-small&quot;&gt;&lt;a href=&quot;https://tmotorhobby.com/goods-1369-T-MOTORHOBBY%2BV2207%2BV30%2B%2BFPV%2BMotor%2BFor%2B5%2BDrone-1500175019502550KV.html&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;모터 제조사 사양&lt;/a&gt;&lt;a href=&quot;https://chinahobbyline.com/products/cnhl-ministar-series-1500mah-22-2v-6s-120c-lipo-battery-with-xt60-plug&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;배터리 제조사 사양&lt;/a&gt;&lt;a href=&quot;https://www.hqprop.com/hq-durable-prop-5x5x3v1s-2cw2ccw-poly-carbonate-p0085.html&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;HQProp 사양&lt;/a&gt;&lt;a href=&quot;https://www.gemfanhobby.com/hurricane-51466-v2-pc-3-blade.html&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;Gemfan 사양&lt;/a&gt;&lt;/div&gt;
-&lt;/details&gt;&lt;div class=&quot;text-small text-muted&quot;&gt;B는 실사 영상이 아닌 가상 비행장입니다. 중앙 십자선은 카메라에 고정되고 풍경만 움직입니다.&lt;/div&gt;&lt;canvas aria-hidden=&quot;true&quot; hidden=&quot;&quot; id=&quot;trace&quot;&gt;&lt;/canvas&gt;&lt;div aria-live=&quot;off&quot; class=&quot;text-small tabular-nums&quot; id=&quot;liveTelemetry&quot; style=&quot;padding:7px 0;line-height:1.6&quot;&gt;실시간 계측 준비&lt;/div&gt;&lt;div class=&quot;table-responsive&quot;&gt;&lt;table class=&quot;table table-sm tabular-nums&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;30초 실험 · 기동 후 측정&lt;/th&gt;&lt;th&gt;A · 기체 실선&lt;/th&gt;&lt;th&gt;B · 풍경 점선&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;metrics&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;div class=&quot;text-small tabular-nums&quot; id=&quot;termTelemetry&quot;&gt;&lt;/div&gt;&lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;heat&quot;&gt;&lt;/div&gt;&lt;details&gt;&lt;summary&gt;모델 및 측정 기준&lt;/summary&gt;&lt;div class=&quot;text-small&quot;&gt;PID → 모터 혼합·출력 제한·모터 지연 → 각속도·자세 → 추력·중력·위치 → 지면 충돌을 1ms 간격으로 계산합니다. 500Hz로 기록하며 기체·FPV·계측·그래프가 같은 결과를 사용합니다. 기동 버튼은 가상 조종사의 목표 자세를 지정하며, 기동 후에도 계산이 이어집니다. 가상 조종사의 고도 회복 스로틀 보조가 포함되어 있어 실제 Acro 비행과 다릅니다. 회전각·위치를 강제로 복원하지 않습니다. 시작 고도는 일반 12m, 하강 25m, 스플릿 S 65m, 이륙 0.16m입니다. 각 축 회전을 근사한 교육 모델로 완전한 강체 6DOF나 Betaflight 펌웨어 재현이 아닙니다. 모터·배터리·프롭 제원은 근사 추력·관성·지연·전압강하·소모량에 반영하며 제조사 실측 곡선은 사용하지 않습니다. 120Hz 센서 잡음이 D 제어량·모터·기체 응답을 통해 전달됩니다. 화면 주사율보다 빠른 떨림은 0.1배 재생과 스펙트럼으로 확인하세요. 음향은 계산 상태에 연동한 합성음이며 실제 녹음이 아닙니다. D 부하는 온도 예측이 아닙니다.&lt;/div&gt;&lt;/details&gt;&lt;/div&gt;&lt;div id=&quot;tsd-right&quot;&gt;&lt;div class=&quot;views&quot;&gt;&lt;section&gt;&lt;h3&gt;A · 추적 카메라&lt;/h3&gt;&lt;canvas aria-label=&quot;가상 비행장에서 이동하며 기동하는 드론의 외부 시점&quot; id=&quot;droneA&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleA&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;section&gt;&lt;h3&gt;B · FPV 카메라&lt;/h3&gt;&lt;canvas aria-label=&quot;비행 위치와 기체 자세를 함께 반영하는 FPV 카메라&quot; id=&quot;droneB&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleB&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;/div&gt;&lt;section class=&quot;tsd-attitude&quot;&gt;&lt;div class=&quot;tsd-att-head&quot;&gt;&lt;strong&gt;3D 쿼드콥터 · Betaflight 스타일 자세 모니터&lt;/strong&gt;&lt;span class=&quot;text-small&quot;&gt;30초 PID 계산 결과 동기화&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-grid&quot;&gt;&lt;canvas aria-label=&quot;3D FPV 쿼드콥터 자세&quot; id=&quot;attQuad&quot;&gt;&lt;/canvas&gt;&lt;canvas aria-label=&quot;인공 수평계&quot; id=&quot;attHorizon&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-numbers tabular-nums&quot; id=&quot;attNumbers&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;div class=&quot;viz-row&quot;&gt;&lt;button class=&quot;btn&quot; id=&quot;test-takeoff&quot;&gt;이륙 · 안정화&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-throttle&quot;&gt;직진 · 스로틀&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-split-left&quot;&gt;스플릿 S · 좌 롤&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-split-right&quot;&gt;스플릿 S · 우 롤&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-drop&quot;&gt;하강 → 스로틀 회복&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-climb&quot;&gt;상승 → 스로틀 회복&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-yaw&quot;&gt;요 턴 360°&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-flip&quot;&gt;백플립 360°&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-roll&quot;&gt;롤 턴 360°&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;viz-controls&quot;&gt;
+&lt;/details&gt;&lt;div class=&quot;text-small text-muted&quot;&gt;B는 실사 영상이 아닌 가상 비행장입니다. 중앙 십자선은 카메라에 고정되고 풍경만 움직입니다.&lt;/div&gt;&lt;canvas aria-hidden=&quot;true&quot; hidden=&quot;&quot; id=&quot;trace&quot;&gt;&lt;/canvas&gt;&lt;div aria-live=&quot;off&quot; class=&quot;text-small tabular-nums&quot; id=&quot;liveTelemetry&quot; style=&quot;padding:7px 0;line-height:1.6&quot;&gt;실시간 계측 준비&lt;/div&gt;&lt;div class=&quot;table-responsive&quot;&gt;&lt;table class=&quot;table table-sm tabular-nums&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;30초 실험 · 기동 후 측정&lt;/th&gt;&lt;th&gt;A · 기체 실선&lt;/th&gt;&lt;th&gt;B · 풍경 점선&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;metrics&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;div class=&quot;text-small tabular-nums&quot; id=&quot;termTelemetry&quot;&gt;&lt;/div&gt;&lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;heat&quot;&gt;&lt;/div&gt;&lt;details&gt;&lt;summary&gt;모델 및 측정 기준&lt;/summary&gt;&lt;div class=&quot;text-small&quot;&gt;PID → 모터 혼합·출력 제한·모터 지연 → 각속도·자세 → 추력·중력·위치 → 지면 충돌을 1ms 간격으로 계산합니다. 500Hz로 기록하며 기체·FPV·계측·그래프가 같은 결과를 사용합니다. 기동 버튼은 가상 조종사의 목표 자세를 지정하며, 기동 후에도 계산이 이어집니다. 고도 회복 스로틀 보조가 포함되어 있어 실제 Acro 비행과 다릅니다. 모든 기동의 안정화 목표 고도는 6m이며 강제 복귀하지 않습니다. 이륙은 0.16m에서 출발하고 나머지는 6m에서 전진합니다. 스플릿 S는 20m 전진 후 22m 준비 상승, 실제 고도와 수직 속도 조건 충족 시 반 롤 0.5초·반 루프 1초를 수행하고 6m로 회복합니다. 요 턴은 목표 180°이며 관성 때문에 이동 방향 전환에는 시간이 걸립니다. 각 축 회전을 근사한 교육 모델로 완전한 강체 6DOF나 Betaflight 펌웨어 재현이 아닙니다. 모터·배터리·프롭 제원은 근사 추력·관성·지연·전압강하·소모량에 반영하며 제조사 실측 곡선은 사용하지 않습니다. 120Hz 센서 잡음이 D 제어량·모터·기체 응답을 통해 전달됩니다. 화면 주사율보다 빠른 떨림은 0.1배 재생과 스펙트럼으로 확인하세요. 음향은 계산 상태에 연동한 합성음이며 실제 녹음이 아닙니다. D 부하는 온도 예측이 아닙니다.&lt;/div&gt;&lt;/details&gt;&lt;/div&gt;&lt;div id=&quot;tsd-right&quot;&gt;&lt;div class=&quot;views&quot;&gt;&lt;section&gt;&lt;h3&gt;A · 추적 카메라&lt;/h3&gt;&lt;canvas aria-label=&quot;가상 비행장에서 이동하며 기동하는 드론의 외부 시점&quot; id=&quot;droneA&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleA&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;section&gt;&lt;h3&gt;B · FPV 카메라&lt;/h3&gt;&lt;canvas aria-label=&quot;비행 위치와 기체 자세를 함께 반영하는 FPV 카메라&quot; id=&quot;droneB&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleB&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;/div&gt;&lt;section class=&quot;tsd-attitude&quot;&gt;&lt;div class=&quot;tsd-att-head&quot;&gt;&lt;strong&gt;3D 쿼드콥터 · Betaflight 스타일 자세 모니터&lt;/strong&gt;&lt;span class=&quot;text-small&quot;&gt;30초 PID 계산 결과 동기화&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-grid&quot;&gt;&lt;canvas aria-label=&quot;3D FPV 쿼드콥터 자세&quot; id=&quot;attQuad&quot;&gt;&lt;/canvas&gt;&lt;canvas aria-label=&quot;롤 경사각 눈금과 포인터가 있는 인공 수평계&quot; id=&quot;attHorizon&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-numbers tabular-nums&quot; id=&quot;attNumbers&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;div class=&quot;viz-row&quot;&gt;&lt;button class=&quot;btn&quot; id=&quot;test-takeoff&quot;&gt;이륙 · 안정화&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-throttle&quot;&gt;직진 · 스로틀&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-split-left&quot;&gt;스플릿 S · 좌 롤&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-split-right&quot;&gt;스플릿 S · 우 롤&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-drop&quot;&gt;하강 → 스로틀 회복&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-climb&quot;&gt;상승 → 스로틀 회복&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-yaw&quot;&gt;요 턴 180°&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-flip&quot;&gt;백플립 360°&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-roll&quot;&gt;롤 턴 360°&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;viz-controls&quot;&gt;
 &lt;label class=&quot;form-label&quot;&gt;외란 크기 &lt;span id=&quot;forceval&quot;&gt;10&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;force&quot; max=&quot;30&quot; min=&quot;0&quot; type=&quot;range&quot; value=&quot;10&quot;/&gt;&lt;/label&gt;
 &lt;label class=&quot;form-label&quot;&gt;자이로 잡음 &lt;span id=&quot;noiseval&quot;&gt;1&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;noise&quot; max=&quot;5&quot; min=&quot;0&quot; step=&quot;0.5&quot; type=&quot;range&quot; value=&quot;1&quot;/&gt;&lt;/label&gt;
 &lt;label class=&quot;form-label&quot;&gt;재생 속도&lt;select class=&quot;form-select&quot; id=&quot;speed&quot;&gt;&lt;option value=&quot;0.1&quot;&gt;0.1배 · 고주파 관찰&lt;/option&gt;&lt;option value=&quot;0.25&quot;&gt;0.25배 · 느리게&lt;/option&gt;&lt;option value=&quot;0.5&quot;&gt;0.5배&lt;/option&gt;&lt;option selected=&quot;&quot; value=&quot;1&quot;&gt;1배&lt;/option&gt;&lt;option value=&quot;2&quot;&gt;2배&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
-&lt;button class=&quot;btn btn-primary&quot; id=&quot;play&quot;&gt;일시 정지&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;replay&quot;&gt;다시 재생&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;arrival&quot;&gt;기동 완료 순간&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;reset&quot;&gt;초기화&lt;/button&gt;
+&lt;button class=&quot;btn btn-primary&quot; id=&quot;play&quot;&gt;일시 정지&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;replay&quot;&gt;다시 재생&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;arrival&quot;&gt;기동 입력 종료 시점&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;reset&quot;&gt;초기화&lt;/button&gt;
 &lt;/div&gt;&lt;div class=&quot;viz-row text-small&quot;&gt;&lt;span class=&quot;tabular-nums&quot; id=&quot;clock&quot;&gt;0.00 / 10.00초&lt;/span&gt;&lt;span id=&quot;command&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;label class=&quot;form-label&quot;&gt;시간 탐색&lt;input class=&quot;form-range&quot; id=&quot;scrub&quot; max=&quot;10&quot; min=&quot;0&quot; step=&quot;0.01&quot; type=&quot;range&quot; value=&quot;0&quot;/&gt;&lt;/label&gt;&lt;/div&gt;&lt;/div&gt;&lt;style&gt;
 #fpv-lab{max-width:1800px;gap:5px}
 #tsd-columns{display:grid;grid-template-columns:minmax(510px,48%) minmax(0,1fr);gap:10px;align-items:start}
@@ -2040,40 +2042,53 @@ const FlightEngine = (() =&gt; {
  function rotate(v,a){let [x,y,z]=v;let [r,p,w]=a;let yy=Math.cos(r)*y-Math.sin(r)*z,zz=Math.sin(r)*y+Math.cos(r)*z;
   let xx=Math.cos(p)*x+Math.sin(p)*zz;zz=-Math.sin(p)*x+Math.cos(p)*zz;
   return [Math.cos(w)*xx-Math.sin(w)*yy,Math.sin(w)*xx+Math.cos(w)*yy,zz];}
- function reference(s,t){
-  const rate=s.rotationRate*Math.PI/180, a=[0,0,0], u=Math.max(0,t-1);
-  if(['flip','roll','yaw'].includes(s.test))a[{roll:0,flip:1,yaw:2}[s.test]]=Math.min(tau,u*rate);
+ function maneuverDuration(s){return s.test.startsWith('split-')?1.5:s.test==='yaw'?180/s.rotationRate:['flip','roll'].includes(s.test)?360/s.rotationRate:s.test==='drop'?2*(s.punchDuration??.5):s.test==='throttle'?0:(s.punchDuration??.5);}
+ function reference(s,t,start=Infinity){
+  if(s.test==='takeoff')return [0,0,0];
+  const rate=s.rotationRate*Math.PI/180, a=[0,-.10*clamp(t,0,1),0], u=t-start;
+  if(u&lt;0)return a;
+  if(['flip','roll','yaw'].includes(s.test))a[{roll:0,flip:1,yaw:2}[s.test]]+=Math.min(s.test==='yaw'?Math.PI:tau,u*rate);
   else if(s.test.startsWith('split-')){
    const sign=s.test==='split-left'?-1:1;
-   if(u&lt;1)a[0]=sign*Math.PI*u;
-   else if(u&lt;3){a[0]=sign*Math.PI;a[1]=Math.PI*(u-1)/2;}
-   else {a[0]=sign*Math.PI;a[1]=Math.PI;}
-  }else if(s.test==='throttle')a[1]=-.10*Math.min(1,u);
+   if(u&lt;.5)a[0]=sign*Math.PI*u/.5;
+   else if(u&lt;1.5){a[0]=sign*Math.PI;a[1]=-.1+(Math.PI+.2)*(u-.5);}
+   else {a[0]=sign*Math.PI;a[1]=Math.PI+.1;}
+  }
   return a;
  }
- function throttle(s,t){
+ function throttle(s,t,start=Infinity){
   let v=s.throttle/100;if(v===0)return 0;
   if(s.test==='takeoff')return v*clamp(t/.8,0,1);
-  if(s.test==='drop'&amp;&amp;t&gt;1&amp;&amp;t&lt;2.6)return v*.22;
-  if(s.test==='drop'&amp;&amp;t&gt;=2.6&amp;&amp;t&lt;4.3)return clamp(v+.22,0,1);
-  if(s.test==='climb'&amp;&amp;t&gt;1&amp;&amp;t&lt;2.5)return clamp(v+.22,0,1);
-  if(s.test==='climb'&amp;&amp;t&gt;=2.5&amp;&amp;t&lt;3.5)return Math.max(0,v-.20);
-  if(s.test.startsWith('split-')){if(t&gt;=1&amp;&amp;t&lt;2)return v*.58;if(t&gt;=2&amp;&amp;t&lt;3.5)return v*.30;if(t&gt;=3.5&amp;&amp;t&lt;4.5)return clamp(v+.20,0,1);}
+  const u=t-start,d=s.punchDuration??.5,p=(s.punchStrength??22)/100;
+  if(u&lt;0)return v;
+  if(s.test==='drop'){if(u&lt;d)return v*.22;if(u&lt;2*d)return clamp(v+p,0,1);}
+  if(s.test==='climb'&amp;&amp;u&lt;d)return clamp(v+p,0,1);
+  if(s.test.startsWith('split-')){if(u&lt;.5)return v*.58;if(u&lt;1.2)return v*.30;if(u&lt;1.5+d)return clamp(v+p,0,1);}
+  if(['flip','roll','yaw'].includes(s.test)){const end=maneuverDuration(s);if(u&lt;end)return v*(s.test==='yaw'?1:.6);if(u&lt;end+d)return clamp(v+p,0,1);}
   return v;
  }
  function simulate(s,seconds=30){
   const dt=.001,hw=hardware(s.hw),gs=axes.map(k=&gt;gains(s,k)),mix=[[1,-1,-1],[-1,-1,1],[-1,1,-1],[1,1,1]];
   let angle=[0,0,0],rate=[0,0,0],integ=[0,0,0],filtered=[0,0,0],prevGyro=[0,0,0],prevTarget=[0,0,0],dFilt=[0,0,0],motor=[0,0,0,0];
-  const initialHeight=s.test.startsWith('split-')?65:s.test==='drop'?25:12;
+  const initialHeight=6;
   let pos=[0,0,s.test==='takeoff'?-.16:-initialHeight],vel=[s.test==='takeoff'?0:6,0,0],crash=false,airborne=s.test!=='takeoff',used=0;
   const delay=Array.from({length:7},()=&gt;[0,0,0]),logs=[];let dIdx=0;
+  let maneuverStart=s.test==='takeoff'?0:null,entryPosition=null,splitStart=null,altIntegral=0;
   for(let n=0;n&lt;=seconds/dt;n++){
-   const t=n*dt,ref=reference(s,t),refNext=reference(s,t+dt),stickThrottle=throttle(s,t),tar=[],terms=[],effectiveD=[];
-   const recovery=s.test.startsWith('split-')?4:s.test==='drop'?2.6:s.test==='climb'?3.5:['flip','roll','yaw'].includes(s.test)?1+360/s.rotationRate:0;
+   const t=n*dt;
+   if(maneuverStart===null&amp;&amp;!crash&amp;&amp;pos[0]&gt;=20){maneuverStart=t;entryPosition=[...pos];}
+   const start=maneuverStart??Infinity,split=s.test.startsWith('split-');
+   if(split&amp;&amp;maneuverStart!==null&amp;&amp;splitStart===null&amp;&amp;!crash&amp;&amp;-pos[2]&gt;=21.5&amp;&amp;Math.abs(vel[2])&lt;1.5)splitStart=t;
+   const rotationStart=split?(splitStart??Infinity):start;
+   const ref=reference(s,t,rotationStart),refNext=reference(s,t+dt,rotationStart),stickThrottle=throttle(s,t,rotationStart),tar=[],terms=[],effectiveD=[];
+   const recovery=rotationStart+maneuverDuration(s)+(split||['flip','roll','yaw'].includes(s.test)?(s.punchDuration??.5):0);
    // Scripted pilot adds collective recovery, never overwrites attitude/position.
-   const heightTarget=s.test==='takeoff'?Math.min(6,t*1.6):initialHeight;
-   const hold=t&gt;=recovery||t&lt;1;
-   const assist=hold?clamp((heightTarget+pos[2])*.035+vel[2]*.06,-.25,.42):0;
+   const heightTarget=s.test==='takeoff'?Math.min(6,t*1.6):split&amp;&amp;t&gt;=start&amp;&amp;t&lt;rotationStart?22:initialHeight;
+   const hold=s.test==='takeoff'||s.test==='throttle'||t&gt;=recovery||t&lt;rotationStart;
+   const heightError=heightTarget+pos[2];
+   if(hold&amp;&amp;!crash&amp;&amp;stickThrottle&gt;0)altIntegral=clamp(altIntegral+heightError*dt,-8,8);
+   else altIntegral*=.999;
+   const assist=hold?clamp(heightError*.065+vel[2]*.10+altIntegral*.015,-.35,.52):0;
    const thr=stickThrottle===0?0:clamp(stickThrottle+assist,0,1);
    const descent=clamp(vel[2]/3,0,2),wash=descent*thr*(.25+s.force*.025);
    const measured=rate.map((v,k)=&gt;v+s.noise*.018*(Math.sin(tau*120*t+k*1.7)+.3*Math.sin(tau*173*t+k)));
@@ -2118,12 +2133,12 @@ const FlightEngine = (() =&gt; {
      pos[2]=-.16;
     }
    }
-   if(n%2===0)logs.push({t,angles:[...angle],rates:[...rate],targets:tar,reference:ref,pos:[...pos],velocity:[...vel],motors:[...motor],terms,effectiveD,disturbance,wash,crash,throttle:thr,used,
+   if(n%2===0)logs.push({t,maneuverStart,rotationStart:Number.isFinite(rotationStart)?rotationStart:null,recoveryTime:Number.isFinite(recovery)?recovery:null,heightTarget,entryPosition,stickThrottle,phase:crash?'충돌':s.test==='takeoff'?'이륙 안정화':s.test==='throttle'?'6m 목표 · 단순 전진':t&lt;start?'20m 진입 비행':split&amp;&amp;t&lt;rotationStart?'스플릿 S 준비 상승 · 22m 목표':t&lt;recovery?'기동 · 스로틀 시퀀스':'6m 복귀 · 계속 비행',angles:[...angle],rates:[...rate],targets:tar,reference:ref,pos:[...pos],velocity:[...vel],motors:[...motor],terms,effectiveD,disturbance,wash,crash,throttle:thr,used,
     saturated:gs.map((_,k)=&gt;raw.some((v,i)=&gt;Math.abs(v-out[i])&gt;.001&amp;&amp;Math.abs(terms[k].sum)&gt;.01))});
   }
   return logs;
  }
- return {gains,hardware,reference,throttle,simulate,rotate,base,axes,clamp};
+ return {gains,hardware,reference,throttle,maneuverDuration,simulate,rotate,base,axes,clamp};
 })();
 
 
@@ -2135,14 +2150,14 @@ const FlightEngine = (() =&gt; {
  const examplePids=()=&gt;({roll:{P:45,I:80,D:30,Dmax:40,FF:120},pitch:{P:47,I:84,D:34,Dmax:46,FF:125},yaw:{P:45,I:80,D:0,Dmax:0,FF:120}});
  const sliderDefs=[['damping','감쇠 · D'],['tracking','추적 · P / I'],['response','스틱 반응 · FF'],['dynamic','동적 감쇠 · D 최대'],['integral','드리프트 / 흔들림 · I'],['pitchD','피치 감쇠 · D'],['pitch','피치 추적 · P / I / FF'],['master','마스터 배율']];
  const defaultSliders=()=&gt;Object.fromEntries(sliderDefs.map(([k])=&gt;[k,1]));
- const defaults=()=&gt;({axis:'pitch',pids:examplePids(),sliders:defaultSliders(),tuningMode:'OFF',A:{P:47,I:84,D:34,Dmax:46,FF:125},force:5,noise:0.5,speed:1,throttle:38,rotationRate:720,hfEnabled:true,volume:15,test:'drop',graph:'angle',motorPreset:'v1950',batteryPreset:'c120',propPreset:'hq5050',hw:{...presets.motorPreset.v1950,...presets.batteryPreset.c120,...presets.propPreset.hq5050,drymass:400}});
+ const defaults=()=&gt;({axis:'pitch',punchDuration:.5,punchStrength:22,pids:examplePids(),sliders:defaultSliders(),tuningMode:'OFF',A:{P:47,I:84,D:34,Dmax:46,FF:125},force:5,noise:0.5,speed:1,throttle:38,rotationRate:720,hfEnabled:true,volume:15,test:'drop',graph:'angle',motorPreset:'v1950',batteryPreset:'c120',propPreset:'hq5050',hw:{...presets.motorPreset.v1950,...presets.batteryPreset.c120,...presets.propPreset.hq5050,drymass:400}});
  let s=defaults(), data=[],t=0,playing=true,last=0;
  $('settings').innerHTML='&lt;table class=&quot;table table-sm&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;기본 / Acro&lt;/th&gt;&lt;th&gt;P · 비례&lt;/th&gt;&lt;th&gt;I · 적분&lt;/th&gt;&lt;th&gt;D · 최소&lt;/th&gt;&lt;th&gt;D · 최대&lt;/th&gt;&lt;th&gt;FF · 피드포워드&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;'+axes.map(axis=&gt;'&lt;tr&gt;&lt;th scope=&quot;row&quot;&gt;'+axisNames[axis]+'&lt;/th&gt;'+pidKeys.map(k=&gt;'&lt;td&gt;&lt;input class=&quot;form-control&quot; type=&quot;number&quot; min=&quot;0&quot; max=&quot;'+(k==='FF'?2000:250)+'&quot; step=&quot;1&quot; id=&quot;pid-'+axis+'-'+k+'&quot; aria-label=&quot;'+axisNames[axis]+' '+k+'&quot;&gt;&lt;/td&gt;').join('')+'&lt;/tr&gt;').join('')+'&lt;/tbody&gt;&lt;/table&gt;';
  $('bfSliders').innerHTML=sliderDefs.map(([k,label])=&gt;'&lt;label class=&quot;form-label&quot;&gt;'+label+' &lt;span id=&quot;sliderValue-'+k+'&quot; class=&quot;tabular-nums&quot;&gt;1.00&lt;/span&gt;&lt;input id=&quot;slider-'+k+'&quot; class=&quot;form-range&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;2&quot; step=&quot;0.05&quot; value=&quot;1&quot;&gt;&lt;/label&gt;').join('');
  $('hardware').innerHTML=fields.map(([id,label,min,max,step])=&gt;`&lt;label class=&quot;form-label&quot;&gt;${label}&lt;input id=&quot;hw-${id}&quot; class=&quot;form-control&quot; type=&quot;number&quot; min=&quot;${min}&quot; max=&quot;${max}&quot; step=&quot;${step}&quot;&gt;&lt;/label&gt;`).join('');
  function normalize(x){const d=defaults();if(!x||typeof x!=='object')return d;for(const n of ['A'])for(const k of ['P','I','D'])if(Number.isFinite(x[n]?.[k]))d[n][k]=Math.max(0,Math.min(250,Math.round(x[n][k])));if(['pitch','roll','yaw'].includes(x.axis))d.axis=x.axis;for(const k of ['force','noise','speed'])if(Number.isFinite(x[k]))d[k]=Math.max(k==='speed'?.1:0,Math.min(k==='force'?30:k==='noise'?5:2,x[k]));d.hfEnabled=true;if(Number.isFinite(x.volume))d.volume=Math.max(0,Math.min(50,x.volume));if(Number.isFinite(x.rotationRate))d.rotationRate=Math.max(60,Math.min(1440,Math.round(x.rotationRate)));if(Number.isFinite(x.throttle))d.throttle=Math.max(0,Math.min(100,x.throttle));if(['throttle','yaw','flip','roll','split-left','split-right','pulse','drop','climb','takeoff'].includes(x.test))d.test=x.test;if(['angle','residual','rate'].includes(x.graph))d.graph=x.graph;for(const [id,,lo,hi] of fields)if(Number.isFinite(x.hw?.[id]))d.hw[id]=Math.max(lo,Math.min(hi,x.hw[id]));for(const k of Object.keys(presets)){d[k]=presets[k][x[k]]?x[k]:x[k]==='custom'?'custom':d[k];if(d[k]!=='custom'&amp;&amp;Object.entries(presets[k][d[k]]).some(([id,v])=&gt;Math.abs(d.hw[id]-v)&gt;.00001))d[k]='custom';}if(d.test==='yaw')d.axis='yaw';if(d.test==='flip')d.axis='pitch';if(d.test==='roll'||d.test==='pulse'||d.test==='split-left'||d.test==='split-right')d.axis='roll';if(d.test==='drop'||d.test==='climb')d.axis='pitch';
  for(const axis of axes){const source=x.pids?.[axis]||x.A; if(source)for(const k of pidKeys){const v=k==='Dmax'&amp;&amp;source[k]===undefined?source.D:k==='FF'&amp;&amp;source[k]===undefined?0:source[k];if(Number.isFinite(v))d.pids[axis][k]=Math.max(0,Math.min(k==='FF'?2000:250,Math.round(v)));}}
- if(['OFF','RP','RPY'].includes(x.tuningMode))d.tuningMode=x.tuningMode;for(const [k] of sliderDefs)if(Number.isFinite(x.sliders?.[k]))d.sliders[k]=Math.max(0,Math.min(2,x.sliders[k]));return d;}
+ for(const [key,lo,hi] of [['punchDuration',.1,1.5],['punchStrength',0,50]])if(Number.isFinite(x[key]))d[key]=Math.max(lo,Math.min(hi,x[key]));if(['OFF','RP','RPY'].includes(x.tuningMode))d.tuningMode=x.tuningMode;for(const [k] of sliderDefs)if(Number.isFinite(x.sliders?.[k]))d.sliders[k]=Math.max(0,Math.min(2,x.sliders[k]));return d;}
  function save(){try{localStorage.setItem('tsd-preview-v2',JSON.stringify(s));}catch{}}
  function localStorageSafeGet(){try{return localStorage.getItem('tsd-preview-v2')}catch{return null}}
 
@@ -2155,10 +2170,11 @@ const FlightEngine = (() =&gt; {
   for(const axis of axes){const g=gains(axis);for(const k of pidKeys){$('pid-'+axis+'-'+k).value=g[k];$('pid-'+axis+'-'+k).disabled=s.tuningMode!=='OFF'&amp;&amp;(s.tuningMode==='RPY'||axis!=='yaw');}}
   for(const [k] of sliderDefs){$('slider-'+k).value=s.sliders[k];$('sliderValue-'+k).textContent=s.sliders[k].toFixed(2);}
  }
- function controls(){$('volume').value=s.volume;$('volumeVal').textContent=s.volume+'%';pidControls();for(const k of ['force','noise','speed','throttle','rotationRate','graph','motorPreset','batteryPreset','propPreset']){const el=$(k);if(el)el.value=s[k];}$('forceval').textContent=s.force;$('noiseval').textContent=s.noise;$('throttleval').textContent=s.throttle+'%';for(const [id] of fields)$('hw-'+id).value=Number(s.hw[id].toFixed(3));specs();pidStatus();}
+ function controls(){$('punchDuration').value=s.punchDuration;$('punchStrength').value=s.punchStrength;$('volume').value=s.volume;$('volumeVal').textContent=s.volume+'%';pidControls();for(const k of ['force','noise','speed','throttle','rotationRate','graph','motorPreset','batteryPreset','propPreset']){const el=$(k);if(el)el.value=s[k];}$('forceval').textContent=s.force;$('noiseval').textContent=s.noise;$('throttleval').textContent=s.throttle+'%';for(const [id] of fields)$('hw-'+id).value=Number(s.hw[id].toFixed(3));specs();pidStatus();}
  function specs(){const h=s.hw;$('specStatus').textContent=`모터 ${s.motorPreset==='custom'?'직접 입력 · 미검증':'제조사 크기·KV 확인'} / 배터리 ${s.batteryPreset==='custom'?'직접 입력 · 미검증':'제조사 공칭 사양 확인'} / 프롭 ${s.propPreset==='custom'?'직접 입력 · 미검증':'제조사 치수·질량 확인'} · ${(h.cells*3.7).toFixed(1)}V · 공칭 ${(h.cells*3.7*h.mah/1000).toFixed(1)}Wh · 총중량 가정 ${Math.round(h.drymass+h.bmass)}g`;}
  function isSpin(){return ['flip','roll','yaw'].includes(s.test);}
- function recoveryStart(){return isSpin()?1+360/s.rotationRate:s.test==='throttle'?1:(s.test==='split-left'||s.test==='split-right')?4.5:3;}
+ function recoveryStart(){const q=pidTrajectory.at(-1);return q?.rotationStart===null||!q?30:Math.min(30,q.rotationStart+FlightEngine.maneuverDuration(s));}
+
  function duration(){return 30;}
 
  function profile(time){const end=recoveryStart(),spin=isSpin();const climb=s.test==='climb',split=s.test==='split-left'||s.test==='split-right';return {rate:spin&amp;&amp;time&gt;=1&amp;&amp;time&lt;end?s.rotationRate:0,throttle:flightThrottle(time),phase:time&lt;1?'시작 대기':split?(time&lt;2?'좌/우 반 롤 180°':time&lt;4?'하강 반 루프 180°':time&lt;4.5?'반대 방향 이탈':'회복 후 역방향 비행'):climb?(time&lt;2.5?'상승 가속':time&lt;3.5?'상승 관성 · 스로틀 감속':'목표 고도 회복'):time&lt;end?(spin?'정속 1회전':'비행 기동'):spin?'중앙 복귀 · 계속 비행':'계속 비행'};}
@@ -2172,7 +2188,7 @@ const FlightEngine = (() =&gt; {
  $('activePid').textContent='적용 중 '+axisNames[s.axis]+' · P '+s.A.P+' / I '+s.A.I+' / D '+s.A.D+' / D 최대 '+s.A.Dmax+' / FF '+s.A.FF;
  const m=data.map(metrics);$('metrics').innerHTML=[['기동 후 진동 폭',...m.map(x=&gt;x.span.toFixed(2)+'°')],['진동 주파수 추정',...m.map(x=&gt;x.f===null?'주기 불충분':x.f.toFixed(2)+' Hz')],['최종 목표 이탈각',...data.map(x=&gt;(x.at(-1).a-x.at(-1).target).toFixed(2)+'°')]].map(row=&gt;'&lt;tr&gt;'+row.map((v,i)=&gt;'&lt;'+(i?'td':'th')+'&gt;'+v+'&lt;/'+(i?'td':'th')+'&gt;').join('')+'&lt;/tr&gt;').join('');
  const hit=pidTrajectory.find(q=&gt;q.crash);$('heat').textContent=hit?'지면 충돌 · '+hit.t.toFixed(2)+'초 · 충돌 후 모터 정지':'30초 계산 완료 · 지면 충돌 없음';
- $('routine').textContent='목표 기동 → PID 추종 → 지속 비행 · 자세·위치를 강제로 복원하지 않습니다';
+ const entry=pidTrajectory.find(q=&gt;q.maneuverStart!==null);$('routine').textContent=s.test==='takeoff'?'이륙 · 6m 안정화':s.test==='throttle'?'6m 목표 · 펀치 없는 단순 전진':entry?'20m 진입 '+entry.maneuverStart.toFixed(3)+'초 → 기동 → 지속 비행':'20m 진입 미완료 · 기동을 시작하지 않았습니다';$('arrival').disabled=!entry;
  $('scrub').max=duration();$('scrub').step='.002';for(const k of ['throttle','yaw','flip','roll','split-left','split-right','drop','climb','takeoff'])$('test-'+k).setAttribute('aria-pressed',String(k===s.test));draw();
 }
 
@@ -2195,7 +2211,7 @@ const FlightEngine = (() =&gt; {
  let pidTrajectory=[];
  function rebuildPidTrajectory(){pidTrajectory=Engine.simulate(s,30);}
  function sampleAt(time){return pidTrajectory[Math.max(0,Math.min(pidTrajectory.length-1,Math.round(time*500)))];}
- function referencePose(time){const a=Engine.reference(s,time);return {r:a[0],p:a[1],y:a[2],pos:[0,0,0]};}
+ function referencePose(time){const a=sampleAt(time).reference;return {r:a[0],p:a[1],y:a[2],pos:[0,0,0]};}
  function pidSignature(axis,time){const q=sampleAt(time),k=axes.indexOf(axis);return {angle:q.angles[k]-q.reference[k],propwash:q.wash,fast:Math.abs(q.terms[k].D),highD:Math.abs(q.terms[k].D)};}
  function pidVibration(time){return axes.map(axis=&gt;pidSignature(axis,time));}
  function pose(time){const q=sampleAt(time);return {r:q.angles[0],p:q.angles[1],y:q.angles[2],pos:q.pos};}
@@ -2207,7 +2223,7 @@ const FlightEngine = (() =&gt; {
  }
  function drone(n,i){
   const {ctx:c,w,h}=setup($('drone'+n)),q=pose(t),fg=color('--foreground'),muted=color('--muted-foreground'),green=color('--green'),blue=color('--blue'),ground=color('--muted'),series=color('--viz-series-1');
-  const chaseYaw=(s.test==='split-left'||s.test==='split-right')?Math.PI*Math.max(0,Math.min(1,(t-2)/2)):s.test==='pulse'?Math.max(0,Math.min(1,(t-1)/2))*Math.PI/2:0;
+  const chaseYaw=s.test==='yaw'?q.y:s.test.startsWith('split-')?Math.PI*Math.max(0,Math.min(1,t-(sampleAt(t).rotationStart??Infinity)-.5)):0;
   const camera=i?q.pos:[q.pos[0]-1.8*Math.cos(chaseYaw),q.pos[1]-1.8*Math.sin(chaseYaw),q.pos[2]-.65];
   const angles=i?[q.r,q.p,q.y]:[0,-.22,chaseYaw],f=w*.66;
   const view=v=&gt;rotate3(v.map((a,k)=&gt;a-camera[k]),...angles,true),project=v=&gt;[w/2+f*v[1]/v[0],h/2+f*v[2]/v[0]];
@@ -2215,7 +2231,7 @@ const FlightEngine = (() =&gt; {
   const faces=[];
   function polygon(points,col,alpha=1){let v=points.map(view),res=[];for(let j=0;j&lt;v.length;j++){const a=v[j],b=v[(j+1)%v.length],inside=a[0]&gt;=.2,next=b[0]&gt;=.2;if(inside)res.push(a);if(inside!==next){const k=(.2-a[0])/(b[0]-a[0]);res.push(a.map((x,i)=&gt;x+k*(b[i]-x)));}}if(res.length&lt;3)return;faces.push({v:res,col,alpha,depth:res.reduce((a,p)=&gt;a+p[0],0)/res.length});}
   function line(a,b,col,width=1){let u=view(a),v=view(b);if(u[0]&lt;.2&amp;&amp;v[0]&lt;.2)return;if(u[0]&lt;.2||v[0]&lt;.2){const back=u[0]&lt;.2?u:v,front=u[0]&lt;.2?v:u,k=(.2-back[0])/(front[0]-back[0]),p=back.map((x,j)=&gt;x+k*(front[j]-x));if(u[0]&lt;.2)u=p;else v=p;}c.strokeStyle=col;c.lineWidth=width;c.beginPath();c.moveTo(...project(u));c.lineTo(...project(v));c.stroke();}
-  polygon([[-300,-300,0],[400,-300,0],[400,300,0],[-300,300,0]],'#456f60');
+  polygon([[-4000,-4000,0],[4000,-4000,0],[4000,4000,0],[-4000,4000,0]],'#456f60');
   for(let x=-40;x&lt;200;x+=24)line([x,-55,-.02],[x,55,-.02],'#b8cbd2',.55);
   // Minimal open-air practice ground: sparse landmarks and just three gates.
   for(const [x,y] of [[-16,-32],[48,-35],[115,-32],[-8,35],[74,38],[156,36]]){
@@ -2227,10 +2243,11 @@ const FlightEngine = (() =&gt; {
    }
   }
   faces.sort((a,b)=&gt;b.depth-a.depth).forEach(face=&gt;{c.globalAlpha=face.alpha;c.fillStyle=face.col;c.beginPath();face.v.forEach((p,j)=&gt;j?c.lineTo(...project(p)):c.moveTo(...project(p)));c.closePath();c.fill();});c.globalAlpha=1;
+  for(let x=Math.floor(q.pos[0]/20)*20-200;x&lt;q.pos[0]+300;x+=20){line([x,-300,-.02],[x,300,-.02],'#71998a',.7);}for(let y=-300;y&lt;=300;y+=20)line([q.pos[0]-200,y,-.02],[q.pos[0]+300,y,-.02],'#71998a',.7);
   // Sparse bidirectional gates; no overlapping obstacle grids.
   // Two-way Split-S route: gates on BOTH sides of the reversal point.
   // Negative-X gates become visible after the 180-degree heading reversal.
-  for(const x of [-96,-52,-22,32,96,160]){
+  for(const x of [-300,-220,-140,-60,20,100,180,260,340,420,500,580]){
    const gate='#9babb7',z=-8;
    line([x,-5,0],[x,-5,z],gate,2);
    line([x,5,0],[x,5,z],gate,2);
@@ -2299,13 +2316,36 @@ const FlightEngine = (() =&gt; {
   if(mode==='error')plot(q=&gt;q.rates[k]-q.targets[k],'#f3b35b',[]);else{plot(q=&gt;q.targets[k],'#69c9ff',[5,4]);plot(q=&gt;q.rates[k],'#ffb45a',[]);}c.setLineDash([]);c.strokeStyle='#d6edff';c.beginPath();c.moveTo(x(t),top);c.lineTo(x(t),bot);c.stroke();c.textAlign='left';c.fillStyle='#b2c4da';c.fillText('각속도 °/s · 점선 목표 / 실선 계산값',l,15);
   const q=sampleAt(t);$('bbStats').textContent=axes[k].toUpperCase()+' · 목표 '+(q.targets[k]*scale).toFixed(1)+'°/s · 계산값 '+(q.rates[k]*scale).toFixed(1)+'°/s · D 적용 '+q.effectiveD[k].toFixed(1);
  }
+ function drawHorizon(R,P){
+  const {ctx:g,w:hw,h:hh}=setup($('attHorizon')),x=hw/2,y=hh/2,radius=Math.min(hw,hh)*.35;
+  // Equivalent upright Euler attitude: a half roll + half loop is level with reversed heading.
+  const bank=Math.atan2(Math.sin(R)*Math.cos(P),Math.cos(R)*Math.cos(P)),pitch=Math.asin(Math.sin(P));
+  g.fillStyle='#101e2e';g.fillRect(0,0,hw,hh);
+  g.save();g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.clip();g.translate(x,y);g.rotate(-bank);g.translate(0,pitch*radius*.8);
+  g.fillStyle='#3978a8';g.fillRect(-hw*2,-hh*3,hw*4,hh*3);g.fillStyle='#80694d';g.fillRect(-hw*2,0,hw*4,hh*3);
+  g.strokeStyle='#edf6ff';g.lineWidth=1.5;g.beginPath();g.moveTo(-hw,0);g.lineTo(hw,0);g.stroke();
+  for(const deg of [-30,-20,-10,10,20,30]){const py=-deg*Math.PI/180*radius*.8,len=Math.abs(deg)%20===0?radius*.35:radius*.2;g.lineWidth=1;g.beginPath();g.moveTo(-len,py);g.lineTo(len,py);g.stroke();}
+  g.restore();g.strokeStyle='#a7bfd3';g.lineWidth=2;g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.stroke();
+  // Fixed bank scale, moving pointer. Positive displayed bank moves to the right.
+  g.font='10px sans-serif';g.fillStyle='#e1ecf7';g.textAlign='center';g.textBaseline='middle';
+  for(const deg of [-90,-60,-30,-20,-10,0,10,20,30,60,90]){
+   const a=deg*Math.PI/180,major=deg===0||Math.abs(deg)&gt;=30,inner=radius+3,outer=radius+(major?12:8);
+   g.beginPath();g.moveTo(x+Math.sin(a)*inner,y-Math.cos(a)*inner);g.lineTo(x+Math.sin(a)*outer,y-Math.cos(a)*outer);g.stroke();
+   if(deg!==0){const textR=radius+21;g.fillText(Math.abs(deg)+'',x+Math.sin(a)*textR,y-Math.cos(a)*textR);}
+  }
+  const pointerRadius=radius-5,px=x+Math.sin(bank)*pointerRadius,py=y-Math.cos(bank)*pointerRadius;
+  g.save();g.translate(px,py);g.rotate(bank);g.fillStyle='#ffe07c';g.beginPath();g.moveTo(0,-5);g.lineTo(-5,6);g.lineTo(5,6);g.closePath();g.fill();g.restore();
+  g.strokeStyle='#ffe07c';g.lineWidth=3;g.beginPath();g.moveTo(x-radius*.55,y);g.lineTo(x-12,y);g.lineTo(x,y+6);g.lineTo(x+12,y);g.lineTo(x+radius*.55,y);g.stroke();
+  g.font='11px sans-serif';g.fillStyle='#e9f2fa';g.fillText('롤 '+(bank*180/Math.PI).toFixed(1)+'°',x,hh-12);g.textBaseline='alphabetic';
+ }
+
  function attitude(){
   if(!pidTrajectory.length)return;const q=pose(t),R=q.r,P=q.p,Y=q.y;
   const {ctx:c,w,h}=setup($('attQuad'));
   c.fillStyle='#17232f';c.fillRect(0,0,w,h);
   // Use the same nose (+X), lateral (+Y), and attitude as the chase camera.
   // Project into a clear 3/4 overhead view: nose (+X) points toward screen top.
-  const chaseYaw=(s.test==='split-left'||s.test==='split-right')?Math.PI*Math.max(0,Math.min(1,(t-2)/2)):s.test==='pulse'?Math.max(0,Math.min(1,(t-1)/2))*Math.PI/2:0;
+  const chaseYaw=s.test==='yaw'?q.y:s.test.startsWith('split-')?Math.PI*Math.max(0,Math.min(1,t-(sampleAt(t).rotationStart??Infinity)-.5)):0;
   const scale=Math.min(w/3.7,h/2.8),cx=w/2,cy=h/2+8;
   const proj=p=&gt;{
    const v=rotate3(p,R,P,Y);
@@ -2331,15 +2371,12 @@ const FlightEngine = (() =&gt; {
    circle(p,.065,'#cbd5e1','#3e5263');
   }
   c.fillStyle='#e2e8f0';c.font='11px sans-serif';c.fillText('NOSE +X RED / TAIL -X BLUE · CHASE ALIGNED',9,16);
-  const {ctx:g,w:hw,h:hh}=setup($('attHorizon'));g.fillStyle='#17232f';g.fillRect(0,0,hw,hh);const radius=Math.min(hw,hh)*.41,x=hw/2,y=hh/2;
-  g.save();g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.clip();g.translate(x,y);g.rotate(-R);g.translate(0,Math.asin(Math.sin(P))*radius*.9);
-  g.fillStyle='#3978a8';g.fillRect(-hw,-hh,hw*2,hh);g.fillStyle='#94714e';g.fillRect(-hw,0,hw*2,hh*2);g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.moveTo(-hw,0);g.lineTo(hw,0);g.stroke();g.restore();
-  g.strokeStyle='#d5dee8';g.lineWidth=3;g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.stroke();g.strokeStyle='#facc15';g.lineWidth=3;g.beginPath();g.moveTo(x-radius*.5,y);g.lineTo(x-10,y);g.lineTo(x,y+7);g.lineTo(x+10,y);g.lineTo(x+radius*.5,y);g.stroke();
+  drawHorizon(R,P);
   $('attNumbers').innerHTML=`&lt;span&gt;Roll ${(R*180/Math.PI).toFixed(2)}°&lt;/span&gt;&lt;span&gt;Pitch ${(P*180/Math.PI).toFixed(2)}°&lt;/span&gt;&lt;span&gt;Yaw ${(Y*180/Math.PI).toFixed(2)}°&lt;/span&gt;&lt;span&gt;자이로 Roll ${(sampleAt(t).rates[0]*180/Math.PI).toFixed(1)}°/s&lt;/span&gt;&lt;span&gt;스로틀 ${(flightThrottle(t)*100).toFixed(1)}%&lt;/span&gt;`;
  }
  function draw(){if(!pidTrajectory.length)return;drone('A',0);drone('B',1);attitude();blackbox();updateAudio();$('scrub').value=t;$('clock').textContent=t.toFixed(2)+' / 30.00초';$('play').textContent=playing?'일시 정지':'재생';
  const q=sampleAt(t),k=axes.indexOf(s.axis),deg=180/Math.PI;
- $('command').textContent=q.crash?'지면 충돌 · 모터 정지':'계산된 비행 · '+(-q.pos[2]).toFixed(1)+'m · 출력 포화 '+(q.saturated.some(Boolean)?'발생':'없음');
+ $('command').textContent=q.phase+' · 전진 위치 '+q.pos[0].toFixed(1)+'m · 고도 '+(-q.pos[2]).toFixed(1)+'m · 스로틀 입력 '+(q.stickThrottle*100).toFixed(0)+'% / 보조 포함 '+(q.throttle*100).toFixed(0)+'%';
  $('liveTelemetry').textContent=axisNames[s.axis]+' 목표 '+(q.reference[k]*deg).toFixed(2)+'° / 기체 '+(q.angles[k]*deg).toFixed(2)+'° / 오차 '+((q.angles[k]-q.reference[k])*deg).toFixed(2)+'° · 모터 '+q.motors.map(v=&gt;(v*100).toFixed(0)+'%').join(' / ');
  const terms=q.terms[k];$('termTelemetry').textContent='제어량 · P '+terms.P.toFixed(3)+' / I '+terms.I.toFixed(3)+' / D '+terms.D.toFixed(3)+' / FF '+terms.FF.toFixed(3)+' · 소비량 모델 '+q.used.toFixed(1)+'mAh';
 }
@@ -2374,6 +2411,7 @@ const FlightEngine = (() =&gt; {
  const graphSelect=$('graph');if(graphSelect)graphSelect.onchange=()=&gt;{s.graph=graphSelect.value;draw();save();};
  for(const group of Object.keys(presets))$(group).onchange=()=&gt;{s[group]=$(group).value;if(s[group]!=='custom')Object.assign(s.hw,presets[group][s[group]]);$('hardwareError').textContent='';controls();update();save();};
  for(const [id,label,lo,hi,step,group] of fields)$('hw-'+id).addEventListener('change',()=&gt;{const value=$('hw-'+id).valueAsNumber;if(!Number.isFinite(value)||value&lt;lo||value&gt;hi||(['cells','blades'].includes(id)&amp;&amp;!Number.isInteger(value))){$('hardwareError').textContent=`${label}: ${lo}~${hi} 범위를 입력하세요. 이전 유효값을 사용 중입니다.`;return;}s.hw[id]=value;if(group!=='assumed'){s[group]='custom';$(group).value='custom';}$('hardwareError').textContent='';specs();update();save();});
+ for(const key of ['punchDuration','punchStrength'])$(key).addEventListener('change',()=&gt;{const el=$(key),v=el.valueAsNumber;if(!el.checkValidity()||!Number.isFinite(v)){el.value=s[key];return;}s[key]=v;update();save();});
  $('speed').onchange=()=&gt;{s.speed=Number($('speed').value);save();};
 
  $('scrub').oninput=()=&gt;{t=Number($('scrub').value);playing=false;draw();};
