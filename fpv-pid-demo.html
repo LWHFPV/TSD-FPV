@@ -1,13 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://unpkg.com; img-src data: blob:; style-src 'unsafe-inline'; frame-src 'self' about:; base-uri 'none'; form-action 'none'"><title>TSD FPV · 미리보기 및 점검</title><style>
+*{box-sizing:border-box}body{margin:0;background:#08121e;color:#e8f2ff;font:14px/1.6 'Segoe UI','Malgun Gothic',sans-serif}header{padding:16px 24px;border-bottom:1px solid #24364b;display:flex;align-items:center;justify-content:space-between;gap:20px}strong{letter-spacing:2px}a{color:#7bd6ee}details{padding:12px 24px;background:#101f30;border-bottom:1px solid #24364b}summary{cursor:pointer;color:#a9c5dd}ul{padding-left:20px;max-width:1100px}iframe{display:block;width:100%;height:calc(100vh - 115px);min-height:760px;border:0}small{color:#a3b8d0}@media(max-width:600px){header{padding:12px;display:block}details{padding:12px}iframe{min-height:900px}}
+</style></head><body>
+<header><div><strong>TSD / FPV FLIGHT LAB</strong><br><small>미리보기 · 교육용 모델 / Configurator 2026.6.2 입력 규격</small></div><a href="https://github.com/LWHFPV/TSD-FPV" target="_blank" rel="noopener noreferrer">GitHub 저장소 ↗</a></header>
+<details><summary>점검 방법 · 입력 범위와 모델 설명</summary><ul>
+<li>기준값으로 기동을 재생한 뒤 P·I·D·FF를 하나씩 바꿔 같은 기동을 비교하세요. 설정을 바꾸면 동일한 시작 상태에서 30초 전체를 다시 계산합니다.</li>
+<li>RP/RPY 모드에서 슬라이더를 조절하면 PID 표와 모든 화면에 같은 값이 적용됩니다. OFF 모드에서는 숫자를 직접 입력합니다.</li>
+<li>기동 종료 뒤에도 계산이 계속됩니다. 요 턴 목표는 180°, 백플립·롤 턴은 360°지만 기체는 PID 추종 결과에 따라 오차가 남거나 회복에 실패할 수 있습니다.</li>
+<li>0.1배 재생과 주파수 스펙트럼으로 빠른 떨림을 확인하세요. 120Hz 떨림을 일반 모니터에서 실시간으로 정확히 볼 수는 없습니다.</li>
+<li>공식 <a href="https://github.com/betaflight/betaflight-configurator/blob/2026.6.2/src/components/tabs/pid-tuning/PidSubTab.vue" target="_blank" rel="noopener noreferrer">Configurator 입력 범위</a>: P/I/D/D 최대 0–250, FF 0–2000. <a href="https://github.com/betaflight/betaflight/blob/2026.6.2/src/main/flight/pid.h" target="_blank" rel="noopener noreferrer">펌웨어 FF</a> 및 <a href="https://github.com/betaflight/betaflight/blob/2026.6.2/src/main/config/simplified_tuning.c" target="_blank" rel="noopener noreferrer">슬라이더 FF 계산</a> 한도는 1000입니다. 화면의 수동 FF 1001–2000은 교육 모델 입력이며 펌웨어 적용값을 보증하지 않습니다.</li>
+<li>실제 펌웨어·공력·필터의 정밀 복제가 아닙니다. 가상 조종사의 자세 목표와 고도 회복 보조가 있으며, 기체 위치는 추력과 중력으로 계산합니다.</li>
+</ul></details>
+<iframe srcdoc="&lt;!DOCTYPE html&gt;
 
-<html data-visualize-standalone="" lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<meta content="no-referrer" name="referrer"/>
-<meta content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://persistent.oaistatic.com/plugins/visualize/; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://persistent.oaistatic.com/plugins/visualize/charts/; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" http-equiv="Content-Security-Policy"/>
-<title>FPV PID 비행 실험실</title>
-<style>:root {
+&lt;html data-visualize-standalone=&quot;&quot; lang=&quot;ko&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;/&gt;
+&lt;meta content=&quot;width=device-width, initial-scale=1&quot; name=&quot;viewport&quot;/&gt;
+&lt;meta content=&quot;no-referrer&quot; name=&quot;referrer&quot;/&gt;
+&lt;meta content=&quot;default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://persistent.oaistatic.com/plugins/visualize/; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com https://persistent.oaistatic.com/plugins/visualize/charts/; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'&quot; http-equiv=&quot;Content-Security-Policy&quot;/&gt;
+&lt;title&gt;TSD · FPV PID Flight Lab&lt;/title&gt;
+&lt;style&gt;:root {
   color-scheme: light dark;
   background-color: var(
     --background,
@@ -100,11 +113,11 @@
 
   /* Internal implementation variables; not part of the agent contract. */
   --font-sans:
-    -apple-system-body, ui-sans-serif, -apple-system, system-ui, "Segoe UI",
-    Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji",
-    "Segoe UI Symbol";
+    -apple-system-body, ui-sans-serif, -apple-system, system-ui, &quot;Segoe UI&quot;,
+    Helvetica, &quot;Apple Color Emoji&quot;, Arial, sans-serif, &quot;Segoe UI Emoji&quot;,
+    &quot;Segoe UI Symbol&quot;;
   --font-mono:
-    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
     monospace;
   --font-size-normal: max(11px, var(--font-size-base));
   --font-size-tooltip: calc(var(--font-size-base) - 1px);
@@ -126,7 +139,7 @@
   --radius-2xl: calc(var(--radius) * 2);
   --radius-full: 9999px;
   --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
-  --checkmark-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17'%3E%3Cpath d='M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z'/%3E%3C/svg%3E");
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17'%3E%3Cpath d='M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z'/%3E%3C/svg%3E&quot;);
 
   /* Legacy aliases; not part of the current agent contract. */
   --viz-bg: transparent;
@@ -141,11 +154,11 @@
   --viz-warning: var(--destructive);
 }
 
-:root[data-theme="light"] {
+:root[data-theme=&quot;light&quot;] {
   color-scheme: light;
 }
 
-:root[data-theme="dark"] {
+:root[data-theme=&quot;dark&quot;] {
   color-scheme: dark;
 }
 
@@ -153,7 +166,7 @@
   box-sizing: border-box;
 }
 
-html > body {
+html &gt; body {
   /* Preserve MCP aliases for older inline renderers without creating :root cycles. */
   --color-background-primary: var(
     --background,
@@ -304,7 +317,7 @@ pre code {
   padding-inline-end: calc(var(--font-size-base) * 1.5);
 }
 
-.table-responsive > .table :is(th, td) {
+.table-responsive &gt; .table :is(th, td) {
   overflow-wrap: break-word;
 }
 
@@ -337,12 +350,12 @@ pre code {
   padding-inline-end: 16px;
 }
 
-.table :is(.text-end, [align="right"]) {
+.table :is(.text-end, [align=&quot;right&quot;]) {
   text-align: end;
   font-variant-numeric: tabular-nums;
 }
 
-.table :is(.text-center, [align="center"]) {
+.table :is(.text-center, [align=&quot;center&quot;]) {
   text-align: center;
 }
 
@@ -381,7 +394,7 @@ pre code {
   background: var(--background);
 }
 
-#widget > :not(.card, .widget, .progress) {
+#widget &gt; :not(.card, .widget, .progress) {
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
@@ -539,7 +552,7 @@ small,
   gap: 8px;
 }
 
-.viz-controls > .form-label {
+.viz-controls &gt; .form-label {
   display: grid;
   min-width: min(100%, 260px);
   flex: 1 1 280px;
@@ -549,7 +562,7 @@ small,
   margin-bottom: 0;
 }
 
-.viz-controls > .form-label > :is(.form-control, .form-range, .form-select) {
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
   grid-column: 1 / -1;
 }
 
@@ -613,7 +626,7 @@ small,
   background: var(--secondary);
 }
 
-/* Codex Button size="compact"; appearance stays with the button variant. */
+/* Codex Button size=&quot;compact&quot;; appearance stays with the button variant. */
 .btn-sm {
   --btn-size: 24px;
   padding-inline: 8px;
@@ -644,7 +657,7 @@ a.btn {
   );
 }
 
-.nav-link:not(:disabled):not([aria-disabled="true"]):hover {
+.nav-link:not(:disabled):not([aria-disabled=&quot;true&quot;]):hover {
   background: color-mix(in srgb, var(--foreground) 10%, transparent);
 }
 
@@ -712,16 +725,16 @@ a.btn {
   min-width: 0;
 }
 
-.viz-carousel:has(> .viz-carousel-controls) {
+.viz-carousel:has(&gt; .viz-carousel-controls) {
   min-height: calc(60px + var(--viz-carousel-picker-height, 0px));
   padding-bottom: 60px;
 }
 
-.viz-carousel > [data-variant][hidden] {
+.viz-carousel &gt; [data-variant][hidden] {
   display: none !important;
 }
 
-.viz-carousel > [data-variant] {
+.viz-carousel &gt; [data-variant] {
   isolation: isolate;
 }
 
@@ -756,7 +769,7 @@ a.btn {
 
 /* Keep authored mockup button styles out of the shared carousel chrome. */
 .viz-carousel-controls button,
-.viz-carousel-picker > summary {
+.viz-carousel-picker &gt; summary {
   display: flex !important;
   height: auto !important;
   min-height: 30px;
@@ -773,19 +786,19 @@ a.btn {
   -webkit-tap-highlight-color: transparent;
 }
 
-.viz-carousel-controls > button,
-.viz-carousel-picker > summary {
+.viz-carousel-controls &gt; button,
+.viz-carousel-picker &gt; summary {
   position: relative;
   isolation: isolate;
 }
 
-.viz-carousel-controls > button {
+.viz-carousel-controls &gt; button {
   --icon-size: 16px;
   width: 30px !important;
   padding: 0 !important;
 }
 
-.viz-carousel-picker > summary {
+.viz-carousel-picker &gt; summary {
   padding-inline: 12px !important;
 }
 
@@ -798,28 +811,28 @@ a.btn {
   transform: rotate(180deg);
 }
 
-.viz-carousel-controls > button > svg,
+.viz-carousel-controls &gt; button &gt; svg,
 .viz-carousel-controls .viz-carousel-caret,
 .viz-carousel-count {
   opacity: 0.5;
 }
 
-.viz-carousel-controls > button::before,
-.viz-carousel-picker > summary::before {
+.viz-carousel-controls &gt; button::before,
+.viz-carousel-picker &gt; summary::before {
   position: absolute;
   z-index: -1;
   inset: 3px;
   border-radius: 12px;
-  content: "";
+  content: &quot;&quot;;
   pointer-events: none;
 }
 
-.viz-carousel-controls > button:hover::before,
-.viz-carousel-picker > summary:hover::before {
+.viz-carousel-controls &gt; button:hover::before,
+.viz-carousel-picker &gt; summary:hover::before {
   background: var(--viz-carousel-hover);
 }
 
-.viz-carousel-controls > button,
+.viz-carousel-controls &gt; button,
 .viz-carousel-controls [data-lucide],
 .viz-carousel-controls .lucide {
   flex-shrink: 0;
@@ -829,12 +842,12 @@ a.btn {
   min-width: 0;
 }
 
-.viz-carousel-picker > summary {
+.viz-carousel-picker &gt; summary {
   min-width: 0;
   list-style: none;
 }
 
-.viz-carousel-picker > summary::-webkit-details-marker {
+.viz-carousel-picker &gt; summary::-webkit-details-marker {
   display: none;
 }
 
@@ -867,7 +880,7 @@ a.btn {
   box-shadow: 0 4px 12px light-dark(rgb(0 0 0 / 6%), rgb(0 0 0 / 25%));
 }
 
-.viz-carousel-options > button {
+.viz-carousel-options &gt; button {
   border-radius: max(0px, calc(var(--radius-lg) - 5px)) !important;
   width: 100% !important;
   min-height: 28px;
@@ -879,14 +892,14 @@ a.btn {
   overflow-wrap: anywhere;
 }
 
-.viz-carousel-options > [aria-current="true"],
-.viz-carousel-options > button:hover {
+.viz-carousel-options &gt; [aria-current=&quot;true&quot;],
+.viz-carousel-options &gt; button:hover {
   background: var(--viz-carousel-hover) !important;
 }
 
 .btn:disabled,
 .nav-link:disabled,
-.nav-link[aria-disabled="true"] {
+.nav-link[aria-disabled=&quot;true&quot;] {
   cursor: not-allowed;
   opacity: 0.4;
 }
@@ -922,22 +935,22 @@ a.btn {
   line-height: 1.4285714286;
 }
 .form-control:is(
-  [type="file"],
-  [type="date"],
-  [type="datetime-local"],
-  [type="month"],
-  [type="week"],
-  [type="color"]
+  [type=&quot;file&quot;],
+  [type=&quot;date&quot;],
+  [type=&quot;datetime-local&quot;],
+  [type=&quot;month&quot;],
+  [type=&quot;week&quot;],
+  [type=&quot;color&quot;]
 ) {
   height: calc(12px + 2 * var(--control-spacing, 12px));
   min-height: calc(12px + 2 * var(--control-spacing, 12px));
   line-height: 18px;
 }
 .form-control:is(
-  [type="date"],
-  [type="datetime-local"],
-  [type="month"],
-  [type="week"]
+  [type=&quot;date&quot;],
+  [type=&quot;datetime-local&quot;],
+  [type=&quot;month&quot;],
+  [type=&quot;week&quot;]
 ) {
   padding-inline: var(--control-spacing, 12px);
 }
@@ -946,13 +959,13 @@ a.btn {
   color: var(--muted-foreground);
 }
 
-.form-control[type="file"] {
+.form-control[type=&quot;file&quot;] {
   overflow: hidden;
   cursor: var(--cursor-interaction, pointer);
   padding: 0;
 }
 
-.form-control[type="file"]::file-selector-button {
+.form-control[type=&quot;file&quot;]::file-selector-button {
   padding: 0 8px;
   border: 0;
   border-right: 1px solid var(--input);
@@ -965,22 +978,22 @@ a.btn {
   margin-inline-end: var(--control-spacing, 12px);
 }
 
-.form-control[type="file"]:not(:disabled):hover::file-selector-button {
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
   background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
 }
 
-.form-control-color[type="color"] {
+.form-control-color[type=&quot;color&quot;] {
   width: 40px;
   height: calc(12px + 2 * var(--control-spacing, 12px));
   padding: 3px;
   cursor: var(--cursor-interaction, pointer);
 }
 
-.form-control-color[type="color"]::-webkit-color-swatch-wrapper {
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
   padding: 0;
 }
 
-.form-control-color[type="color"]::-webkit-color-swatch {
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
   border: 0;
   border-radius: calc(var(--radius-lg) - 4px);
   corner-shape: var(--corner-shape);
@@ -1002,7 +1015,7 @@ textarea.form-control {
   background: color-mix(in srgb, var(--foreground) 5%, transparent);
   opacity: 1;
 }
-.form-control[aria-invalid="true"] {
+.form-control[aria-invalid=&quot;true&quot;] {
   border-color: var(--red);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--red) 20%, transparent);
 }
@@ -1100,7 +1113,7 @@ textarea.form-control {
     box-shadow 150ms;
 }
 
-.form-check:not(.form-switch) .form-check-input[type="checkbox"] {
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
   corner-shape: round;
   box-shadow: var(--shadow-sm);
   position: relative;
@@ -1118,23 +1131,23 @@ textarea.form-control {
 }
 
 .form-check:not(.form-switch)
-  .form-check-input[type="checkbox"]:is(:checked, :indeterminate) {
+  .form-check-input[type=&quot;checkbox&quot;]:is(:checked, :indeterminate) {
   border-color: var(--border-strong, var(--input));
   background-color: color-mix(in srgb, var(--popover) 96%, transparent);
 }
 
 .form-check:not(.form-switch)
-  .form-check-input[type="checkbox"]:checked::before {
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
   display: block;
   width: 100%;
   height: 100%;
   background: var(--primary-foreground);
-  content: "";
+  content: &quot;&quot;;
   mask: var(--checkmark-image) center / 12px 12px no-repeat;
   background-color: var(--foreground);
 }
 .form-check:not(.form-switch)
-  .form-check-input[type="checkbox"]:indeterminate::before {
+  .form-check-input[type=&quot;checkbox&quot;]:indeterminate::before {
   position: absolute;
   inset: 0;
   display: block;
@@ -1144,10 +1157,10 @@ textarea.form-control {
   border-radius: var(--radius-full);
   background: var(--foreground);
   mask: none;
-  content: "";
+  content: &quot;&quot;;
 }
 
-.form-check-input[type="radio"] {
+.form-check-input[type=&quot;radio&quot;] {
   border-radius: var(--radius-full);
   width: 16px;
   height: 16px;
@@ -1155,7 +1168,7 @@ textarea.form-control {
   box-shadow: inset 0 0 0 1px var(--input);
 }
 
-.form-check-input[type="radio"]:checked {
+.form-check-input[type=&quot;radio&quot;]:checked {
   border: 0;
   background: radial-gradient(
     circle,
@@ -1169,7 +1182,7 @@ textarea.form-control {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
-.form-check:not(.form-switch) .form-check-input[type="checkbox"]:focus-visible {
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:focus-visible {
   border-color: var(--ring);
   outline: none;
   box-shadow: 0 0 0 2px var(--ring);
@@ -1183,9 +1196,9 @@ textarea.form-control {
 .form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
   cursor: not-allowed;
 }
-.form-check:not(.form-switch) .form-check-input[type="radio"]:disabled,
+.form-check:not(.form-switch) .form-check-input[type=&quot;radio&quot;]:disabled,
 .form-check:not(.form-switch)
-  .form-check-input[type="radio"]:disabled
+  .form-check-input[type=&quot;radio&quot;]:disabled
   + .form-check-label {
   opacity: 0.5;
 }
@@ -1222,7 +1235,7 @@ textarea.form-control {
   border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-sm);
-  content: "";
+  content: &quot;&quot;;
   transform: translate(2px, -50%);
   transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
   border-color: #fff;
@@ -1310,8 +1323,8 @@ textarea.form-control {
 }
 
 .btn:not(.btn-primary, .viz-tile):is(
-  [aria-pressed="true"],
-  [aria-selected="true"],
+  [aria-pressed=&quot;true&quot;],
+  [aria-selected=&quot;true&quot;],
   .is-selected
 ) {
   border-color: transparent;
@@ -1319,7 +1332,7 @@ textarea.form-control {
   background: var(--blue);
 }
 
-.btn.viz-tile:is([aria-pressed="true"], [aria-selected="true"], .is-selected) {
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
   border-color: var(--primary);
   box-shadow: inset 0 0 0 1px var(--primary);
 }
@@ -1374,7 +1387,7 @@ textarea.form-control {
     );
   }
 
-  .form-check:not(.form-switch) .form-check-input[type="checkbox"] {
+  .form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
     border-radius: if(
       style(--corner-shape: round): calc(var(--radius-sm) / 2);
         else: calc(var(--radius-lg) * 0.4)
@@ -1389,7 +1402,7 @@ textarea.form-control {
 }
 
 @media (pointer: coarse) {
-  .viz-carousel:has(> .viz-carousel-controls) {
+  .viz-carousel:has(&gt; .viz-carousel-controls) {
     min-height: calc(76px + var(--viz-carousel-picker-height, 0px));
     padding-bottom: 76px;
   }
@@ -1397,7 +1410,7 @@ textarea.form-control {
   .btn,
   .nav-link,
   .viz-carousel-controls button,
-  .viz-carousel-picker > summary,
+  .viz-carousel-picker &gt; summary,
   .form-control,
   .form-select {
     --btn-size: 44px;
@@ -1415,13 +1428,13 @@ textarea.form-control {
     );
   }
   .form-control:is(
-    [type="file"],
-    [type="date"],
-    [type="datetime-local"],
-    [type="month"],
-    [type="week"],
-    [type="time"],
-    [type="color"]
+    [type=&quot;file&quot;],
+    [type=&quot;date&quot;],
+    [type=&quot;datetime-local&quot;],
+    [type=&quot;month&quot;],
+    [type=&quot;week&quot;],
+    [type=&quot;time&quot;],
+    [type=&quot;color&quot;]
   ) {
     height: 44px;
     min-height: 44px;
@@ -1432,22 +1445,22 @@ textarea.form-control {
     );
   }
 
-  .form-control[type="file"]::file-selector-button {
+  .form-control[type=&quot;file&quot;]::file-selector-button {
     min-width: 44px;
     min-height: 44px;
   }
 
-  .form-control-color[type="color"] {
+  .form-control-color[type=&quot;color&quot;] {
     width: 44px;
     height: 44px;
   }
 
   .form-control:is(
-    [type="date"],
-    [type="datetime-local"],
-    [type="month"],
-    [type="time"],
-    [type="week"]
+    [type=&quot;date&quot;],
+    [type=&quot;datetime-local&quot;],
+    [type=&quot;month&quot;],
+    [type=&quot;time&quot;],
+    [type=&quot;week&quot;]
   ) {
     min-width: 0;
     max-width: 100%;
@@ -1469,7 +1482,7 @@ textarea.form-control {
     left: 50%;
     width: 44px;
     height: 44px;
-    content: "";
+    content: &quot;&quot;;
     transform: translate(-50%, -50%);
   }
 
@@ -1492,7 +1505,7 @@ svg {
   height: auto;
 }
 
-#widget > svg {
+#widget &gt; svg {
   width: 100%;
 }
 
@@ -1511,8 +1524,8 @@ svg.lucide {
   color: var(--destructive);
 }
 
-html>body{padding:0}</style>
-<style>
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;style&gt;
 /* Compact single-screen desktop presentation; overrides previous legacy rules. */
 @media(min-width:1051px){
 #fpv-lab{max-width:1600px;gap:4px}
@@ -1526,15 +1539,61 @@ html>body{padding:0}</style>
 #fpv-lab .tsd-att-numbers span{padding:3px 5px}
 #fpv-lab .views{gap:5px}
 #fpv-lab .views section{padding:4px}
-#tsd-right .viz-row:has([id^="test-"]){margin-top:4px}
-#fpv-lab>h2{font-size:18px}
+#tsd-right .viz-row:has([id^=&quot;test-&quot;]){margin-top:4px}
+#fpv-lab&gt;h2{font-size:18px}
 }
-</style></head>
-<body>
-<script id="codex-visualization-widget-state" type="application/json">__CODEX_VISUALIZATION_WIDGET_STATE__</script>
-<script>(() => {
+&lt;/style&gt;&lt;style&gt;:root{color-scheme:dark;--background:#0b1420!important;--foreground:#e5effa!important;--muted:#17283b!important;--muted-foreground:#9db0c8!important;--border:#293d55!important;--primary:#6cd5f0!important;--blue:#61bdf9!important;--green:#74c9a5!important;--viz-series-1:#69c9ff!important;--viz-series-2:#ffb45a!important}
+html,body{margin:0!important;background:#0b1420!important;color:#e5effa!important;font-family:Inter,'Segoe UI','Malgun Gothic',sans-serif!important}
+#fpv-lab{padding:26px!important;max-width:1920px!important;margin:auto!important;display:block!important}
+#fpv-lab h2{font-size:26px!important;line-height:1.5!important;letter-spacing:-.6px;margin:0 0 6px!important}
+#fpv-lab .brand{font-size:11px;letter-spacing:3px;color:#72d6ec;font-weight:700}
+#fpv-lab h3{font-size:14px!important;font-weight:650!important;margin:0 0 12px!important}
+#fpv-lab .text-small{font-size:12px!important;line-height:1.7!important}
+#fpv-lab .text-muted{color:#9db0c8!important}
+#tsd-columns{grid-template-columns:minmax(420px,.85fr) minmax(0,1.35fr)!important;gap:24px!important;margin-top:24px}
+#tsd-left,#tsd-right{gap:15px!important}
+#fpv-lab #bfPanel,#fpv-lab .tsd-bb,#fpv-lab details,#fpv-lab .tsd-attitude,#fpv-lab .views section{border:1px solid #293d55!important;border-radius:14px!important;background:#101e2e!important;padding:18px!important;box-shadow:0 8px 24px #0002}
+#fpv-lab .tsd-bb{margin:16px 0!important;padding:14px!important}
+#fpv-lab .views{display:grid!important;grid-template-columns:1fr 1fr!important;gap:14px!important}
+#fpv-lab canvas{display:block;width:100%!important;border-radius:9px}
+#fpv-lab #droneA,#fpv-lab #droneB{height:280px!important;background:#21435c}
+#fpv-lab #bbTrace{height:200px!important}
+#fpv-lab .tsd-att-grid{display:grid;grid-template-columns:1.4fr 1fr!important;gap:12px}
+#fpv-lab #attQuad,#fpv-lab #attHorizon{height:205px!important}
+#fpv-lab .tsd-att-numbers{display:flex;gap:12px;flex-wrap:wrap;padding-top:10px;color:#9dc4df}
+#fpv-lab .viz-controls,#fpv-lab .viz-row{gap:10px!important;flex-wrap:wrap!important}
+#fpv-lab .form-label{font-size:12px!important;color:#bacce0!important;line-height:1.8}
+#fpv-lab .form-control,#fpv-lab .form-select{background:#0a1523!important;color:#e7f3ff!important;border:1px solid #304761!important;border-radius:7px!important;min-height:34px!important;padding:5px 7px!important;font-size:13px!important;box-shadow:none!important}
+#fpv-lab input:focus,#fpv-lab select:focus,#fpv-lab button:focus-visible{outline:2px solid #7edbf1!important;outline-offset:2px}
+#fpv-lab input:disabled{color:#7d92aa!important;background:#16283b!important;opacity:1!important}
+#fpv-lab input[type=range]{accent-color:#65cbe9;width:100%;height:22px}
+#fpv-lab .btn{background:#192c40!important;border:1px solid #344d68!important;color:#d8e8f7!important;border-radius:8px!important;padding:9px 12px!important;font-size:12px!important;min-height:36px;cursor:pointer;transition:background .15s}
+#fpv-lab .btn:hover{background:#25445e!important}
+#fpv-lab .btn[aria-pressed=true],#fpv-lab .btn-primary{background:#72d6ec!important;border-color:#72d6ec!important;color:#081a28!important;font-weight:700}
+#fpv-lab table{width:100%;border-collapse:collapse;font-size:12px}
+#fpv-lab td,#fpv-lab th{padding:8px 4px!important;border-color:#24384d!important;text-align:left}
+#fpv-lab #settings table{min-width:0!important;table-layout:fixed;width:100%!important}
+#fpv-lab #settings th,#fpv-lab #settings td{padding:7px 3px!important;overflow-wrap:anywhere}
+#fpv-lab #settings input{min-width:0!important;width:100%!important;max-width:none!important}
+#fpv-lab .bf-sliders{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
+#fpv-lab [hidden]{display:none!important}
+#fpv-lab #liveTelemetry,#fpv-lab #termTelemetry{background:#12263a;border-left:3px solid #69c9ff;padding:10px 12px!important;border-radius:5px;font-variant-numeric:tabular-nums}
+#fpv-lab #heat{color:#ffca7e}
+#fpv-lab .pid-invalid{border-color:#ff758c!important}
+#fpv-lab .pid-risk{border-color:#d9a44f!important}
+#fpv-lab #hardware{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#fpv-lab #hardware input{width:100%}
+#fpv-lab a{color:#7bd6ee}
+#fpv-lab summary{cursor:pointer;font-weight:600;font-size:13px}
+@media(min-width:1250px){#tsd-right{position:sticky;top:12px}}
+@media(max-width:1100px){#tsd-columns{grid-template-columns:1fr!important}#tsd-right{grid-row:1}#fpv-lab{padding:16px!important}}
+@media(max-width:620px){#fpv-lab .views{grid-template-columns:1fr!important}#fpv-lab .tsd-att-grid{grid-template-columns:1fr 1fr!important}#fpv-lab #attQuad,#fpv-lab #attHorizon{height:160px!important}#fpv-lab #hardware{grid-template-columns:1fr 1fr}#fpv-lab #settings input{font-size:11px!important;padding:3px!important}#fpv-lab #bfPanel{padding:10px!important}}
+&lt;/style&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;script id=&quot;codex-visualization-widget-state&quot; type=&quot;application/json&quot;&gt;__CODEX_VISUALIZATION_WIDGET_STATE__&lt;/script&gt;
+&lt;script&gt;(() =&gt; {
   const root = document.documentElement;
-  const mediaQuery = globalThis.matchMedia("(prefers-color-scheme: dark)");
+  const mediaQuery = globalThis.matchMedia(&quot;(prefers-color-scheme: dark)&quot;);
   const apply = Reflect.apply;
   const isArray = Array.isArray;
   const hasOwn = Object.hasOwn;
@@ -1543,29 +1602,29 @@ html>body{padding:0}</style>
   const parse = JSON.parse;
   const encode = TextEncoder.prototype.encode.bind(new TextEncoder());
   const initialStateElement = document.getElementById(
-    "codex-visualization-widget-state",
+    &quot;codex-visualization-widget-state&quot;,
   );
-  let initialGlobals={};try{initialGlobals=parse(initialStateElement?.textContent ?? "{}")}catch(_){initialGlobals={}};
+  let initialGlobals={};try{initialGlobals=parse(initialStateElement?.textContent ?? &quot;{}&quot;)}catch(_){initialGlobals={}};
   initialStateElement?.remove();
-  /** @type {Record<string, unknown> | null} */
+  /** @type {Record&lt;string, unknown&gt; | null} */
   let state = initialGlobals.widgetState ?? null;
-  const statePersistence = initialGlobals.statePersistence ?? "none";
+  const statePersistence = initialGlobals.statePersistence ?? &quot;none&quot;;
   let nextStateRequestId = 0;
-  /** @type {Map<number, { resolve: () => void; reject: (error: Error) => void; timeout: ReturnType<typeof globalThis.setTimeout>; serializedState: string }>} */
+  /** @type {Map&lt;number, { resolve: () =&gt; void; reject: (error: Error) =&gt; void; timeout: ReturnType&lt;typeof globalThis.setTimeout&gt;; serializedState: string }&gt;} */
   const pendingStateWrites = new Map();
-  const persistenceError = () =>
+  const persistenceError = () =&gt;
     Object.assign(
-      new Error("The host could not persist the widget state update"),
+      new Error(&quot;The host could not persist the widget state update&quot;),
       {
         code: -32000,
-        data: { code: "widget_state_persistence_failed", retryable: false },
+        data: { code: &quot;widget_state_persistence_failed&quot;, retryable: false },
       },
     );
   /**
    * @param {object} prototype
    * @param {string} property
    */
-  const getPrototypeGetter = (prototype, property) => {
+  const getPrototypeGetter = (prototype, property) =&gt; {
     // oxlint-disable-next-line typescript/unbound-method -- invoked through captured Reflect.apply
     const getter = Object.getOwnPropertyDescriptor(prototype, property)?.get;
     if (getter == null) {
@@ -1573,9 +1632,9 @@ html>body{padding:0}</style>
     }
     return getter;
   };
-  const getMessageData = getPrototypeGetter(MessageEvent.prototype, "data");
-  const getMessagePorts = getPrototypeGetter(MessageEvent.prototype, "ports");
-  const getMessageSource = getPrototypeGetter(MessageEvent.prototype, "source");
+  const getMessageData = getPrototypeGetter(MessageEvent.prototype, &quot;data&quot;);
+  const getMessagePorts = getPrototypeGetter(MessageEvent.prototype, &quot;ports&quot;);
+  const getMessageSource = getPrototypeGetter(MessageEvent.prototype, &quot;source&quot;);
   // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
   const addHostMessageListener = MessagePort.prototype.addEventListener;
   // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
@@ -1586,45 +1645,45 @@ html>body{padding:0}</style>
   const stopMessagePropagation = Event.prototype.stopImmediatePropagation;
   /** @type {MessagePort | null} */
   let hostPort = null;
-  const postToHost = (type, payload) => {
+  const postToHost = (type, payload) =&gt; {
     if (hostPort != null) {
       apply(postHostMessage, hostPort, [{ type, ...payload }]);
     }
   };
-  const openExternal = ({ href }) => {
+  const openExternal = ({ href }) =&gt; {
     if (globalThis.navigator.userActivation?.isActive === true) {
-      postToHost("open-external", { href });
+      postToHost(&quot;open-external&quot;, { href });
     }
   };
-  const sendFollowUpMessage = ({ context, prompt, title }) => {
+  const sendFollowUpMessage = ({ context, prompt, title }) =&gt; {
     if (globalThis.navigator.userActivation?.isActive === true) {
-      postToHost("follow-up", { context, prompt, title });
+      postToHost(&quot;follow-up&quot;, { context, prompt, title });
     }
     return Promise.resolve();
   };
   /**
-   * @param {Record<string, unknown> | ((previous: Record<string, unknown> | null) => Record<string, unknown>)} next
-   * @returns {Promise<void>}
+   * @param {Record&lt;string, unknown&gt; | ((previous: Record&lt;string, unknown&gt; | null) =&gt; Record&lt;string, unknown&gt;)} next
+   * @returns {Promise&lt;void&gt;}
    */
-  const setWidgetState = async (next) => {
-    const nextState = typeof next === "function" ? next(state) : next;
+  const setWidgetState = async (next) =&gt; {
+    const nextState = typeof next === &quot;function&quot; ? next(state) : next;
     if (
       nextState == null ||
-      typeof nextState !== "object" ||
+      typeof nextState !== &quot;object&quot; ||
       isArray(nextState)
     ) {
-      throw new TypeError("Widget state must be a JSON object");
+      throw new TypeError(&quot;Widget state must be a JSON object&quot;);
     }
     const inputState = stringify(
       nextState,
-      (_key, /** @type {unknown} */ value) => {
+      (_key, /** @type {unknown} */ value) =&gt; {
         if (
-          typeof value === "undefined" ||
-          typeof value === "function" ||
-          typeof value === "symbol" ||
-          (typeof value === "number" && !Number.isFinite(value))
+          typeof value === &quot;undefined&quot; ||
+          typeof value === &quot;function&quot; ||
+          typeof value === &quot;symbol&quot; ||
+          (typeof value === &quot;number&quot; &amp;&amp; !Number.isFinite(value))
         ) {
-          throw new TypeError("Widget state must be a JSON object");
+          throw new TypeError(&quot;Widget state must be a JSON object&quot;);
         }
         return value;
       },
@@ -1632,10 +1691,10 @@ html>body{padding:0}</style>
     const parsedState = parse(inputState);
     if (
       parsedState == null ||
-      typeof parsedState !== "object" ||
+      typeof parsedState !== &quot;object&quot; ||
       isArray(parsedState)
     ) {
-      throw new TypeError("Widget state must be a JSON object");
+      throw new TypeError(&quot;Widget state must be a JSON object&quot;);
     }
     const storedState = {
       modelContent: null,
@@ -1643,78 +1702,78 @@ html>body{padding:0}</style>
       ...parsedState,
     };
     const serializedState = stringify(storedState);
-    if (encode(serializedState).length > 16 * 1024) {
+    if (encode(serializedState).length &gt; 16 * 1024) {
       throw new TypeError(
-        "Widget state must be a JSON object of at most 16 KiB",
+        &quot;Widget state must be a JSON object of at most 16 KiB&quot;,
       );
     }
     if (
-      hasOwn(storedState, "imageIds") &&
+      hasOwn(storedState, &quot;imageIds&quot;) &amp;&amp;
       (!isArray(storedState.imageIds) ||
         storedState.imageIds.some(
-          (/** @type {unknown} */ id) => typeof id !== "string",
+          (/** @type {unknown} */ id) =&gt; typeof id !== &quot;string&quot;,
         ))
     ) {
-      throw new TypeError("Widget state imageIds must be an array of strings");
+      throw new TypeError(&quot;Widget state imageIds must be an array of strings&quot;);
     }
-    if (storedState.imageIds?.length > 0) {
+    if (storedState.imageIds?.length &gt; 0) {
       throw Object.assign(
-        new TypeError("Visualization state does not support image attachments"),
-        { code: -32602, data: { code: "images_unsupported" } },
+        new TypeError(&quot;Visualization state does not support image attachments&quot;),
+        { code: -32602, data: { code: &quot;images_unsupported&quot; } },
       );
     }
     state = storedState;
     globalThis.openai.widgetState = state;
     globalThis.dispatchEvent(
-      new CustomEvent("openai:set_globals", {
+      new CustomEvent(&quot;openai:set_globals&quot;, {
         detail: { globals: { widgetState: state } },
       }),
     );
-    if (statePersistence === "none") {
+    if (statePersistence === &quot;none&quot;) {
       throw persistenceError();
     }
     const id = ++nextStateRequestId;
-    return new Promise((resolve, reject) => {
-      const timeout = globalThis.setTimeout(() => {
+    return new Promise((resolve, reject) =&gt; {
+      const timeout = globalThis.setTimeout(() =&gt; {
         pendingStateWrites.delete(id);
         reject(persistenceError());
       }, 30_000);
       pendingStateWrites.set(id, { resolve, reject, timeout, serializedState });
-      postToHost("widget-state-write", { id, state: serializedState });
+      postToHost(&quot;widget-state-write&quot;, { id, state: serializedState });
     });
   };
-  const mockElement = document.getElementById("codex-connector-mocks");
+  const mockElement = document.getElementById(&quot;codex-connector-mocks&quot;);
   const connectorGlobals = {};
   if (mockElement != null) {
     const values = new Map(Object.entries(parse(mockElement.textContent)));
     mockElement.remove();
     connectorGlobals.visualizationData = {
-      updates: Array.from(values, ([name, value]) => ({
+      updates: Array.from(values, ([name, value]) =&gt; ({
         name,
         revision: 1,
-        state: "ready",
-        value: { type: "json", value },
+        state: &quot;ready&quot;,
+        value: { type: &quot;json&quot;, value },
       })),
     };
     connectorGlobals.visualization = {
-      /** @param {string} name @param {(value: unknown) => void} callback */
+      /** @param {string} name @param {(value: unknown) =&gt; void} callback */
       onData(name, callback) {
-        if (typeof callback !== "function") {
-          throw new TypeError("onData requires a callback");
+        if (typeof callback !== &quot;function&quot;) {
+          throw new TypeError(&quot;onData requires a callback&quot;);
         }
         try {
           callback(values.get(name));
         } catch (error) {
           // oxlint-disable-next-line no-console -- Keep authored callback failures local.
-          console.error("Live visualization data callback failed", error);
+          console.error(&quot;Live visualization data callback failed&quot;, error);
         }
         // A static preview delivers the current fixture once per subscription.
-        return () => {};
+        return () =&gt; {};
       },
     };
   }
-  const syncTheme = () => {
-    const theme = mediaQuery.matches ? "dark" : "light";
+  const syncTheme = () =&gt; {
+    const theme = mediaQuery.matches ? &quot;dark&quot; : &quot;light&quot;;
     root.dataset.theme = theme;
     globalThis.openai = {
       ...globalThis.openai,
@@ -1727,16 +1786,16 @@ html>body{padding:0}</style>
       visualizationTheme: theme,
       widgetState: state,
       statePersistence,
-      stateModelContext: "none",
+      stateModelContext: &quot;none&quot;,
     };
     globalThis.dispatchEvent(
-      new CustomEvent("openai:set_globals", {
+      new CustomEvent(&quot;openai:set_globals&quot;, {
         detail: { globals: globalThis.openai },
       }),
     );
   };
-  const sendHeight = () => {
-    postToHost("height", {
+  const sendHeight = () =&gt; {
+    postToHost(&quot;height&quot;, {
       height: Math.ceil(
         Math.max(
           document.body.scrollHeight,
@@ -1747,16 +1806,16 @@ html>body{padding:0}</style>
   };
 
   globalThis.addEventListener(
-    "message",
-    (event) => {
+    &quot;message&quot;,
+    (event) =&gt; {
       const data = apply(getMessageData, event, []);
       const ports = apply(getMessagePorts, event, []);
       const source = apply(getMessageSource, event, []);
       if (
         hostPort != null ||
         source !== parentWindow ||
-        typeof data !== "object" ||
-        data?.type !== "codex-visualization-initialize" ||
+        typeof data !== &quot;object&quot; ||
+        data?.type !== &quot;codex-visualization-initialize&quot; ||
         !isArray(ports) ||
         ports.length !== 1
       ) {
@@ -1766,18 +1825,18 @@ html>body{padding:0}</style>
       const nextHostPort = ports[0];
       try {
         apply(addHostMessageListener, nextHostPort, [
-          "message",
-          (event) => {
+          &quot;message&quot;,
+          (event) =&gt; {
             const data = apply(getMessageData, event, []);
-            if (typeof data === "object" && data?.type === "measure") {
+            if (typeof data === &quot;object&quot; &amp;&amp; data?.type === &quot;measure&quot;) {
               sendHeight();
             } else if (
-              typeof data === "object" &&
-              data?.type === "widget-state-result"
+              typeof data === &quot;object&quot; &amp;&amp;
+              data?.type === &quot;widget-state-result&quot;
             ) {
               /** @type {unknown} */
               const id = data.id;
-              if (typeof id !== "number") {
+              if (typeof id !== &quot;number&quot;) {
                 return;
               }
               const pending = pendingStateWrites.get(id);
@@ -1799,15 +1858,15 @@ html>body{padding:0}</style>
       }
       hostPort = nextHostPort;
       for (const [id, { serializedState }] of pendingStateWrites) {
-        postToHost("widget-state-write", { id, state: serializedState });
+        postToHost(&quot;widget-state-write&quot;, { id, state: serializedState });
       }
       sendHeight();
     },
     { capture: true },
   );
   document.currentScript?.remove();
-  mediaQuery.addEventListener("change", syncTheme);
-  globalThis.addEventListener("click", (event) => {
+  mediaQuery.addEventListener(&quot;change&quot;, syncTheme);
+  globalThis.addEventListener(&quot;click&quot;, (event) =&gt; {
     if (event.defaultPrevented) {
       return;
     }
@@ -1817,12 +1876,12 @@ html>body{padding:0}</style>
     } else if (event.target instanceof globalThis.Node) {
       element = event.target.parentElement;
     }
-    const link = element?.closest("a[href]");
-    const href = link?.getAttribute("href");
+    const link = element?.closest(&quot;a[href]&quot;);
+    const href = link?.getAttribute(&quot;href&quot;);
     if (href == null) {
       return;
     }
-    if (href.startsWith("#")) {
+    if (href.startsWith(&quot;#&quot;)) {
       let id;
       try {
         id = decodeURIComponent(href.slice(1));
@@ -1837,7 +1896,7 @@ html>body{padding:0}</style>
         return;
       }
       event.preventDefault();
-      postToHost("scroll-to", {
+      postToHost(&quot;scroll-to&quot;, {
         top: target.getBoundingClientRect().top + globalThis.scrollY,
       });
       return;
@@ -1848,10 +1907,10 @@ html>body{padding:0}</style>
   new ResizeObserver(sendHeight).observe(document.body);
   syncTheme();
 })();
-</script>
-<div id="fpv-lab">
-<h2>FPV 비행장 · PID 반응 <small style="font-size:12px;font-weight:500;opacity:.7">Betaflight 2026.6.2 교육용 범위 프로필</small></h2>
-<div class="text-small text-muted">교육용 근사 모델 · 실제 Betaflight의 물리·필터·제어기 정밀 재현 아님 · 비행용 튜닝값 권장 아님</div>
+&lt;/script&gt;
+&lt;div id=&quot;fpv-lab&quot;&gt;
+&lt;h2&gt;&lt;span class=&quot;brand&quot;&gt;TSD / FLIGHT LAB&lt;/span&gt;&lt;br&gt;FPV 비행장 · PID 반응 &lt;small style=&quot;font-size:12px;font-weight:500;opacity:.7&quot;&gt;Betaflight 2026.6.2 교육용 범위 프로필&lt;/small&gt;&lt;/h2&gt;
+&lt;div class=&quot;text-small text-muted&quot;&gt;교육용 근사 모델 · 실제 Betaflight의 물리·필터·제어기 정밀 재현 아님 · 비행용 튜닝값 권장 아님&lt;/div&gt;
 
 
 
@@ -1869,36 +1928,36 @@ html>body{padding:0}</style>
 
 
 
-<div id="tsd-columns"><div id="tsd-left"><section id="bfPanel">
-<h3>PID 튜닝</h3>
-<div class="viz-controls"><label class="form-label">모드<select class="form-select" id="tuningMode"><option value="OFF">OFF · 숫자 직접 입력</option><option value="RP">RP · 롤 / 피치 슬라이더</option><option value="RPY">RPY · 롤 / 피치 / 요 슬라이더</option></select></label><button class="btn" id="pidReset">교육용 목표 PID 복원</button></div>
-<div class="bf-sliders" id="bfSliders"></div>
-<div class="table-responsive" id="settings"></div>
-<div class="text-small" style="padding:10px;border:1px solid var(--border);border-radius:8px;margin:8px 0"><strong>교육용 기준점</strong> · Roll 45/80/30/40/120 · Pitch 47/84/34/46/125 · Yaw 45/80/0/0/120<br/>고정 비교 조건: 기준 호버 스로틀 38%, 외란 5(상대 단위), 자이로 잡음 0.5(상대 단위), 같은 기동·같은 시작 상태. 목표 PID에서 잔류 진동을 최소화하도록 보정한 교육 모델이며 실제 Betaflight/기체 최적값을 의미하지 않습니다.</div>
-<section class="tsd-bb" id="blackboxPanel"><h3>PID Blackbox · 10초 시간응답</h3><div class="text-small text-muted">점선: 목표 각속도 · 실선: 계산된 자이로 각속도 · 수직선: 현재 영상 시간. 같은 제어 데이터로 표시합니다.</div><div class="viz-row"><label class="form-label">분석 축 <select class="form-select" id="bbAxis"><option value="roll">Roll</option><option value="pitch">Pitch</option><option value="yaw">Yaw</option></select></label><label class="form-label">분석 <select class="form-select" id="bbMode"><option value="time">각속도 시간응답</option><option value="error">목표 대비 오차</option><option value="spectrum">진동 주파수 스펙트럼 (FFT)</option></select></label></div><canvas aria-label="10초 PID 블랙박스 그래프" id="bbTrace"></canvas><div class="text-small tabular-nums" id="bbStats"></div></section>
-<div class="text-small text-destructive" id="pidError" role="alert"></div><div aria-live="polite" class="text-small" id="pidWarnings"></div><div class="text-small text-muted">빨강: 입력 범위 또는 D Max 관계 위반 · 주황: 교육용 모델에서 불안정 가능성. 실제 비행 가능 여부를 판정하지 않습니다. 범위는 공식 2026.6.2 소스 대조 전 임시 설정입니다.</div>
-<div aria-live="polite" class="text-small" id="activePid"></div>
-<div class="text-small text-muted">D 최소 = 기본 D · D 최대 = 기동 시 상한(0이면 동적 D 꺼짐). FF는 정속 360° 이후 정지 반동에 적용합니다. 슬라이더 환산·동적 D·FF는 교육용 근사이며 실제 Betaflight 계산과 다릅니다.</div>
-</section><div class="viz-controls">
-<label class="form-label">스로틀 <span id="throttleval">38%</span><input class="form-range" id="throttle" max="100" min="0" step="1" type="range" value="38"/></label>
-<label class="form-label">회전 각속도 (°/초)<input class="form-control" id="rotationRate" max="1440" min="60" step="1" type="number" value="360"/></label>
-</div><div class="viz-controls"><button aria-pressed="false" class="btn" id="audioToggle">비행 소리 켜기</button><label class="form-label">음량 <span id="volumeVal">15%</span><input class="form-range" id="volume" max="50" min="0" step="1" type="range" value="15"/></label><span aria-live="polite" class="text-small" id="audioStatus">모터·프로프워시·고주파 합성음</span></div><div class="text-small text-destructive" id="rateError" role="alert"></div><div aria-live="polite" class="text-small" id="routine"></div><details><summary>모터 · 배터리 · 프롭 설정</summary>
-<div class="viz-controls">
-<label class="form-label">모터 4개 공통<select class="form-select" id="motorPreset"><option value="v1950">T-MOTOR V2207 V3 · 1950KV</option><option value="v1750">T-MOTOR V2207 V3 · 1750KV</option><option value="custom">직접 입력 · 미검증</option></select></label>
-<label class="form-label">배터리<select class="form-select" id="batteryPreset"><option value="c120">CNHL MiniStar · 6S 1500mAh 120C</option><option value="c130">CNHL · 6S 1500mAh 130C</option><option value="custom">직접 입력 · 미검증</option></select></label>
-<label class="form-label">프롭 4개 공통<select class="form-select" id="propPreset"><option value="hq5050">HQProp 5×5×3 V1S · 5050 3엽</option><option value="gemfan">Gemfan 51466 V2 · 3엽</option><option value="custom">직접 입력 · 미검증</option></select></label>
-</div>
-<div class="viz-controls" id="hardware"></div>
-<div class="text-destructive text-small" id="hardwareError" role="alert"></div>
-<div aria-live="polite" class="text-small" id="specStatus"></div>
-<div class="text-small text-muted">제조사 공개 사양 확인 ≠ 조합 실측 검증. 이 모터·5050·배터리 조합의 추력 곡선 및 PID 반응은 검증되지 않았습니다. 직접 수정한 값은 미검증으로 표시합니다. 5050은 여기서 5인치 직경·5인치 피치·3엽으로 가정합니다.</div>
-<div class="viz-row text-small"><a href="https://tmotorhobby.com/goods-1369-T-MOTORHOBBY%2BV2207%2BV30%2B%2BFPV%2BMotor%2BFor%2B5%2BDrone-1500175019502550KV.html" rel="noopener noreferrer" target="_blank">모터 제조사 사양</a><a href="https://chinahobbyline.com/products/cnhl-ministar-series-1500mah-22-2v-6s-120c-lipo-battery-with-xt60-plug" rel="noopener noreferrer" target="_blank">배터리 제조사 사양</a><a href="https://www.hqprop.com/hq-durable-prop-5x5x3v1s-2cw2ccw-poly-carbonate-p0085.html" rel="noopener noreferrer" target="_blank">HQProp 사양</a><a href="https://www.gemfanhobby.com/hurricane-51466-v2-pc-3-blade.html" rel="noopener noreferrer" target="_blank">Gemfan 사양</a></div>
-</details><div class="text-small text-muted">B는 실사 영상이 아닌 가상 비행장입니다. 중앙 십자선은 카메라에 고정되고 풍경만 움직입니다.</div><canvas aria-hidden="true" hidden="" id="trace"></canvas><div aria-live="off" class="text-small tabular-nums" id="liveTelemetry" style="padding:7px 0;line-height:1.6">실시간 계측 준비</div><div class="table-responsive"><table class="table table-sm tabular-nums"><thead><tr><th>10초 실험 · 기동 후 측정</th><th>A · 기체 실선</th><th>B · 풍경 점선</th></tr></thead><tbody id="metrics"></tbody></table></div><div aria-live="polite" class="text-small" id="heat"></div><details><summary>모델 및 측정 기준</summary><div class="text-small">기동 프리셋은 목표 자세를 제공하고, 표시되는 3D 자세는 공통 PID 근사 모델의 추종 결과를 사용합니다. P·I·D 변화는 10초 연속 각속도 동역학과 외란 보정에 반영됩니다. 모든 화면은 계산된 자세를 공유합니다. 목표 회전각은 360°이며 실제 회전각은 PID 추종 결과로 표시되고, 이후 5초는 중앙을 목표로 하는 교육용 PID 회복 모델입니다. 정지 충격을 잔류 각속도로 가정하고 P는 복원, I는 누적 오차 보정, D는 감쇠에 적용합니다. 실제 Acro 제어기의 실측 재현이나 자동 수평 복귀 동작이 아닙니다. P=0 등에서는 복원이 되지 않을 수 있습니다. 스로틀 0%에서도 비교를 위해 지정 회전은 재생하지만 회복 제어는 꺼집니다. 비행 경로는 사전 정의한 기준 경로에 자세 오차의 일부를 반영하며 공력 기반 자유비행 계산은 아닙니다. 프로프워시는 하강·스플릿 S·기동 회복 시 10초 연속 계산에 반영되는 불규칙한 자세 외란으로, D 잡음 진동은 합성 미세 진동으로 표현합니다. 음향은 이 상태에 연동한 합성음이며 실제 녹음이나 해당 영상의 추출음이 아닙니다. 부품 사양은 임의 출력·관성·지연 계수에 반영합니다. 용량은 공칭 에너지 계산에만 사용합니다. 기본 건조중량 400g과 반응 계수는 실측값이 아닙니다. 기준 호버 스로틀은 38%로 지정했으며, 3D 고도 경로는 여전히 교육용 사전 정의 경로이므로 실제 추력·중력 평형을 검증한 6DOF 모델은 아닙니다. 주파수는 복귀 후 평균각 상승 교차 간격 기반 추정이며, D 부하는 온도나 안전 판정이 아닙니다.</div></details></div><div id="tsd-right"><div class="views"><section><h3>A · 추적 카메라</h3><canvas aria-label="가상 비행장에서 이동하며 기동하는 드론의 외부 시점" id="droneA" role="img"></canvas><div class="tabular-nums" id="angleA"></div></section><section><h3>B · FPV 카메라</h3><canvas aria-label="비행 위치와 기체 자세를 함께 반영하는 FPV 카메라" id="droneB" role="img"></canvas><div class="tabular-nums" id="angleB"></div></section></div><section class="tsd-attitude"><div class="tsd-att-head"><strong>3D 쿼드콥터 · Betaflight 스타일 자세 모니터</strong><span class="text-small">10초 PID 계산 결과 동기화</span></div><div class="tsd-att-grid"><canvas aria-label="3D FPV 쿼드콥터 자세" id="attQuad"></canvas><canvas aria-label="인공 수평계" id="attHorizon"></canvas></div><div class="tsd-att-numbers tabular-nums" id="attNumbers"></div></section><div class="viz-row"><button class="btn" id="test-throttle">직진 · 스로틀</button><button class="btn" id="test-split-left">스플릿 S · 좌 롤</button><button class="btn" id="test-split-right">스플릿 S · 우 롤</button><button class="btn" id="test-drop">하강 → 스로틀 회복</button><button class="btn" id="test-climb">상승 → 스로틀 회복</button><button class="btn" id="test-yaw">요 턴 360°</button><button class="btn" id="test-flip">백플립 360°</button><button class="btn" id="test-roll">롤 턴 360°</button></div><div class="viz-controls">
-<label class="form-label">외란 크기 <span id="forceval">10</span><input class="form-range" id="force" max="30" min="0" type="range" value="10"/></label>
-<label class="form-label">자이로 잡음 <span id="noiseval">1</span><input class="form-range" id="noise" max="5" min="0" step="0.5" type="range" value="1"/></label>
-<label class="form-label">재생 속도<select class="form-select" id="speed"><option value="0.1">0.1배 · 고주파 관찰</option><option value="0.25">0.25배 · 느리게</option><option value="0.5">0.5배</option><option selected="" value="1">1배</option><option value="2">2배</option></select></label>
-<button class="btn btn-primary" id="play">일시 정지</button><button class="btn" id="replay">다시 재생</button><button class="btn" id="arrival">기동 완료 순간</button><button class="btn" id="reset">초기화</button>
-</div><div class="viz-row text-small"><span class="tabular-nums" id="clock">0.00 / 10.00초</span><span id="command"></span></div><label class="form-label">시간 탐색<input class="form-range" id="scrub" max="10" min="0" step="0.01" type="range" value="0"/></label></div></div><style>
+&lt;div id=&quot;tsd-columns&quot;&gt;&lt;div id=&quot;tsd-left&quot;&gt;&lt;section id=&quot;bfPanel&quot;&gt;
+&lt;h3&gt;PID 튜닝&lt;/h3&gt;
+&lt;div class=&quot;viz-controls&quot;&gt;&lt;label class=&quot;form-label&quot;&gt;모드&lt;select class=&quot;form-select&quot; id=&quot;tuningMode&quot;&gt;&lt;option value=&quot;OFF&quot;&gt;OFF · 숫자 직접 입력&lt;/option&gt;&lt;option value=&quot;RP&quot;&gt;RP · 롤 / 피치 슬라이더&lt;/option&gt;&lt;option value=&quot;RPY&quot;&gt;RPY · 롤 / 피치 / 요 슬라이더&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;button class=&quot;btn&quot; id=&quot;pidReset&quot;&gt;교육용 목표 PID 복원&lt;/button&gt;&lt;/div&gt;
+&lt;div class=&quot;bf-sliders&quot; id=&quot;bfSliders&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;table-responsive&quot; id=&quot;settings&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;text-small&quot; style=&quot;padding:10px;border:1px solid var(--border);border-radius:8px;margin:8px 0&quot;&gt;&lt;strong&gt;교육용 기준점&lt;/strong&gt; · Roll 45/80/30/40/120 · Pitch 47/84/34/46/125 · Yaw 45/80/0/0/120&lt;br/&gt;고정 비교 조건: 기준 호버 스로틀 38%, 외란 5(상대 단위), 자이로 잡음 0.5(상대 단위), 같은 기동·같은 시작 상태. 기준값은 비교 출발점입니다. 실제 기체 최적값이 아닙니다. 모든 기동에서 지속적인 외란과 제어 반응을 계산합니다.&lt;/div&gt;
+&lt;section class=&quot;tsd-bb&quot; id=&quot;blackboxPanel&quot;&gt;&lt;h3&gt;PID Blackbox · 30초 시간응답&lt;/h3&gt;&lt;div class=&quot;text-small text-muted&quot;&gt;점선: 목표 각속도 · 실선: 계산된 자이로 각속도 · 수직선: 현재 영상 시간. 같은 제어 데이터로 표시합니다.&lt;/div&gt;&lt;div class=&quot;viz-row&quot;&gt;&lt;label class=&quot;form-label&quot;&gt;분석 축 &lt;select class=&quot;form-select&quot; id=&quot;bbAxis&quot;&gt;&lt;option value=&quot;roll&quot;&gt;Roll&lt;/option&gt;&lt;option value=&quot;pitch&quot;&gt;Pitch&lt;/option&gt;&lt;option value=&quot;yaw&quot;&gt;Yaw&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;label class=&quot;form-label&quot;&gt;분석 &lt;select class=&quot;form-select&quot; id=&quot;bbMode&quot;&gt;&lt;option value=&quot;time&quot;&gt;각속도 시간응답&lt;/option&gt;&lt;option value=&quot;error&quot;&gt;목표 대비 오차&lt;/option&gt;&lt;option value=&quot;spectrum&quot;&gt;진동 주파수 스펙트럼 (DFT)&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;/div&gt;&lt;canvas aria-label=&quot;30초 PID 블랙박스 그래프&quot; id=&quot;bbTrace&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;text-small tabular-nums&quot; id=&quot;bbStats&quot;&gt;&lt;/div&gt;&lt;/section&gt;
+&lt;div class=&quot;text-small text-destructive&quot; id=&quot;pidError&quot; role=&quot;alert&quot;&gt;&lt;/div&gt;&lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;pidWarnings&quot;&gt;&lt;/div&gt;&lt;div class=&quot;text-small text-muted&quot;&gt;빨강: 입력 범위 위반 · 주황: 교육용 모델에서 불안정 가능성. 실제 비행 가능 여부를 판정하지 않습니다. Configurator 2026.6.2: P/I/D/D 최대 0–250 · FF 직접 입력 0–2000. 펌웨어 및 슬라이더 FF 상한은 1000입니다.&lt;/div&gt;
+&lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;activePid&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;text-small text-muted&quot;&gt;D 최소는 기본 감쇠입니다. D 최대가 기본 D보다 클 때 동적 D가 적용됩니다. FF는 기동 시작·변화·정지의 목표 각속도 변화에 반영됩니다. 슬라이더는 2026.6.2 공식 환산식, 비행 반응은 교육용 모델입니다.&lt;/div&gt;
+&lt;/section&gt;&lt;div class=&quot;viz-controls&quot;&gt;
+&lt;label class=&quot;form-label&quot;&gt;스로틀 &lt;span id=&quot;throttleval&quot;&gt;38%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;throttle&quot; max=&quot;100&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;38&quot;/&gt;&lt;/label&gt;
+&lt;label class=&quot;form-label&quot;&gt;회전 각속도 (°/초)&lt;input class=&quot;form-control&quot; id=&quot;rotationRate&quot; max=&quot;1440&quot; min=&quot;60&quot; step=&quot;1&quot; type=&quot;number&quot; value=&quot;360&quot;/&gt;&lt;/label&gt;
+&lt;/div&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;button aria-pressed=&quot;false&quot; class=&quot;btn&quot; id=&quot;audioToggle&quot;&gt;비행 소리 켜기&lt;/button&gt;&lt;label class=&quot;form-label&quot;&gt;음량 &lt;span id=&quot;volumeVal&quot;&gt;15%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;volume&quot; max=&quot;50&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;15&quot;/&gt;&lt;/label&gt;&lt;span aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;audioStatus&quot;&gt;모터·프로프워시·고주파 합성음&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;text-small text-destructive&quot; id=&quot;rateError&quot; role=&quot;alert&quot;&gt;&lt;/div&gt;&lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;routine&quot;&gt;&lt;/div&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;label class=&quot;form-label&quot;&gt;펀치 길이 (초)&lt;input class=&quot;form-control&quot; id=&quot;punchDuration&quot; type=&quot;number&quot; min=&quot;0.1&quot; max=&quot;1.5&quot; step=&quot;0.1&quot; value=&quot;0.5&quot;&gt;&lt;/label&gt;&lt;label class=&quot;form-label&quot;&gt;펀치 추가 스로틀 (%p)&lt;input class=&quot;form-control&quot; id=&quot;punchStrength&quot; type=&quot;number&quot; min=&quot;0&quot; max=&quot;50&quot; step=&quot;1&quot; value=&quot;22&quot;&gt;&lt;/label&gt;&lt;/div&gt;&lt;div class=&quot;text-small text-muted&quot;&gt;공통 목표 고도 6m · 직진은 펀치 없는 단순 전진. 다른 기동은 20m 전진 후 시작합니다. 스플릿 S는 준비 상승 → 반 롤·하강 반 루프 → 6m 복귀·반대 방향 비행. 요 턴은 180°, 백플립·롤 턴은 360°입니다. 펀치 기본 0.5초 / +22%p이며 이륙·단순 직진에는 적용하지 않습니다. 설정 변경 시 같은 시작 상태에서 다시 계산합니다.&lt;/div&gt;&lt;details&gt;&lt;summary&gt;모터 · 배터리 · 프롭 설정&lt;/summary&gt;
+&lt;div class=&quot;viz-controls&quot;&gt;
+&lt;label class=&quot;form-label&quot;&gt;모터 4개 공통&lt;select class=&quot;form-select&quot; id=&quot;motorPreset&quot;&gt;&lt;option value=&quot;v1950&quot;&gt;T-MOTOR V2207 V3 · 1950KV&lt;/option&gt;&lt;option value=&quot;v1750&quot;&gt;T-MOTOR V2207 V3 · 1750KV&lt;/option&gt;&lt;option value=&quot;custom&quot;&gt;직접 입력 · 미검증&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
+&lt;label class=&quot;form-label&quot;&gt;배터리&lt;select class=&quot;form-select&quot; id=&quot;batteryPreset&quot;&gt;&lt;option value=&quot;c120&quot;&gt;CNHL MiniStar · 6S 1500mAh 120C&lt;/option&gt;&lt;option value=&quot;c130&quot;&gt;CNHL · 6S 1500mAh 130C&lt;/option&gt;&lt;option value=&quot;custom&quot;&gt;직접 입력 · 미검증&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
+&lt;label class=&quot;form-label&quot;&gt;프롭 4개 공통&lt;select class=&quot;form-select&quot; id=&quot;propPreset&quot;&gt;&lt;option value=&quot;hq5050&quot;&gt;HQProp 5×5×3 V1S · 5050 3엽&lt;/option&gt;&lt;option value=&quot;gemfan&quot;&gt;Gemfan 51466 V2 · 3엽&lt;/option&gt;&lt;option value=&quot;custom&quot;&gt;직접 입력 · 미검증&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
+&lt;/div&gt;
+&lt;div class=&quot;viz-controls&quot; id=&quot;hardware&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;text-destructive text-small&quot; id=&quot;hardwareError&quot; role=&quot;alert&quot;&gt;&lt;/div&gt;
+&lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;specStatus&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;text-small text-muted&quot;&gt;제조사 공개 사양 확인 ≠ 조합 실측 검증. 이 모터·5050·배터리 조합의 추력 곡선 및 PID 반응은 검증되지 않았습니다. 직접 수정한 값은 미검증으로 표시합니다. 5050은 여기서 5인치 직경·5인치 피치·3엽으로 가정합니다.&lt;/div&gt;
+&lt;div class=&quot;viz-row text-small&quot;&gt;&lt;a href=&quot;https://tmotorhobby.com/goods-1369-T-MOTORHOBBY%2BV2207%2BV30%2B%2BFPV%2BMotor%2BFor%2B5%2BDrone-1500175019502550KV.html&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;모터 제조사 사양&lt;/a&gt;&lt;a href=&quot;https://chinahobbyline.com/products/cnhl-ministar-series-1500mah-22-2v-6s-120c-lipo-battery-with-xt60-plug&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;배터리 제조사 사양&lt;/a&gt;&lt;a href=&quot;https://www.hqprop.com/hq-durable-prop-5x5x3v1s-2cw2ccw-poly-carbonate-p0085.html&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;HQProp 사양&lt;/a&gt;&lt;a href=&quot;https://www.gemfanhobby.com/hurricane-51466-v2-pc-3-blade.html&quot; rel=&quot;noopener noreferrer&quot; target=&quot;_blank&quot;&gt;Gemfan 사양&lt;/a&gt;&lt;/div&gt;
+&lt;/details&gt;&lt;div class=&quot;text-small text-muted&quot;&gt;B는 실사 영상이 아닌 가상 비행장입니다. 중앙 십자선은 카메라에 고정되고 풍경만 움직입니다.&lt;/div&gt;&lt;canvas aria-hidden=&quot;true&quot; hidden=&quot;&quot; id=&quot;trace&quot;&gt;&lt;/canvas&gt;&lt;div aria-live=&quot;off&quot; class=&quot;text-small tabular-nums&quot; id=&quot;liveTelemetry&quot; style=&quot;padding:7px 0;line-height:1.6&quot;&gt;실시간 계측 준비&lt;/div&gt;&lt;div class=&quot;table-responsive&quot;&gt;&lt;table class=&quot;table table-sm tabular-nums&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;30초 실험 · 기동 후 측정&lt;/th&gt;&lt;th&gt;A · 기체 실선&lt;/th&gt;&lt;th&gt;B · 풍경 점선&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;metrics&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;div class=&quot;text-small tabular-nums&quot; id=&quot;termTelemetry&quot;&gt;&lt;/div&gt;&lt;div aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;heat&quot;&gt;&lt;/div&gt;&lt;details&gt;&lt;summary&gt;모델 및 측정 기준&lt;/summary&gt;&lt;div class=&quot;text-small&quot;&gt;PID → 모터 혼합·출력 제한·모터 지연 → 각속도·자세 → 추력·중력·위치 → 지면 충돌을 1ms 간격으로 계산합니다. 500Hz로 기록하며 기체·FPV·계측·그래프가 같은 결과를 사용합니다. 기동 버튼은 가상 조종사의 목표 자세를 지정하며, 기동 후에도 계산이 이어집니다. 고도 회복 스로틀 보조가 포함되어 있어 실제 Acro 비행과 다릅니다. 모든 기동의 안정화 목표 고도는 6m이며 강제 복귀하지 않습니다. 이륙은 0.16m에서 출발하고 나머지는 6m에서 전진합니다. 스플릿 S는 20m 전진 후 22m 준비 상승, 실제 고도와 수직 속도 조건 충족 시 반 롤 0.5초·반 루프 1초를 수행하고 6m로 회복합니다. 요 턴은 목표 180°이며 관성 때문에 이동 방향 전환에는 시간이 걸립니다. 각 축 회전을 근사한 교육 모델로 완전한 강체 6DOF나 Betaflight 펌웨어 재현이 아닙니다. 모터·배터리·프롭 제원은 근사 추력·관성·지연·전압강하·소모량에 반영하며 제조사 실측 곡선은 사용하지 않습니다. 120Hz 센서 잡음이 D 제어량·모터·기체 응답을 통해 전달됩니다. 화면 주사율보다 빠른 떨림은 0.1배 재생과 스펙트럼으로 확인하세요. 음향은 계산 상태에 연동한 합성음이며 실제 녹음이 아닙니다. D 부하는 온도 예측이 아닙니다.&lt;/div&gt;&lt;/details&gt;&lt;/div&gt;&lt;div id=&quot;tsd-right&quot;&gt;&lt;div class=&quot;views&quot;&gt;&lt;section&gt;&lt;h3&gt;A · 추적 카메라&lt;/h3&gt;&lt;canvas aria-label=&quot;가상 비행장에서 이동하며 기동하는 드론의 외부 시점&quot; id=&quot;droneA&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleA&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;section&gt;&lt;h3&gt;B · FPV 카메라&lt;/h3&gt;&lt;canvas aria-label=&quot;비행 위치와 기체 자세를 함께 반영하는 FPV 카메라&quot; id=&quot;droneB&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleB&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;/div&gt;&lt;section class=&quot;tsd-attitude&quot;&gt;&lt;div class=&quot;tsd-att-head&quot;&gt;&lt;strong&gt;3D 쿼드콥터 · Betaflight 스타일 자세 모니터&lt;/strong&gt;&lt;span class=&quot;text-small&quot;&gt;30초 PID 계산 결과 동기화&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-grid&quot;&gt;&lt;canvas aria-label=&quot;3D FPV 쿼드콥터 자세&quot; id=&quot;attQuad&quot;&gt;&lt;/canvas&gt;&lt;canvas aria-label=&quot;롤 경사각 눈금과 포인터가 있는 인공 수평계&quot; id=&quot;attHorizon&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-numbers tabular-nums&quot; id=&quot;attNumbers&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;div class=&quot;viz-row&quot;&gt;&lt;button class=&quot;btn&quot; id=&quot;test-takeoff&quot;&gt;이륙 · 안정화&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-throttle&quot;&gt;직진 · 스로틀&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-split-left&quot;&gt;스플릿 S · 좌 롤&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-split-right&quot;&gt;스플릿 S · 우 롤&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-drop&quot;&gt;하강 → 스로틀 회복&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-climb&quot;&gt;상승 → 스로틀 회복&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-yaw&quot;&gt;요 턴 180°&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-flip&quot;&gt;백플립 360°&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;test-roll&quot;&gt;롤 턴 360°&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;viz-controls&quot;&gt;
+&lt;label class=&quot;form-label&quot;&gt;외란 크기 &lt;span id=&quot;forceval&quot;&gt;10&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;force&quot; max=&quot;30&quot; min=&quot;0&quot; type=&quot;range&quot; value=&quot;10&quot;/&gt;&lt;/label&gt;
+&lt;label class=&quot;form-label&quot;&gt;자이로 잡음 &lt;span id=&quot;noiseval&quot;&gt;1&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;noise&quot; max=&quot;5&quot; min=&quot;0&quot; step=&quot;0.5&quot; type=&quot;range&quot; value=&quot;1&quot;/&gt;&lt;/label&gt;
+&lt;label class=&quot;form-label&quot;&gt;재생 속도&lt;select class=&quot;form-select&quot; id=&quot;speed&quot;&gt;&lt;option value=&quot;0.1&quot;&gt;0.1배 · 고주파 관찰&lt;/option&gt;&lt;option value=&quot;0.25&quot;&gt;0.25배 · 느리게&lt;/option&gt;&lt;option value=&quot;0.5&quot;&gt;0.5배&lt;/option&gt;&lt;option selected=&quot;&quot; value=&quot;1&quot;&gt;1배&lt;/option&gt;&lt;option value=&quot;2&quot;&gt;2배&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
+&lt;button class=&quot;btn btn-primary&quot; id=&quot;play&quot;&gt;일시 정지&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;replay&quot;&gt;다시 재생&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;arrival&quot;&gt;기동 입력 종료 시점&lt;/button&gt;&lt;button class=&quot;btn&quot; id=&quot;reset&quot;&gt;초기화&lt;/button&gt;
+&lt;/div&gt;&lt;div class=&quot;viz-row text-small&quot;&gt;&lt;span class=&quot;tabular-nums&quot; id=&quot;clock&quot;&gt;0.00 / 10.00초&lt;/span&gt;&lt;span id=&quot;command&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;label class=&quot;form-label&quot;&gt;시간 탐색&lt;input class=&quot;form-range&quot; id=&quot;scrub&quot; max=&quot;10&quot; min=&quot;0&quot; step=&quot;0.01&quot; type=&quot;range&quot; value=&quot;0&quot;/&gt;&lt;/label&gt;&lt;/div&gt;&lt;/div&gt;&lt;style&gt;
 #fpv-lab{max-width:1800px;gap:5px}
 #tsd-columns{display:grid;grid-template-columns:minmax(510px,48%) minmax(0,1fr);gap:10px;align-items:start}
 #tsd-left,#tsd-right{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -1915,18 +1974,18 @@ html>body{padding:0}</style>
 #fpv-lab .tsd-attitude{padding:6px;margin:0}
 #fpv-lab #attQuad,#fpv-lab #attHorizon{height:clamp(105px,15vh,145px)!important}
 #fpv-lab .tsd-att-grid{margin-top:4px;gap:5px}
-#tsd-right .viz-row:has([id^="test-"]){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
-#tsd-right .viz-row:has([id^="test-"]) button{font-size:11px;white-space:normal;min-height:34px;line-height:1.15}
+#tsd-right .viz-row:has([id^=&quot;test-&quot;]){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+#tsd-right .viz-row:has([id^=&quot;test-&quot;]) button{font-size:11px;white-space:normal;min-height:34px;line-height:1.15}
 #tsd-right .viz-controls{gap:5px}
 #tsd-right .viz-controls .form-label{min-width:110px;flex:1 1 130px}
 #fpv-lab #settings table{min-width:0}
 #fpv-lab #settings input{min-width:42px;max-width:75px}
 #fpv-lab #settings table{font-size:11px}
 #fpv-lab .bf-sliders{gap:3px}
-@media(max-width:1050px){#tsd-columns{grid-template-columns:1fr}#tsd-right .viz-row:has([id^="test-"]){grid-template-columns:repeat(2,1fr)}}
-</style></div>
-<style>
-#fpv-lab{display:grid;gap:9px;color:var(--foreground);max-width:1550px;margin:auto}#fpv-lab>h2{font-size:clamp(19px,2vw,25px);margin:0;line-height:1.15}#fpv-lab>h2+.text-small{font-size:11px}#fpv-lab #bfPanel{gap:6px;padding:8px}#fpv-lab #bfPanel h3{margin:0;font-size:16px}#fpv-lab .viz-controls{gap:7px}#fpv-lab .viz-row{gap:5px}#fpv-lab .viz-row .btn{padding:5px 8px;font-size:12px}#fpv-lab #settings input{min-width:64px;max-width:105px;padding:5px}#fpv-lab #settings table{font-size:12px}#fpv-lab .views h3{margin:3px 0;font-size:14px}#fpv-lab .views section{padding:7px}#fpv-lab input.pid-invalid{border:2px solid #e53e3e!important;background:rgba(220,38,38,.12)!important}#fpv-lab input.pid-risk{border:2px solid #d97706!important;background:rgba(245,158,11,.10)!important}#fpv-lab #pidWarnings{font-weight:600;color:#d97706}
+@media(max-width:1050px){#tsd-columns{grid-template-columns:1fr}#tsd-right .viz-row:has([id^=&quot;test-&quot;]){grid-template-columns:repeat(2,1fr)}}
+&lt;/style&gt;&lt;/div&gt;
+&lt;style&gt;
+#fpv-lab{display:grid;gap:9px;color:var(--foreground);max-width:1550px;margin:auto}#fpv-lab&gt;h2{font-size:clamp(19px,2vw,25px);margin:0;line-height:1.15}#fpv-lab&gt;h2+.text-small{font-size:11px}#fpv-lab #bfPanel{gap:6px;padding:8px}#fpv-lab #bfPanel h3{margin:0;font-size:16px}#fpv-lab .viz-controls{gap:7px}#fpv-lab .viz-row{gap:5px}#fpv-lab .viz-row .btn{padding:5px 8px;font-size:12px}#fpv-lab #settings input{min-width:64px;max-width:105px;padding:5px}#fpv-lab #settings table{font-size:12px}#fpv-lab .views h3{margin:3px 0;font-size:14px}#fpv-lab .views section{padding:7px}#fpv-lab input.pid-invalid{border:2px solid #e53e3e!important;background:rgba(220,38,38,.12)!important}#fpv-lab input.pid-risk{border:2px solid #d97706!important;background:rgba(245,158,11,.10)!important}#fpv-lab #pidWarnings{font-weight:600;color:#d97706}
 #fpv-lab .views{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:calc(var(--font-size-base)*1)}
 #fpv-lab .pid-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(var(--font-size-base)*.5)}
 #fpv-lab #bfPanel{display:grid;gap:calc(var(--font-size-base)*.75)}
@@ -1936,7 +1995,7 @@ html>body{padding:0}</style>
 @media(max-width:600px){#fpv-lab .bf-sliders{grid-template-columns:1fr}}
 #fpv-lab canvas{display:block;width:100%;height:clamp(170px,24vh,260px)}#fpv-lab #trace{height:140px}
 #fpv-lab section{min-width:0}#fpv-lab .setting{display:grid;gap:calc(var(--font-size-base)*.5)}
-#fpv-lab details>div{margin-top:calc(var(--font-size-base)*.5)}
+#fpv-lab details&gt;div{margin-top:calc(var(--font-size-base)*.5)}
 @media(max-width:520px){#fpv-lab .views{grid-template-columns:1fr}}
 
 #fpv-lab .tsd-bb{border:1px solid var(--border);border-radius:10px;padding:10px;margin:8px 0;background:var(--card,var(--background))}
@@ -1950,195 +2009,212 @@ html>body{padding:0}</style>
 #fpv-lab .tsd-att-numbers span{background:var(--muted,#e6e9ed);padding:6px 9px;border-radius:6px}
 #fpv-lab #trace[hidden]{display:none!important}
 @media(max-width:600px){#fpv-lab .tsd-att-grid{grid-template-columns:1fr}}
-</style>
-<script>
-(()=>{
- const root=document.getElementById('fpv-lab'),$=id=>root.querySelector('#'+id);
+&lt;/style&gt;
+&lt;script&gt;
+(()=&gt;{
+/* Educational plant. SI time/position, Euler-axis angular approximation.
+ * No firmware flight prediction. Slider equations checked against 2026.6.2.
+ */
+const FlightEngine = (() =&gt; {
+ const clamp=(x,a,b)=&gt;Math.max(a,Math.min(b,x)), tau=2*Math.PI;
+ const axes=['roll','pitch','yaw'];
+ const base=[{P:45,I:80,D:30,Dmax:40,FF:120},{P:47,I:84,D:34,Dmax:46,FF:125},{P:45,I:80,D:0,Dmax:0,FF:120}];
+ function gains(s,axis){
+  const i=axes.indexOf(axis), b=base[i],m=s.sliders;
+  if(s.tuningMode==='OFF'||(s.tuningMode==='RP'&amp;&amp;i===2))return {...s.pids[axis]};
+  const pi=i===1?m.pitch:1, pd=i===1?m.pitchD:1, tr=(x,max=250)=&gt;clamp(Math.trunc(x),0,max);
+  return {P:tr(b.P*m.master*m.tracking*pi),I:tr(b.I*m.master*m.tracking*m.integral*pi),
+   D:tr(b.D*m.master*m.damping*pd),Dmax:tr((b.Dmax*m.dynamic+(1-m.dynamic)*b.D)*m.master*m.damping*pd),
+   FF:tr(b.FF*m.master*pi*m.response,1000)};
+ }
+ function hardware(h){
+  const mass=(h.drymass+h.bmass)/1000;
+  const rotor=(h.pmass/4.48)*Math.pow(h.diameter/5,2);
+  const stator=Math.pow(h.statorD/22,2)*h.statorH/7;
+  const prop=Math.pow(h.diameter/5,3)*Math.pow(h.pitch/5,.55)*(h.blades/3);
+  const drive=Math.pow(h.kv/1950*h.cells/6,1.5)*Math.pow(stator,.35);
+  const supply=clamp(h.cRate*h.mah/(120*1500),.25,1.4);
+  const thrust=.632*9.81/(4*.38)*clamp(prop*drive*Math.sqrt(supply),.15,5);
+  return {mass,thrust,lag:clamp(.022*rotor/(stator*Math.sqrt(h.kv/1950)),.008,.12),
+   inertia:.0035*(mass/.632)*Math.pow(h.diameter/5,.6)+.0003*rotor,
+   sag:clamp(.025/supply,.01,.15),capacity:h.mah};
+ }
+ function rotate(v,a){let [x,y,z]=v;let [r,p,w]=a;let yy=Math.cos(r)*y-Math.sin(r)*z,zz=Math.sin(r)*y+Math.cos(r)*z;
+  let xx=Math.cos(p)*x+Math.sin(p)*zz;zz=-Math.sin(p)*x+Math.cos(p)*zz;
+  return [Math.cos(w)*xx-Math.sin(w)*yy,Math.sin(w)*xx+Math.cos(w)*yy,zz];}
+ function maneuverDuration(s){return s.test.startsWith('split-')?1.5:s.test==='yaw'?180/s.rotationRate:['flip','roll'].includes(s.test)?360/s.rotationRate:s.test==='drop'?2*(s.punchDuration??.5):s.test==='throttle'?0:(s.punchDuration??.5);}
+ function reference(s,t,start=Infinity){
+  if(s.test==='takeoff')return [0,0,0];
+  const rate=s.rotationRate*Math.PI/180, a=[0,-.10*clamp(t,0,1),0], u=t-start;
+  if(u&lt;0)return a;
+  if(['flip','roll','yaw'].includes(s.test))a[{roll:0,flip:1,yaw:2}[s.test]]+=Math.min(s.test==='yaw'?Math.PI:tau,u*rate);
+  else if(s.test.startsWith('split-')){
+   const sign=s.test==='split-left'?-1:1;
+   if(u&lt;.5)a[0]=sign*Math.PI*u/.5;
+   else if(u&lt;1.5){a[0]=sign*Math.PI;a[1]=-.1+(Math.PI+.2)*(u-.5);}
+   else {a[0]=sign*Math.PI;a[1]=Math.PI+.1;}
+  }
+  return a;
+ }
+ function throttle(s,t,start=Infinity){
+  let v=s.throttle/100;if(v===0)return 0;
+  if(s.test==='takeoff')return v*clamp(t/.8,0,1);
+  const u=t-start,d=s.punchDuration??.5,p=(s.punchStrength??22)/100;
+  if(u&lt;0)return v;
+  if(s.test==='drop'){if(u&lt;d)return v*.22;if(u&lt;2*d)return clamp(v+p,0,1);}
+  if(s.test==='climb'&amp;&amp;u&lt;d)return clamp(v+p,0,1);
+  if(s.test.startsWith('split-')){if(u&lt;.5)return v*.58;if(u&lt;1.2)return v*.30;if(u&lt;1.5+d)return clamp(v+p,0,1);}
+  if(['flip','roll','yaw'].includes(s.test)){const end=maneuverDuration(s);if(u&lt;end)return v*(s.test==='yaw'?1:.6);if(u&lt;end+d)return clamp(v+p,0,1);}
+  return v;
+ }
+ function simulate(s,seconds=30){
+  const dt=.001,hw=hardware(s.hw),gs=axes.map(k=&gt;gains(s,k)),mix=[[1,-1,-1],[-1,-1,1],[-1,1,-1],[1,1,1]];
+  let angle=[0,0,0],rate=[0,0,0],integ=[0,0,0],filtered=[0,0,0],prevGyro=[0,0,0],prevTarget=[0,0,0],dFilt=[0,0,0],motor=[0,0,0,0];
+  const initialHeight=6;
+  let pos=[0,0,s.test==='takeoff'?-.16:-initialHeight],vel=[s.test==='takeoff'?0:6,0,0],crash=false,airborne=s.test!=='takeoff',used=0;
+  const delay=Array.from({length:7},()=&gt;[0,0,0]),logs=[];let dIdx=0;
+  let maneuverStart=s.test==='takeoff'?0:null,entryPosition=null,splitStart=null,altIntegral=0;
+  for(let n=0;n&lt;=seconds/dt;n++){
+   const t=n*dt;
+   if(maneuverStart===null&amp;&amp;!crash&amp;&amp;pos[0]&gt;=20){maneuverStart=t;entryPosition=[...pos];}
+   const start=maneuverStart??Infinity,split=s.test.startsWith('split-');
+   if(split&amp;&amp;maneuverStart!==null&amp;&amp;splitStart===null&amp;&amp;!crash&amp;&amp;-pos[2]&gt;=21.5&amp;&amp;Math.abs(vel[2])&lt;1.5)splitStart=t;
+   const rotationStart=split?(splitStart??Infinity):start;
+   const ref=reference(s,t,rotationStart),refNext=reference(s,t+dt,rotationStart),stickThrottle=throttle(s,t,rotationStart),tar=[],terms=[],effectiveD=[];
+   const recovery=rotationStart+maneuverDuration(s)+(split||['flip','roll','yaw'].includes(s.test)?(s.punchDuration??.5):0);
+   // Scripted pilot adds collective recovery, never overwrites attitude/position.
+   const heightTarget=s.test==='takeoff'?Math.min(6,t*1.6):split&amp;&amp;t&gt;=start&amp;&amp;t&lt;rotationStart?22:initialHeight;
+   const hold=s.test==='takeoff'||s.test==='throttle'||t&gt;=recovery||t&lt;rotationStart;
+   const heightError=heightTarget+pos[2];
+   if(hold&amp;&amp;!crash&amp;&amp;stickThrottle&gt;0)altIntegral=clamp(altIntegral+heightError*dt,-8,8);
+   else altIntegral*=.999;
+   const assist=hold?clamp(heightError*.065+vel[2]*.10+altIntegral*.015,-.35,.52):0;
+   const thr=stickThrottle===0?0:clamp(stickThrottle+assist,0,1);
+   const descent=clamp(vel[2]/3,0,2),wash=descent*thr*(.25+s.force*.025);
+   const measured=rate.map((v,k)=&gt;v+s.noise*.018*(Math.sin(tau*120*t+k*1.7)+.3*Math.sin(tau*173*t+k)));
+   const gyro=delay[dIdx];delay[dIdx]=measured;dIdx=(dIdx+1)%delay.length;
+   for(let k=0;k&lt;3;k++){
+    const g=gs[k],referenceRate=(refNext[k]-ref[k])/dt;
+    // Preset pilot holds the target attitude; PID controls angular rates.
+    const errAngle=Math.atan2(Math.sin(ref[k]-angle[k]),Math.cos(ref[k]-angle[k]));
+    const target=clamp(referenceRate+errAngle*2.2,-30,30);tar.push(target);
+    filtered[k]+=(gyro[k]-filtered[k])*dt/.002;
+    const err=target-filtered[k],deriv=(filtered[k]-prevGyro[k])/dt;prevGyro[k]=filtered[k];
+    dFilt[k]+=(deriv-dFilt[k])*dt/.003;
+    const d=g.D+(g.Dmax&gt;g.D?(g.Dmax-g.D)*clamp(Math.abs(target)/10+Math.abs(deriv)/600,0,1):0);effectiveD.push(d);
+    const acceleration=clamp((target-prevTarget[k])/dt,-500,500);prevTarget[k]=target;
+    const P=g.P*.006*err,I=g.I*.003*integ[k],D=-d*.00035*dFilt[k],FF=g.FF*.000018*acceleration;
+    const command=P+I+D+FF;
+    if(thr&gt;0&amp;&amp;!crash&amp;&amp;(Math.abs(command)&lt;.4||Math.sign(err)!==Math.sign(command)))integ[k]=clamp(integ[k]+err*dt,-1.5,1.5);
+    if(thr===0||crash)integ[k]*=.99;
+    terms.push({P,I,D,FF,sum:command});
+   }
+   const raw=mix.map(m=&gt;thr+m.reduce((v,sign,k)=&gt;v+sign*terms[k].sum,0)),out=raw.map(v=&gt;crash||thr===0?0:clamp(v,0,1));
+   for(let i=0;i&lt;4;i++)motor[i]+=(out[i]-motor[i])*dt/hw.lag;
+   const avg=motor.reduce((a,b)=&gt;a+b,0)/4;used+=avg*85*dt/3.6;
+   const battery=clamp(1-hw.sag*avg-.12*used/hw.capacity,.5,1),forces=motor.map(v=&gt;v*hw.thrust*battery);
+   const torques=[0,1,2].map(k=&gt;mix.reduce((v,m,i)=&gt;v+m[k]*forces[i],0)*(k===2?.035:.078));
+   const disturbance=[];
+   for(let k=0;k&lt;3;k++){
+    const gust=s.force*.0006*(Math.sin(tau*1.3*t+k)+.45*Math.sin(tau*2.7*t+k*2)+.32);
+    const propwash=wash*.012*(Math.sin(tau*8.2*t+k)+.6*Math.sin(tau*13.7*t+k*1.4));
+    const imbalance=avg*.0005*s.noise*Math.sin(tau*120*t+k);
+    disturbance[k]=gust+propwash+imbalance;
+    if(!crash){const acc=(torques[k]+disturbance[k]-.0018*rate[k])/(hw.inertia*(k===2?1.4:1));rate[k]=clamp(rate[k]+acc*dt,-100,100);angle[k]+=rate[k]*dt;}
+   }
+   if(!crash){
+    const thrust=rotate([0,0,-forces.reduce((a,b)=&gt;a+b,0)],angle);
+    for(let k=0;k&lt;3;k++){vel[k]+=(thrust[k]/hw.mass+(k===2?9.81:0)-.10*vel[k])*dt;pos[k]+=vel[k]*dt;}
+    if(pos[2]&lt;-.20)airborne=true;
+    const tilt=Math.acos(clamp(rotate([0,0,1],angle)[2],-1,1));
+    if(pos[2]&gt;=-.16){
+     if((airborne&amp;&amp;vel[2]&gt;1.2)||tilt&gt;.65){crash=true;rate=[0,0,0];vel=[0,0,0];}
+     else {vel[2]=Math.min(0,vel[2]);vel[0]*=.99;vel[1]*=.99;}
+     pos[2]=-.16;
+    }
+   }
+   if(n%2===0)logs.push({t,maneuverStart,rotationStart:Number.isFinite(rotationStart)?rotationStart:null,recoveryTime:Number.isFinite(recovery)?recovery:null,heightTarget,entryPosition,stickThrottle,phase:crash?'충돌':s.test==='takeoff'?'이륙 안정화':s.test==='throttle'?'6m 목표 · 단순 전진':t&lt;start?'20m 진입 비행':split&amp;&amp;t&lt;rotationStart?'스플릿 S 준비 상승 · 22m 목표':t&lt;recovery?'기동 · 스로틀 시퀀스':'6m 복귀 · 계속 비행',angles:[...angle],rates:[...rate],targets:tar,reference:ref,pos:[...pos],velocity:[...vel],motors:[...motor],terms,effectiveD,disturbance,wash,crash,throttle:thr,used,
+    saturated:gs.map((_,k)=&gt;raw.some((v,i)=&gt;Math.abs(v-out[i])&gt;.001&amp;&amp;Math.abs(terms[k].sum)&gt;.01))});
+  }
+  return logs;
+ }
+ return {gains,hardware,reference,throttle,maneuverDuration,simulate,rotate,base,axes,clamp};
+})();
+
+
+ const root=document.getElementById('fpv-lab'),$=id=&gt;root.querySelector('#'+id);
  const presets={motorPreset:{v1950:{kv:1950,statorD:22,statorH:7},v1750:{kv:1750,statorD:22,statorH:7}},batteryPreset:{c120:{cells:6,mah:1500,bmass:232,cRate:120},c130:{cells:6,mah:1500,bmass:253,cRate:130}},propPreset:{hq5050:{diameter:5,pitch:5,blades:3,pmass:4.48},gemfan:{diameter:131.8/25.4,pitch:3.6,blades:3,pmass:4.2}}};
  const fields=[['kv','모터 KV',500,4000,1,'motorPreset'],['statorD','스테이터 직경 mm',14,32,.1,'motorPreset'],['statorH','스테이터 높이 mm',3,12,.1,'motorPreset'],['cells','배터리 S',3,8,1,'batteryPreset'],['mah','용량 mAh',500,4000,10,'batteryPreset'],['bmass','배터리 질량 g',80,800,1,'batteryPreset'],['cRate','제조사 표기 C',10,200,1,'batteryPreset'],['diameter','프롭 직경 inch',3,8,.01,'propPreset'],['pitch','프롭 피치 inch',2,7,.1,'propPreset'],['blades','프롭 날개 수',2,5,1,'propPreset'],['pmass','프롭 1개 질량 g',1,15,.01,'propPreset'],['drymass','배터리 제외 중량 g · 가정',200,1200,1,'assumed']];
  const axes=['roll','pitch','yaw'],axisNames={roll:'롤',pitch:'피치',yaw:'요'};
  const pidKeys=['P','I','D','Dmax','FF'];
- const examplePids=()=>({roll:{P:45,I:80,D:30,Dmax:40,FF:120},pitch:{P:47,I:84,D:34,Dmax:46,FF:125},yaw:{P:45,I:80,D:0,Dmax:0,FF:120}});
- const sliderDefs=[['damping','감쇠 · D'],['tracking','추적 · P / I'],['response','스틱 반응 · FF'],['dynamic','동적 감쇠 · D 최대'],['integral','드리프트 / 흔들림 · I'],['pitch','피치 추적 · P / I / D'],['master','마스터 배율']];
- const defaultSliders=()=>Object.fromEntries(sliderDefs.map(([k])=>[k,1]));
- const defaults=()=>({axis:'pitch',pids:examplePids(),sliders:defaultSliders(),tuningMode:'OFF',A:{P:47,I:84,D:34,Dmax:46,FF:125},force:5,noise:0.5,speed:1,throttle:38,rotationRate:720,hfEnabled:true,volume:15,test:'drop',graph:'angle',motorPreset:'v1950',batteryPreset:'c120',propPreset:'hq5050',hw:{...presets.motorPreset.v1950,...presets.batteryPreset.c120,...presets.propPreset.hq5050,drymass:400}});
+ const examplePids=()=&gt;({roll:{P:45,I:80,D:30,Dmax:40,FF:120},pitch:{P:47,I:84,D:34,Dmax:46,FF:125},yaw:{P:45,I:80,D:0,Dmax:0,FF:120}});
+ const sliderDefs=[['damping','감쇠 · D'],['tracking','추적 · P / I'],['response','스틱 반응 · FF'],['dynamic','동적 감쇠 · D 최대'],['integral','드리프트 / 흔들림 · I'],['pitchD','피치 감쇠 · D'],['pitch','피치 추적 · P / I / FF'],['master','마스터 배율']];
+ const defaultSliders=()=&gt;Object.fromEntries(sliderDefs.map(([k])=&gt;[k,1]));
+ const defaults=()=&gt;({axis:'pitch',punchDuration:.5,punchStrength:22,pids:examplePids(),sliders:defaultSliders(),tuningMode:'OFF',A:{P:47,I:84,D:34,Dmax:46,FF:125},force:5,noise:0.5,speed:1,throttle:38,rotationRate:720,hfEnabled:true,volume:15,test:'drop',graph:'angle',motorPreset:'v1950',batteryPreset:'c120',propPreset:'hq5050',hw:{...presets.motorPreset.v1950,...presets.batteryPreset.c120,...presets.propPreset.hq5050,drymass:400}});
  let s=defaults(), data=[],t=0,playing=true,last=0;
- $('settings').innerHTML='<table class="table table-sm"><thead><tr><th>기본 / Acro</th><th>P · 비례</th><th>I · 적분</th><th>D · 최소</th><th>D · 최대</th><th>FF · 피드포워드</th></tr></thead><tbody>'+axes.map(axis=>'<tr><th scope="row">'+axisNames[axis]+'</th>'+pidKeys.map(k=>'<td><input class="form-control" type="number" min="0" max="'+(k==='FF'?1000:250)+'" step="1" id="pid-'+axis+'-'+k+'" aria-label="'+axisNames[axis]+' '+k+'"></td>').join('')+'</tr>').join('')+'</tbody></table>';
- $('bfSliders').innerHTML=sliderDefs.map(([k,label])=>'<label class="form-label">'+label+' <span id="sliderValue-'+k+'" class="tabular-nums">1.00</span><input id="slider-'+k+'" class="form-range" type="range" min="0" max="2" step="0.05" value="1"></label>').join('');
- $('hardware').innerHTML=fields.map(([id,label,min,max,step])=>`<label class="form-label">${label}<input id="hw-${id}" class="form-control" type="number" min="${min}" max="${max}" step="${step}"></label>`).join('');
- function normalize(x){const d=defaults();if(!x||typeof x!=='object')return d;for(const n of ['A'])for(const k of ['P','I','D'])if(Number.isFinite(x[n]?.[k]))d[n][k]=Math.max(0,Math.min(250,Math.round(x[n][k])));if(['pitch','roll','yaw'].includes(x.axis))d.axis=x.axis;for(const k of ['force','noise','speed'])if(Number.isFinite(x[k]))d[k]=Math.max(k==='speed'?.1:0,Math.min(k==='force'?30:k==='noise'?5:2,x[k]));d.hfEnabled=true;if(Number.isFinite(x.volume))d.volume=Math.max(0,Math.min(50,x.volume));if(Number.isFinite(x.rotationRate))d.rotationRate=Math.max(60,Math.min(1440,Math.round(x.rotationRate)));if(Number.isFinite(x.throttle))d.throttle=Math.max(0,Math.min(100,x.throttle));if(['throttle','yaw','flip','roll','split-left','split-right','pulse','drop','climb'].includes(x.test))d.test=x.test;if(['angle','residual','rate'].includes(x.graph))d.graph=x.graph;for(const [id,,lo,hi] of fields)if(Number.isFinite(x.hw?.[id]))d.hw[id]=Math.max(lo,Math.min(hi,x.hw[id]));for(const k of Object.keys(presets)){d[k]=presets[k][x[k]]?x[k]:x[k]==='custom'?'custom':d[k];if(d[k]!=='custom'&&Object.entries(presets[k][d[k]]).some(([id,v])=>Math.abs(d.hw[id]-v)>.00001))d[k]='custom';}if(d.test==='yaw')d.axis='yaw';if(d.test==='flip')d.axis='pitch';if(d.test==='roll'||d.test==='pulse'||d.test==='split-left'||d.test==='split-right')d.axis='roll';if(d.test==='drop'||d.test==='climb')d.axis='pitch';
- for(const axis of axes){const source=x.pids?.[axis]||x.A; if(source)for(const k of pidKeys){const v=k==='Dmax'&&source[k]===undefined?source.D:k==='FF'&&source[k]===undefined?0:source[k];if(Number.isFinite(v))d.pids[axis][k]=Math.max(0,Math.min(k==='FF'?1000:250,Math.round(v)));}if(d.pids[axis].Dmax>0)d.pids[axis].Dmax=Math.max(d.pids[axis].D,d.pids[axis].Dmax);}
- if(['OFF','RP','RPY'].includes(x.tuningMode))d.tuningMode=x.tuningMode;for(const [k] of sliderDefs)if(Number.isFinite(x.sliders?.[k]))d.sliders[k]=Math.max(0,Math.min(2,x.sliders[k]));return d;}
- function save(){window.openai?.setWidgetState?.({modelContent:s,privateContent:null})?.catch(()=>{});}
- function gains(axis=s.axis){const g={...s.pids[axis]},m=s.sliders;if(s.tuningMode!=='OFF'&&(s.tuningMode==='RPY'||axis!=='yaw')){const pitch=axis==='pitch'?m.pitch:1;g.P*=m.tracking*m.master*pitch;g.I*=m.tracking*m.integral*m.master*pitch;g.D*=m.damping*m.master*pitch;g.Dmax*=m.damping*m.dynamic*m.master*pitch;g.FF*=m.response*m.master;}for(const k of pidKeys)g[k]=Math.round(Math.max(0,Math.min(k==='FF'?1000:250,g[k])));if(g.Dmax>0)g.Dmax=Math.max(g.D,g.Dmax);return g;}
- function dAt(g,time,velocity=0){if(g.Dmax===0)return g.D;const boost=Math.min(1,Math.max(Math.abs(velocity)/500,profile(time).rate/500,time>=recoveryStart()?Math.exp(-(time-recoveryStart())*3):0));return g.D+(g.Dmax-g.D)*boost;}
+ $('settings').innerHTML='&lt;table class=&quot;table table-sm&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;기본 / Acro&lt;/th&gt;&lt;th&gt;P · 비례&lt;/th&gt;&lt;th&gt;I · 적분&lt;/th&gt;&lt;th&gt;D · 최소&lt;/th&gt;&lt;th&gt;D · 최대&lt;/th&gt;&lt;th&gt;FF · 피드포워드&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;'+axes.map(axis=&gt;'&lt;tr&gt;&lt;th scope=&quot;row&quot;&gt;'+axisNames[axis]+'&lt;/th&gt;'+pidKeys.map(k=&gt;'&lt;td&gt;&lt;input class=&quot;form-control&quot; type=&quot;number&quot; min=&quot;0&quot; max=&quot;'+(k==='FF'?2000:250)+'&quot; step=&quot;1&quot; id=&quot;pid-'+axis+'-'+k+'&quot; aria-label=&quot;'+axisNames[axis]+' '+k+'&quot;&gt;&lt;/td&gt;').join('')+'&lt;/tr&gt;').join('')+'&lt;/tbody&gt;&lt;/table&gt;';
+ $('bfSliders').innerHTML=sliderDefs.map(([k,label])=&gt;'&lt;label class=&quot;form-label&quot;&gt;'+label+' &lt;span id=&quot;sliderValue-'+k+'&quot; class=&quot;tabular-nums&quot;&gt;1.00&lt;/span&gt;&lt;input id=&quot;slider-'+k+'&quot; class=&quot;form-range&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;2&quot; step=&quot;0.05&quot; value=&quot;1&quot;&gt;&lt;/label&gt;').join('');
+ $('hardware').innerHTML=fields.map(([id,label,min,max,step])=&gt;`&lt;label class=&quot;form-label&quot;&gt;${label}&lt;input id=&quot;hw-${id}&quot; class=&quot;form-control&quot; type=&quot;number&quot; min=&quot;${min}&quot; max=&quot;${max}&quot; step=&quot;${step}&quot;&gt;&lt;/label&gt;`).join('');
+ function normalize(x){const d=defaults();if(!x||typeof x!=='object')return d;for(const n of ['A'])for(const k of ['P','I','D'])if(Number.isFinite(x[n]?.[k]))d[n][k]=Math.max(0,Math.min(250,Math.round(x[n][k])));if(['pitch','roll','yaw'].includes(x.axis))d.axis=x.axis;for(const k of ['force','noise','speed'])if(Number.isFinite(x[k]))d[k]=Math.max(k==='speed'?.1:0,Math.min(k==='force'?30:k==='noise'?5:2,x[k]));d.hfEnabled=true;if(Number.isFinite(x.volume))d.volume=Math.max(0,Math.min(50,x.volume));if(Number.isFinite(x.rotationRate))d.rotationRate=Math.max(60,Math.min(1440,Math.round(x.rotationRate)));if(Number.isFinite(x.throttle))d.throttle=Math.max(0,Math.min(100,x.throttle));if(['throttle','yaw','flip','roll','split-left','split-right','pulse','drop','climb','takeoff'].includes(x.test))d.test=x.test;if(['angle','residual','rate'].includes(x.graph))d.graph=x.graph;for(const [id,,lo,hi] of fields)if(Number.isFinite(x.hw?.[id]))d.hw[id]=Math.max(lo,Math.min(hi,x.hw[id]));for(const k of Object.keys(presets)){d[k]=presets[k][x[k]]?x[k]:x[k]==='custom'?'custom':d[k];if(d[k]!=='custom'&amp;&amp;Object.entries(presets[k][d[k]]).some(([id,v])=&gt;Math.abs(d.hw[id]-v)&gt;.00001))d[k]='custom';}if(d.test==='yaw')d.axis='yaw';if(d.test==='flip')d.axis='pitch';if(d.test==='roll'||d.test==='pulse'||d.test==='split-left'||d.test==='split-right')d.axis='roll';if(d.test==='drop'||d.test==='climb')d.axis='pitch';
+ for(const axis of axes){const source=x.pids?.[axis]||x.A; if(source)for(const k of pidKeys){const v=k==='Dmax'&amp;&amp;source[k]===undefined?source.D:k==='FF'&amp;&amp;source[k]===undefined?0:source[k];if(Number.isFinite(v))d.pids[axis][k]=Math.max(0,Math.min(k==='FF'?2000:250,Math.round(v)));}}
+ for(const [key,lo,hi] of [['punchDuration',.1,1.5],['punchStrength',0,50]])if(Number.isFinite(x[key]))d[key]=Math.max(lo,Math.min(hi,x[key]));if(['OFF','RP','RPY'].includes(x.tuningMode))d.tuningMode=x.tuningMode;for(const [k] of sliderDefs)if(Number.isFinite(x.sliders?.[k]))d.sliders[k]=Math.max(0,Math.min(2,x.sliders[k]));return d;}
+ function save(){try{localStorage.setItem('tsd-preview-v2',JSON.stringify(s));}catch{}}
+ function localStorageSafeGet(){try{return localStorage.getItem('tsd-preview-v2')}catch{return null}}
+
+ function gains(axis=s.axis){return FlightEngine.gains(s,axis);}
+
+ function dAt(g,time,velocity=0){return g.Dmax&gt;g.D?g.D+(g.Dmax-g.D)*Math.min(1,Math.abs(velocity)/500):g.D;}
+
  function pidControls(){
   $('tuningMode').value=s.tuningMode;$('bfSliders').hidden=s.tuningMode==='OFF';
-  for(const axis of axes){const g=gains(axis);for(const k of pidKeys){$('pid-'+axis+'-'+k).value=g[k];$('pid-'+axis+'-'+k).disabled=s.tuningMode!=='OFF'&&(s.tuningMode==='RPY'||axis!=='yaw');}}
+  for(const axis of axes){const g=gains(axis);for(const k of pidKeys){$('pid-'+axis+'-'+k).value=g[k];$('pid-'+axis+'-'+k).disabled=s.tuningMode!=='OFF'&amp;&amp;(s.tuningMode==='RPY'||axis!=='yaw');}}
   for(const [k] of sliderDefs){$('slider-'+k).value=s.sliders[k];$('sliderValue-'+k).textContent=s.sliders[k].toFixed(2);}
  }
- function controls(){$('volume').value=s.volume;$('volumeVal').textContent=s.volume+'%';pidControls();for(const k of ['force','noise','speed','throttle','rotationRate','graph','motorPreset','batteryPreset','propPreset']){const el=$(k);if(el)el.value=s[k];}$('forceval').textContent=s.force;$('noiseval').textContent=s.noise;$('throttleval').textContent=s.throttle+'%';for(const [id] of fields)$('hw-'+id).value=Number(s.hw[id].toFixed(3));specs();}
+ function controls(){$('punchDuration').value=s.punchDuration;$('punchStrength').value=s.punchStrength;$('volume').value=s.volume;$('volumeVal').textContent=s.volume+'%';pidControls();for(const k of ['force','noise','speed','throttle','rotationRate','graph','motorPreset','batteryPreset','propPreset']){const el=$(k);if(el)el.value=s[k];}$('forceval').textContent=s.force;$('noiseval').textContent=s.noise;$('throttleval').textContent=s.throttle+'%';for(const [id] of fields)$('hw-'+id).value=Number(s.hw[id].toFixed(3));specs();pidStatus();}
  function specs(){const h=s.hw;$('specStatus').textContent=`모터 ${s.motorPreset==='custom'?'직접 입력 · 미검증':'제조사 크기·KV 확인'} / 배터리 ${s.batteryPreset==='custom'?'직접 입력 · 미검증':'제조사 공칭 사양 확인'} / 프롭 ${s.propPreset==='custom'?'직접 입력 · 미검증':'제조사 치수·질량 확인'} · ${(h.cells*3.7).toFixed(1)}V · 공칭 ${(h.cells*3.7*h.mah/1000).toFixed(1)}Wh · 총중량 가정 ${Math.round(h.drymass+h.bmass)}g`;}
  function isSpin(){return ['flip','roll','yaw'].includes(s.test);}
- function recoveryStart(){return isSpin()?1+360/s.rotationRate:s.test==='throttle'?1:(s.test==='split-left'||s.test==='split-right')?4.5:3;}
- function duration(){return 10;}
- function profile(time){const end=recoveryStart(),spin=isSpin();const climb=s.test==='climb',split=s.test==='split-left'||s.test==='split-right';return {rate:spin&&time>=1&&time<end?s.rotationRate:0,throttle:flightThrottle(time),phase:time<1?'시작 대기':split?(time<2?'좌/우 반 롤 180°':time<4?'하강 반 루프 180°':time<4.5?'반대 방향 이탈':'회복 후 역방향 비행'):climb?(time<2.5?'상승 가속':time<3.5?'상승 관성 · 스로틀 감속':'목표 고도 회복'):time<end?(spin?'정속 1회전':'비행 기동'):spin?'중앙 복귀 · 계속 비행':'계속 비행'};}
+ function recoveryStart(){const q=pidTrajectory.at(-1);return q?.rotationStart===null||!q?30:Math.min(30,q.rotationStart+FlightEngine.maneuverDuration(s));}
+
+ function duration(){return 30;}
+
+ function profile(time){const end=recoveryStart(),spin=isSpin();const climb=s.test==='climb',split=s.test==='split-left'||s.test==='split-right';return {rate:spin&amp;&amp;time&gt;=1&amp;&amp;time&lt;end?s.rotationRate:0,throttle:flightThrottle(time),phase:time&lt;1?'시작 대기':split?(time&lt;2?'좌/우 반 롤 180°':time&lt;4?'하강 반 루프 180°':time&lt;4.5?'반대 방향 이탈':'회복 후 역방향 비행'):climb?(time&lt;2.5?'상승 가속':time&lt;3.5?'상승 관성 · 스로틀 감속':'목표 고도 회복'):time&lt;end?(spin?'정속 1회전':'비행 기동'):spin?'중앙 복귀 · 계속 비행':'계속 비행'};}
  // The graph and both camera views read the SAME 10-second controller trajectory.
- function simulate(g){
-  return pidTrajectory.map(q=>{
-   const axisIndex=axes.indexOf(s.axis), k=axisIndex<0?1:axisIndex;
-   const ref=referencePose(q.t), v=q.rates[k]*180/Math.PI;
-   const target=ref[['r','p','y'][k]]*180/Math.PI;
-   const desired=q.targets[k]*180/Math.PI;
-   return {t:q.t,a:q.angles[k]*180/Math.PI,v,desired,target,saturated:q.saturated[k]};
-  });
- }
- function metrics(d){const z=d.filter(p=>p.t>=recoveryStart()),vals=z.map(p=>p.a-p.target),mean=vals.reduce((a,b)=>a+b,0)/vals.length,span=Math.max(...vals)-Math.min(...vals);let crossings=[];for(let j=1;j<z.length;j++)if(z[j-1].a<mean&&z[j].a>=mean)crossings.push(z[j].t);const f=span>.1&&crossings.length>=3?(crossings.length-1)/(crossings.at(-1)-crossings[0]):null;return {span,mean,f};}
- function update(){lastSpectrumKey='';s.A=gains();rebuildPidTrajectory();const a=simulate(s.A);$('activePid').textContent='현재 기동: '+axisNames[s.axis]+' · P '+s.A.P+' / I '+s.A.I+' / D '+s.A.D+'~'+(s.A.Dmax||s.A.D)+' / FF '+s.A.FF;data=[a,a.map(p=>({...p,a:-p.a,v:-p.v,target:-p.target,desired:-p.desired}))];t=0;const m=data.map(metrics);
- const post=pidTrajectory.filter(q=>q.t>=Math.max(1,recoveryStart()) && q.t<=10);
- const rmsAxis=k=>Math.sqrt(post.reduce((acc,q)=>acc+Math.pow((q.rates[k]-q.targets[k])*180/Math.PI,2),0)/Math.max(1,post.length));
- const pkAxis=k=>Math.max(...post.map(q=>Math.abs((q.angles[k]-referencePose(q.t)[['r','p','y'][k]])*180/Math.PI)));
- $('activePid').textContent+=' · 잔류 각속도 오차 RMS: Roll '+rmsAxis(0).toFixed(1)+' / Pitch '+rmsAxis(1).toFixed(1)+' / Yaw '+rmsAxis(2).toFixed(1)+'°/s';
- $('metrics').innerHTML=[['진동 폭 (최대−최소)',...m.map(v=>v.span.toFixed(2)+'°')],['진동 주파수 추정',...m.map(v=>v.f===null?'주기 불충분':v.f.toFixed(2)+' Hz')],['최종 중앙 이탈각',...data.map((d,i)=>(d.at(-1).a-(!isSpin()?0:i?-360:360)).toFixed(2)+'°')]].map(row=>'<tr>'+row.map((v,i)=>`<${i?'td':'th'}>${v}</${i?'td':'th'}>`).join('')+'</tr>').join('');const h=s.A.D*s.noise*(.2+s.throttle/100*1.6)/30;$('heat').textContent=`기동 후 최대 자세오차 Roll ${pkAxis(0).toFixed(1)}° / Pitch ${pkAxis(1).toFixed(1)}° · D·잡음 부하 ${h.toFixed(1)}배${h>=3?' · D 과다 시 발열 위험 증가':''} · 모형 출력 포화 ${(a.filter(p=>p.saturated).length/a.length*100).toFixed(1)}% (모두 교육용 상대 지표)`;$('routine').textContent=!isSpin()?({throttle:'직진 비행 · 스로틀 유지',pulse:'기울여 급선회 → 회복','split-left':'스플릿 S · 좌 롤 180° → 하강 반루프 180° → 반대 방향 이탈','split-right':'스플릿 S · 우 롤 180° → 하강 반루프 180° → 반대 방향 이탈',drop:'하강 → 스로틀 회복 · 프로프워시 관찰',climb:'상승 → 스로틀 회복 · 상승 관성과 목표 고도 안정화'}[s.test]):s.rotationRate+'°/초 × '+(360/s.rotationRate).toFixed(3)+'초 = 정확히 360° · 10초 고정 실험';$('scrub').max=duration();$('scrub').step='0.001';for(const k of ['throttle','yaw','flip','roll','split-left','split-right','drop','climb'])$('test-'+k).setAttribute('aria-pressed',String(k===s.test));draw();}
+ function simulate(){return pidTrajectory.map(q=&gt;{const k=axes.indexOf(s.axis);return {t:q.t,a:q.angles[k]*180/Math.PI,v:q.rates[k]*180/Math.PI,desired:q.targets[k]*180/Math.PI,target:q.reference[k]*180/Math.PI,saturated:q.saturated[k]};});}
+
+ function metrics(d){const z=d.filter(p=&gt;p.t&gt;=recoveryStart()),v=z.map(p=&gt;p.a-p.target),mean=v.reduce((a,b)=&gt;a+b,0)/v.length;let crossings=[];for(let i=1;i&lt;v.length;i++)if(v[i-1]&lt;mean&amp;&amp;v[i]&gt;=mean)crossings.push(z[i].t);return {span:Math.max(...v)-Math.min(...v),mean,f:crossings.length&gt;2?(crossings.length-1)/(crossings.at(-1)-crossings[0]):null};}
+
+ function update(){
+ spectrumCache={};s.A=gains();rebuildPidTrajectory();const a=simulate();data=[a,a.map(p=&gt;({...p,a:-p.a,v:-p.v,target:-p.target,desired:-p.desired}))];t=0;
+ $('activePid').textContent='적용 중 '+axisNames[s.axis]+' · P '+s.A.P+' / I '+s.A.I+' / D '+s.A.D+' / D 최대 '+s.A.Dmax+' / FF '+s.A.FF;
+ const m=data.map(metrics);$('metrics').innerHTML=[['기동 후 진동 폭',...m.map(x=&gt;x.span.toFixed(2)+'°')],['진동 주파수 추정',...m.map(x=&gt;x.f===null?'주기 불충분':x.f.toFixed(2)+' Hz')],['최종 목표 이탈각',...data.map(x=&gt;(x.at(-1).a-x.at(-1).target).toFixed(2)+'°')]].map(row=&gt;'&lt;tr&gt;'+row.map((v,i)=&gt;'&lt;'+(i?'td':'th')+'&gt;'+v+'&lt;/'+(i?'td':'th')+'&gt;').join('')+'&lt;/tr&gt;').join('');
+ const hit=pidTrajectory.find(q=&gt;q.crash);$('heat').textContent=hit?'지면 충돌 · '+hit.t.toFixed(2)+'초 · 충돌 후 모터 정지':'30초 계산 완료 · 지면 충돌 없음';
+ const entry=pidTrajectory.find(q=&gt;q.maneuverStart!==null);$('routine').textContent=s.test==='takeoff'?'이륙 · 6m 안정화':s.test==='throttle'?'6m 목표 · 펀치 없는 단순 전진':entry?'20m 진입 '+entry.maneuverStart.toFixed(3)+'초 → 기동 → 지속 비행':'20m 진입 미완료 · 기동을 시작하지 않았습니다';$('arrival').disabled=!entry;
+ $('scrub').max=duration();$('scrub').step='.002';for(const k of ['throttle','yaw','flip','roll','split-left','split-right','drop','climb','takeoff'])$('test-'+k).setAttribute('aria-pressed',String(k===s.test));draw();
+}
+
  function setup(c){const w=c.clientWidth,h=c.clientHeight,dpr=devicePixelRatio||1;if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);return {ctx,w,h};}
  function color(name){const probe=document.createElement('span');probe.style.color=`var(${name})`;root.append(probe);const c=getComputedStyle(probe).color;probe.remove();return c;}
  function rotate(p,a){const [x,y,z]=p,C=Math.cos(a),S=Math.sin(a);return s.axis==='roll'?[x,C*y-S*z,S*y+C*z]:s.axis==='pitch'?[C*x+S*z,y,-S*x+C*z]:[C*x-S*y,S*x+C*y,z];}
  function hfAmplitude(){return s.hfEnabled?Math.min(3,.00006*dAt(gains(),t)*dAt(gains(),t)*s.noise*s.throttle/100):0;}
- function highFrequency(time){const tau=time-recoveryStart();return tau<=0?0:hfAmplitude()*(1-Math.exp(-tau*25))*Math.sin(2*Math.PI*120*tau);}
+ function highFrequency(time){const tau=time-recoveryStart();return tau&lt;=0?0:hfAmplitude()*(1-Math.exp(-tau*25))*Math.sin(2*Math.PI*120*tau);}
  function currentAngle(){
-  const d=data[0];let lo=0,hi=d.length-1;while(hi-lo>1){const mid=(lo+hi)>>1;if(d[mid].t<=t)lo=mid;else hi=mid;}
+  const d=data[0];let lo=0,hi=d.length-1;while(hi-lo&gt;1){const mid=(lo+hi)&gt;&gt;1;if(d[mid].t&lt;=t)lo=mid;else hi=mid;}
   const f=Math.max(0,Math.min(1,(t-d[lo].t)/(d[hi].t-d[lo].t)));return d[lo].a*(1-f)+d[hi].a*f;
  }
  function wash(time){
-  if(s.throttle===0||(isSpin()&&time<=recoveryStart()))return 0;const center=isSpin()?recoveryStart()+.35:s.test==='drop'?2.9:s.test==='pulse'?2.5:100;
+  if(s.throttle===0||(isSpin()&amp;&amp;time&lt;=recoveryStart()))return 0;const center=isSpin()?recoveryStart()+.35:s.test==='drop'?2.9:s.test==='pulse'?2.5:100;
   return Math.exp(-Math.pow((time-center)/.65,2))*(.5+s.throttle/100)*(.5+2/(1+s.A.P/30))/(1+dAt(gains(),time)/30)*(isSpin()?1-Math.exp(-(time-recoveryStart())*12):1);
  }
- function nominalPose(time){
-  const forward=3+10*s.throttle/100,p={pos:[forward*time,0,-6],r:0,p:0,y:0};
-  if(s.test==='split-left'||s.test==='split-right'){
-   // Educational Split-S: half roll, descending half loop, reverse-heading exit.
-   const sign=s.test==='split-left'?-1:1;
-   const smooth=u=>{u=Math.max(0,Math.min(1,u));return u*u*(3-2*u);};
-   const roll=smooth((time-1)/1.0),loop=smooth((time-2)/2.0);
-   const theta=Math.PI*loop, radius=3.0, entry=forward*2;
-   p.r=sign*Math.PI*roll;
-   p.p=Math.PI*loop;
-   if(time<2){p.pos=[forward*time,0,-12];}
-   else if(time<4){p.pos=[entry+radius*Math.sin(theta),sign*.55*Math.sin(theta),-12+radius*(1-Math.cos(theta))];}
-   else {p.pos=[entry-forward*(time-4),0,-6];}
-  }else if(s.test==='pulse'){
-   const u=Math.max(0,Math.min(1,(time-1)/2)),q=u*Math.PI/2,rad=forward*2/(Math.PI/2);
-   p.pos=time<1?[forward*time,0,-6]:[forward+rad*Math.sin(q),rad*(1-Math.cos(q))+forward*Math.max(0,time-3),-6];
-   p.y=q;p.r=Math.sin(u*Math.PI)*.8;
-  }else if(s.test==='drop'){
-   const u=Math.max(0,Math.min(1,(time-1)/2));p.pos[2]=-10+6*Math.sin(u*Math.PI);p.p=-.18*Math.sin(u*2*Math.PI);
-  }else if(s.test==='climb'){
-   // Educational vertical trajectory: initial climb, overshoot from inertia, then damped recovery to 10m.
-   const u=Math.max(0,time-1);
-   let altitude;
-   if(u<1.5){const q=u/1.5;altitude=6+5*(q*q*(3-2*q));}
-   else if(u<2.5){const q=(u-1.5);altitude=11+1.3*Math.sin(q*Math.PI/2);}
-   else {const q=u-2.5;altitude=10+2.3*Math.exp(-q*1.35)*Math.cos(q*2.2);}
-   p.pos[2]=-altitude;
-   p.p=-.10*Math.sin(Math.min(u,2.5)/2.5*Math.PI);
-  }else if(s.test==='throttle')p.pos[2]=-6-Math.max(0,time-1)*s.throttle/100*.7;
-  const angle=(isSpin()?Math.max(0,Math.min(360,(time-1)*s.rotationRate)):0)*Math.PI/180;
-  if(s.test!=='split-left'&&s.test!=='split-right'){if(s.axis==='roll')p.r+=angle;else if(s.axis==='yaw')p.y+=angle;else p.p+=angle;}
-  return p;
- }
- // A single continuous angular-rate controller, integrated at 1 ms for all 10 s.
- // Reference maneuvers are commands, not prescribed aircraft attitude.
+ function nominalPose(time){return referencePose(time);}
+
+ const Engine=FlightEngine;
  let pidTrajectory=[];
- function referencePose(time){return nominalPose(time);}
- function rebuildPidTrajectory(){
-  const dt=.001,N=10000, names=['r','p','y'];
-  const st=axes.map(()=>({angle:0,rate:0,integral:0,prevError:0,motor:0}));
-  pidTrajectory=[];
-  const ref0=referencePose(0);
-  st.forEach((v,k)=>{v.angle=ref0[names[k]];});
-  for(let j=0;j<=N;j++){
-   const tm=j*dt,ref=referencePose(tm),next=referencePose(Math.min(10,tm+dt));
-   const sample={t:tm,angles:[],rates:[],targets:[],saturated:[]};
-   for(let k=0;k<3;k++){
-    const v=st[k],g=gains(axes[k]),desired=ref[names[k]];
-    // Limit target angular velocity to realistic educational range.
-    const targetRate=Math.max(-18,Math.min(18,(next[names[k]]-desired)/dt));
-    const angleErr=Math.atan2(Math.sin(desired-v.angle),Math.cos(desired-v.angle));
-    const rateSetpoint=Math.max(-18,Math.min(18,targetRate*(.45+.55*g.FF/Math.max(1,examplePids()[axes[k]].FF))+angleErr*4));
-    const error=rateSetpoint-v.rate;
-    v.integral=Math.max(-3,Math.min(3,v.integral+error*dt));
-    const gyroNoise=s.noise*.001*Math.sin(tm*117+k*2.1);
-    const gyroRate=v.rate+gyroNoise;
-    const derivative=-(gyroRate-v.prevError)/dt;
-    v.prevError=gyroRate;
-    const dEffective=dAt(g,tm,v.rate*180/Math.PI);
-    // Controller drives motor torque; damping and motor lag determine response.
-    // Educational rate PID: P tracks the commanded rate, I rejects sustained torque,
-    // and D opposes measured rate changes. The motor/airframe dynamics below
-    // determine the resulting motion; no separate decorative camera shake.
-    const control=g.P*.17*error+g.I*.055*v.integral+dEffective*.004*derivative;
-    const limit=6*(.5+flightThrottle(tm));
-    const clipped=Math.max(-limit,Math.min(limit,control));
-    const motorLag=.045;
-    v.motor+=(clipped-v.motor)*dt/motorLag;
-    // Deterministic, persistent 10-second airflow and motor disturbance.
-    // Propwash grows during descent/recovery, and is attenuated by D damping.
-    const split=(s.test==='split-left'||s.test==='split-right');
-    const descending=(split&&tm>=2&&tm<4)||(s.test==='drop'&&tm>=1&&tm<3.3);
-    const recovering=(split&&tm>=4&&tm<6.5)||(s.test==='drop'&&tm>=2.6&&tm<5.5);
-    const washEnvelope=(descending?1:recovering?.78:.20);
-    const dRatio=dEffective/Math.max(1,examplePids()[axes[k]].D||30);
-    const washGain=washEnvelope*(.55+Math.max(0,s.force)*.075)/(1+Math.max(0,dRatio)*.65);
-    const airflow=(Math.sin(2*Math.PI*8.2*tm+k*1.6)+.48*Math.sin(2*Math.PI*13.7*tm+k*.9));
-    // A small nonzero DC torque exposes insufficient I during the full experiment.
-    const persistent=.012*s.force*(Math.sin(2*Math.PI*2.3*tm+k)+.3*Math.sin(2*Math.PI*5.7*tm+k*1.9)) + .055*s.force*(k===0?1:k===1?-.8:.25);
-    const highDNoise=Math.max(0,dRatio-1)*s.noise*.10*Math.sin(2*Math.PI*38*tm+k*1.3);
-    // Under-damped response is a consequence of low D / excess P, not an
-    // independent animation. Same torque is integrated into the logged gyro.
-    const pRatio=g.P/Math.max(1,examplePids()[axes[k]].P);
-    const dampingDeficit=Math.max(0,1-dRatio);
-    const excitation=(.12+.9*dampingDeficit+Math.max(0,pRatio-1)*.45);
-    const disturbance=persistent+washGain*excitation*2.0*airflow+highDNoise;
-    const inertia=k===2?1.25:1;
-    // D deficiency reduces effective damping, while excessive P reduces phase margin.
-    const effectiveDrag=Math.max(.055,.38+.28*Math.min(1,dRatio)-.22*Math.max(0,pRatio-1));
-    const acceleration=(v.motor+disturbance-effectiveDrag*v.rate)/inertia;
-    v.rate+=acceleration*dt;
-    // Spin-axis angular-rate tracking: keep the commanded full revolution
-    // physically represented in the shared trajectory (not just a label).
-    // This is an educational rate-servo approximation, not Betaflight firmware.
-    if(isSpin() && k===axes.indexOf(s.axis)){
-     const spinRate=targetRate;
-     const trackingTime=Math.max(.014,.05*(45/Math.max(10,g.P)));
-     v.rate+=(spinRate-v.rate)*Math.min(1,dt/trackingTime);
-    }
-    v.angle+=v.rate*dt;
-    sample.angles.push(v.angle);sample.rates.push(v.rate);
-    sample.targets.push(rateSetpoint);sample.saturated.push(Math.abs(control)>limit);
-   }
-   if(j%10===0)pidTrajectory.push(sample);
-  }
- }
- function pidSignature(axis,time){
-  const k=axes.indexOf(axis),idx=Math.min(pidTrajectory.length-1,Math.round(time*100));
-  const q=pidTrajectory[idx],ref=referencePose(time),angle=q?q.angles[k]-ref[['r','p','y'][k]]:0;
-  const active=(s.test==='drop'&&time>=1&&time<=5.5)||((s.test==='split-left'||s.test==='split-right')&&time>=2&&time<=6.5);
-  const damp=dAt(gains(axis),time);
-  return {angle,propwash:active?Math.abs(angle)*.22:Math.abs(angle)*.025,
-    fast:Math.abs(angle)*.08,highD:Math.max(0,damp-(examplePids()[axis].D||30))*.004*s.noise};
- }
- function pidVibration(time){return axes.map(axis=>pidSignature(axis,time));}
- function pose(time){
-  const p=referencePose(time);
-  if(pidTrajectory.length){
-   const index=Math.max(0,Math.min(pidTrajectory.length-2,Math.floor(time/.01)));
-   const f=Math.max(0,Math.min(1,time/.01-index));
-   const a=pidTrajectory[index].angles,b=pidTrajectory[index+1].angles;
-   p.r=a[0]*(1-f)+b[0]*f;p.p=a[1]*(1-f)+b[1]*f;p.y=a[2]*(1-f)+b[2]*f;
-   p.pos[1]+=(p.y-referencePose(time).y)*1.5;
-  }
-  return p;
- }
+ function rebuildPidTrajectory(){pidTrajectory=Engine.simulate(s,30);}
+ function sampleAt(time){return pidTrajectory[Math.max(0,Math.min(pidTrajectory.length-1,Math.round(time*500)))];}
+ function referencePose(time){const a=sampleAt(time).reference;return {r:a[0],p:a[1],y:a[2],pos:[0,0,0]};}
+ function pidSignature(axis,time){const q=sampleAt(time),k=axes.indexOf(axis);return {angle:q.angles[k]-q.reference[k],propwash:q.wash,fast:Math.abs(q.terms[k].D),highD:Math.abs(q.terms[k].D)};}
+ function pidVibration(time){return axes.map(axis=&gt;pidSignature(axis,time));}
+ function pose(time){const q=sampleAt(time);return {r:q.angles[0],p:q.angles[1],y:q.angles[2],pos:q.pos};}
  function rotate3(v,r,p,y,inverse=false){
   function rx([a,b,c],q){return [a,Math.cos(q)*b-Math.sin(q)*c,Math.sin(q)*b+Math.cos(q)*c];}
   function ry([a,b,c],q){return [Math.cos(q)*a+Math.sin(q)*c,b,-Math.sin(q)*a+Math.cos(q)*c];}
@@ -2147,43 +2223,44 @@ html>body{padding:0}</style>
  }
  function drone(n,i){
   const {ctx:c,w,h}=setup($('drone'+n)),q=pose(t),fg=color('--foreground'),muted=color('--muted-foreground'),green=color('--green'),blue=color('--blue'),ground=color('--muted'),series=color('--viz-series-1');
-  const chaseYaw=(s.test==='split-left'||s.test==='split-right')?Math.PI*Math.max(0,Math.min(1,(t-2)/2)):s.test==='pulse'?Math.max(0,Math.min(1,(t-1)/2))*Math.PI/2:0;
-  const camera=i?q.pos:[q.pos[0]-8*Math.cos(chaseYaw),q.pos[1]-8*Math.sin(chaseYaw),q.pos[2]-3];
+  const chaseYaw=s.test==='yaw'?q.y:s.test.startsWith('split-')?Math.PI*Math.max(0,Math.min(1,t-(sampleAt(t).rotationStart??Infinity)-.5)):0;
+  const camera=i?q.pos:[q.pos[0]-1.8*Math.cos(chaseYaw),q.pos[1]-1.8*Math.sin(chaseYaw),q.pos[2]-.65];
   const angles=i?[q.r,q.p,q.y]:[0,-.22,chaseYaw],f=w*.66;
-  const view=v=>rotate3(v.map((a,k)=>a-camera[k]),...angles,true),project=v=>[w/2+f*v[1]/v[0],h/2+f*v[2]/v[0]];
-  c.fillStyle=color('--background');c.fillRect(0,0,w,h);c.globalAlpha=.12;c.fillStyle=blue;c.fillRect(0,0,w,h);c.globalAlpha=1;
+  const view=v=&gt;rotate3(v.map((a,k)=&gt;a-camera[k]),...angles,true),project=v=&gt;[w/2+f*v[1]/v[0],h/2+f*v[2]/v[0]];
+  const sky=c.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#294764');sky.addColorStop(1,'#a8cedb');c.fillStyle=sky;c.fillRect(0,0,w,h);
   const faces=[];
-  function polygon(points,col,alpha=1){let v=points.map(view),res=[];for(let j=0;j<v.length;j++){const a=v[j],b=v[(j+1)%v.length],inside=a[0]>=.2,next=b[0]>=.2;if(inside)res.push(a);if(inside!==next){const k=(.2-a[0])/(b[0]-a[0]);res.push(a.map((x,i)=>x+k*(b[i]-x)));}}if(res.length<3)return;faces.push({v:res,col,alpha,depth:res.reduce((a,p)=>a+p[0],0)/res.length});}
-  function line(a,b,col,width=1){let u=view(a),v=view(b);if(u[0]<.2&&v[0]<.2)return;if(u[0]<.2||v[0]<.2){const back=u[0]<.2?u:v,front=u[0]<.2?v:u,k=(.2-back[0])/(front[0]-back[0]),p=back.map((x,j)=>x+k*(front[j]-x));if(u[0]<.2)u=p;else v=p;}c.strokeStyle=col;c.lineWidth=width;c.beginPath();c.moveTo(...project(u));c.lineTo(...project(v));c.stroke();}
-  polygon([[-300,-300,0],[400,-300,0],[400,300,0],[-300,300,0]],ground);
-  for(let x=-40;x<200;x+=24)line([x,-55,-.02],[x,55,-.02],'#b8cbd2',.55);
+  function polygon(points,col,alpha=1){let v=points.map(view),res=[];for(let j=0;j&lt;v.length;j++){const a=v[j],b=v[(j+1)%v.length],inside=a[0]&gt;=.2,next=b[0]&gt;=.2;if(inside)res.push(a);if(inside!==next){const k=(.2-a[0])/(b[0]-a[0]);res.push(a.map((x,i)=&gt;x+k*(b[i]-x)));}}if(res.length&lt;3)return;faces.push({v:res,col,alpha,depth:res.reduce((a,p)=&gt;a+p[0],0)/res.length});}
+  function line(a,b,col,width=1){let u=view(a),v=view(b);if(u[0]&lt;.2&amp;&amp;v[0]&lt;.2)return;if(u[0]&lt;.2||v[0]&lt;.2){const back=u[0]&lt;.2?u:v,front=u[0]&lt;.2?v:u,k=(.2-back[0])/(front[0]-back[0]),p=back.map((x,j)=&gt;x+k*(front[j]-x));if(u[0]&lt;.2)u=p;else v=p;}c.strokeStyle=col;c.lineWidth=width;c.beginPath();c.moveTo(...project(u));c.lineTo(...project(v));c.stroke();}
+  polygon([[-4000,-4000,0],[4000,-4000,0],[4000,4000,0],[-4000,4000,0]],'#456f60');
+  for(let x=-40;x&lt;200;x+=24)line([x,-55,-.02],[x,55,-.02],'#b8cbd2',.55);
   // Minimal open-air practice ground: sparse landmarks and just three gates.
   for(const [x,y] of [[-16,-32],[48,-35],[115,-32],[-8,35],[74,38],[156,36]]){
    const height=3.5;
    polygon([[x-.25,y-.25,0],[x+.25,y-.25,0],[x+.25,y-.25,-height],[x-.25,y-.25,-height]],'#8496a3',.45);
-   for(let side=0;side<4;side++){
+   for(let side=0;side&lt;4;side++){
     const a=side*Math.PI/2,b=(side+1)*Math.PI/2;
     polygon([[x+1.9*Math.cos(a),y+1.9*Math.sin(a),-height+1.2],[x+1.9*Math.cos(b),y+1.9*Math.sin(b),-height+1.2],[x,y,-height-1.8]],'#56a58a',.58);
    }
   }
-  faces.sort((a,b)=>b.depth-a.depth).forEach(face=>{c.globalAlpha=face.alpha;c.fillStyle=face.col;c.beginPath();face.v.forEach((p,j)=>j?c.lineTo(...project(p)):c.moveTo(...project(p)));c.closePath();c.fill();});c.globalAlpha=1;
+  faces.sort((a,b)=&gt;b.depth-a.depth).forEach(face=&gt;{c.globalAlpha=face.alpha;c.fillStyle=face.col;c.beginPath();face.v.forEach((p,j)=&gt;j?c.lineTo(...project(p)):c.moveTo(...project(p)));c.closePath();c.fill();});c.globalAlpha=1;
+  for(let x=Math.floor(q.pos[0]/20)*20-200;x&lt;q.pos[0]+300;x+=20){line([x,-300,-.02],[x,300,-.02],'#71998a',.7);}for(let y=-300;y&lt;=300;y+=20)line([q.pos[0]-200,y,-.02],[q.pos[0]+300,y,-.02],'#71998a',.7);
   // Sparse bidirectional gates; no overlapping obstacle grids.
   // Two-way Split-S route: gates on BOTH sides of the reversal point.
   // Negative-X gates become visible after the 180-degree heading reversal.
-  for(const x of [-96,-52,-22,32,96,160]){
+  for(const x of [-300,-220,-140,-60,20,100,180,260,340,420,500,580]){
    const gate='#9babb7',z=-8;
    line([x,-5,0],[x,-5,z],gate,2);
    line([x,5,0],[x,5,z],gate,2);
    line([x,-5,z],[x,5,z],gate,2);
   }
-  for(let x=-24;x<174;x+=18){
+  for(let x=-24;x&lt;174;x+=18){
    line([x,-11,-.03],[x+3,-11,-.03],'#c4d2d9',1);
    line([x,11,-.03],[x+3,11,-.03],'#c4d2d9',1);
   }
   if(!i){
-   const body=p=>rotate3(p,q.r,q.p,q.y).map((a,k)=>a+q.pos[k]);
+   const body=p=&gt;rotate3(p.map(v=&gt;v*.15),q.r,q.p,q.y).map((a,k)=&gt;a+q.pos[k]);
    // Shared X-frame geometry: nose is +X (red), tail -X (blue).
-   const arm=(a,b,col,width)=>line(body(a),body(b),col,width);
+   const arm=(a,b,col,width)=&gt;line(body(a),body(b),col,width);
    for(const x of [-.72,.72])for(const y of [-.72,.72]){
     arm([0,0,.01],[x,y,.01],'#263747',9);
     arm([0,0,-.04],[x,y,-.04],'#91a2ae',3);
@@ -2192,8 +2269,8 @@ html>body{padding:0}</style>
    arm([-.38,0,-.12],[.38,0,-.12],'#52616e',8);
    arm([.2,0,-.14],[.82,0,-.14],'#e9b949',3);
    for(const x of [-.72,.72])for(const y of [-.72,.72]){
-    const propColor=x>0?'#ef4444':'#2794ed';
-    for(let j=0;j<24;j++){
+    const propColor=x&gt;0?'#ef4444':'#2794ed';
+    for(let j=0;j&lt;24;j++){
      const a=j*Math.PI/12,b=(j+1)*Math.PI/12;
      arm([x+.29*Math.cos(a),y+.29*Math.sin(a),-.06],[x+.29*Math.cos(b),y+.29*Math.sin(b),-.06],propColor,3);
     }
@@ -2202,94 +2279,82 @@ html>body{padding:0}</style>
   }
   else{c.strokeStyle=fg;c.lineWidth=1;c.beginPath();c.moveTo(w/2-8,h/2);c.lineTo(w/2+8,h/2);c.moveTo(w/2,h/2-8);c.lineTo(w/2,h/2+8);c.stroke();}
   c.font=getComputedStyle(root).font;c.fillStyle=fg;c.textAlign='left';c.fillText(i?'FPV':'CHASE · NOSE RED / TAIL BLUE',12,22);c.fillText('THR '+Math.round(flightThrottle(t)*100)+'%',12,h-14);
-  $('angle'+n).textContent=i?'전진 · 높이 '+(-q.pos[2]).toFixed(1)+'m · 가상 경로':'기체 이동 '+q.pos[0].toFixed(1)+'m · '+{flip:'백플립',roll:'롤 턴',yaw:'요 턴',pulse:'급선회','split-left':'스플릿 S 좌','split-right':'스플릿 S 우',drop:'하강 회복',climb:'상승 회복',throttle:'직진'}[s.test];
+  $('angle'+n).textContent=i?'비행 · 높이 '+(-q.pos[2]).toFixed(1)+'m · 계산된 위치':'기체 이동 '+q.pos[0].toFixed(1)+'m · '+{flip:'백플립',roll:'롤 턴',yaw:'요 턴',pulse:'급선회','split-left':'스플릿 S 좌','split-right':'스플릿 S 우',drop:'하강 회복',climb:'상승 회복',throttle:'직진',takeoff:'이륙'}[s.test];
  }
- function flightThrottle(time){const base=s.throttle/100; // 교육용 기준 호버 스로틀 38%; 모든 기동은 선택된 스로틀을 기준으로 변화
-  if(s.test==='split-left'||s.test==='split-right'){
-   if(time<1)return base;
-   if(time<2)return Math.max(.08,base*.58);
-   if(time<3.5)return Math.max(.05,base*.30);
-   if(time<4.5)return Math.min(1,base+.12);
-   return base;
-  }
+ function flightThrottle(time){return pidTrajectory.length?sampleAt(time).throttle:FlightEngine.throttle(s,time);}
 
-  if(s.test==='drop'&&time>1&&time<2.6)return base*.22;
-  if(s.test==='climb'){
-   if(time<1)return base;
-   if(time<2.5)return Math.min(1,base+.22);
-   if(time<3.5)return Math.max(0,base-.20);
-   const u=time-3.5;return Math.max(0,Math.min(1,base-.06*Math.exp(-u*1.2)*Math.cos(u*2.2)));
-  }
-  return base;
- }
  let audio=null,audioOn=false;
- function makeAudio(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw Error('AudioContext unavailable');const ac=new AC(),master=ac.createGain();master.gain.value=0;master.connect(ac.destination);const motors=[];for(let k=1;k<=3;k++){const o=ac.createOscillator(),g=ac.createGain();o.type='sawtooth';g.gain.value=.035/k;o.connect(g).connect(master);o.start();motors.push(o);}const buffer=ac.createBuffer(1,ac.sampleRate,ac.sampleRate),samples=buffer.getChannelData(0);let seed=12345;for(let j=0;j<samples.length;j++){seed=(seed*16807)%2147483647;samples[j]=seed/1073741824-1;}const noise=ac.createBufferSource();noise.buffer=buffer;noise.loop=true;const filter=ac.createBiquadFilter();filter.type='bandpass';filter.frequency.value=450;filter.Q.value=.6;const washGain=ac.createGain();washGain.gain.value=0;noise.connect(filter).connect(washGain).connect(master);noise.start();const buzz=ac.createOscillator(),buzzGain=ac.createGain();buzz.type='sine';buzz.frequency.value=1800;buzzGain.gain.value=0;buzz.connect(buzzGain).connect(master);buzz.start();return {ac,master,motors,washGain,buzz,buzzGain};}
- function updateAudio(){if(!audio)return;const now=audio.ac.currentTime,thr=flightThrottle(t),active=audioOn&&playing&&!document.hidden;
-  audio.master.gain.setTargetAtTime(active?s.volume/100:0,now,.025);
-  const signatures=pidVibration(t),rough=wash(t)+signatures[0].propwash*5+signatures[1].propwash*5;
-  const fastVib=Math.max(...signatures.map(x=>x.fast));
-  const highDVib=Math.max(...signatures.map(x=>x.highD));
-  const rebound=Math.abs(currentAngle()-(t>=recoveryStart()&&isSpin()?360:0));
-  audio.motors.forEach((o,k)=>o.frequency.setTargetAtTime((110+thr*360)*(k+1)*(s.hw.kv/1950)*(1+.015*rough*Math.sin(t*47)+fastVib*.5*Math.sin(t*63)),now,.015));
-  audio.washGain.gain.setTargetAtTime(thr*.13*Math.min(2,rough)*(1+.3*Math.sin(t*31)),now,.01);
-  audio.buzzGain.gain.setTargetAtTime(thr*(.025*hfAmplitude()*(t>recoveryStart()?1:.15)+Math.min(.14,highDVib*2.4+fastVib*.15)),now,.015);
-  audio.buzz.frequency.setTargetAtTime(1500+thr*800+Math.min(100,rebound)*2+highDVib*1600,now,.015);
- }
- function chart(){const {ctx:c,w,h}=setup($('trace')),left=62,right=w-12,top=30,bottom=h-30,start=s.graph==='residual'?recoveryStart():0,unit=s.graph==='rate'?'°/s':'°';const ds=data.map(d=>{const z=d.filter(p=>p.t>=start),mean=z.reduce((a,p)=>a+p.a,0)/z.length;return z.map(p=>({t:p.t,a:s.graph==='rate'?p.v:s.graph==='residual'?p.a-(!isSpin()?0:d===data[0]?360:-360):p.a}));});if(s.graph==='rate')ds.push(data[0].map(p=>({t:p.t,a:p.desired})));let max=s.graph==='residual'?.1:20;for(const d of ds)for(const p of d)max=Math.max(max,Math.abs(p.a));max=max>10?Math.ceil(max/10)*10:Math.ceil(max*10)/10;const x=v=>left+(right-left)*(v-start)/(duration()-start),y=v=>(top+bottom)/2-v/max*(bottom-top)/2;c.font=getComputedStyle(root).font;c.fillStyle=color('--muted-foreground');c.strokeStyle=color('--border');c.lineWidth=1;for(const v of [-max,0,max]){c.beginPath();c.moveTo(left,y(v));c.lineTo(right,y(v));c.stroke();c.textAlign='right';c.fillText(Number(v.toFixed(1)),left-6,y(v)+4);}for(const v of Array.from({length:5},(_,i)=>start+(duration()-start)*i/4)){c.textAlign='center';c.fillText(v.toFixed(1)+'초',x(v),h-7);}c.textAlign='left';c.fillText(unit+(s.graph==='rate'?' · 가는 선=목표':s.graph==='residual'?' · 후반 자세' :' · 누적 회전각'),left,16);ds.forEach((d,i)=>{c.strokeStyle=color(i===2?'--muted-foreground':i?'--viz-series-2':'--viz-series-1');c.lineWidth=i===2?1:2;c.setLineDash(i===1?[6,4]:[]);c.beginPath();d.forEach((p,j)=>j?c.lineTo(x(p.t),y(p.a)):c.moveTo(x(p.t),y(p.a)));c.stroke();});c.setLineDash([]);if(t>=start){c.strokeStyle=color('--foreground');c.lineWidth=1;c.beginPath();c.moveTo(x(t),top);c.lineTo(x(t),bottom);c.stroke();}}
+ function makeAudio(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw Error('AudioContext unavailable');const ac=new AC(),master=ac.createGain();master.gain.value=0;master.connect(ac.destination);const motors=[];for(let k=1;k&lt;=3;k++){const o=ac.createOscillator(),g=ac.createGain();o.type='sawtooth';g.gain.value=.035/k;o.connect(g).connect(master);o.start();motors.push(o);}const buffer=ac.createBuffer(1,ac.sampleRate,ac.sampleRate),samples=buffer.getChannelData(0);let seed=12345;for(let j=0;j&lt;samples.length;j++){seed=(seed*16807)%2147483647;samples[j]=seed/1073741824-1;}const noise=ac.createBufferSource();noise.buffer=buffer;noise.loop=true;const filter=ac.createBiquadFilter();filter.type='bandpass';filter.frequency.value=450;filter.Q.value=.6;const washGain=ac.createGain();washGain.gain.value=0;noise.connect(filter).connect(washGain).connect(master);noise.start();const buzz=ac.createOscillator(),buzzGain=ac.createGain();buzz.type='sine';buzz.frequency.value=1800;buzzGain.gain.value=0;buzz.connect(buzzGain).connect(master);buzz.start();return {ac,master,motors,washGain,buzz,buzzGain};}
+ function updateAudio(){if(!audio||!pidTrajectory.length)return;const q=sampleAt(t),now=audio.ac.currentTime,active=audioOn&amp;&amp;playing&amp;&amp;!document.hidden&amp;&amp;!q.crash;
+ audio.master.gain.setTargetAtTime(active?s.volume/100:0,now,.025);
+ const avg=q.motors.reduce((a,b)=&gt;a+b,0)/4,spread=Math.max(...q.motors)-Math.min(...q.motors),d=Math.max(...q.terms.map(v=&gt;Math.abs(v.D)));
+ audio.motors.forEach((o,k)=&gt;o.frequency.setTargetAtTime((100+q.motors[k]*420)*(k+1)*s.hw.kv/1950,now,.01));
+ audio.washGain.gain.setTargetAtTime(Math.min(.25,q.wash*.12+spread*.025),now,.02);
+ audio.buzzGain.gain.setTargetAtTime(Math.min(.12,d*.2)*avg,now,.01);audio.buzz.frequency.setTargetAtTime(1300+avg*1700,now,.01);
+}
 
- let lastSpectrumKey='',lastSpectrumTime=-1;
+ function chart(){const {ctx:c,w,h}=setup($('trace')),left=62,right=w-12,top=30,bottom=h-30,start=s.graph==='residual'?recoveryStart():0,unit=s.graph==='rate'?'°/s':'°';const ds=data.map(d=&gt;{const z=d.filter(p=&gt;p.t&gt;=start),mean=z.reduce((a,p)=&gt;a+p.a,0)/z.length;return z.map(p=&gt;({t:p.t,a:s.graph==='rate'?p.v:s.graph==='residual'?p.a-(!isSpin()?0:d===data[0]?360:-360):p.a}));});if(s.graph==='rate')ds.push(data[0].map(p=&gt;({t:p.t,a:p.desired})));let max=s.graph==='residual'?.1:20;for(const d of ds)for(const p of d)max=Math.max(max,Math.abs(p.a));max=max&gt;10?Math.ceil(max/10)*10:Math.ceil(max*10)/10;const x=v=&gt;left+(right-left)*(v-start)/(duration()-start),y=v=&gt;(top+bottom)/2-v/max*(bottom-top)/2;c.font=getComputedStyle(root).font;c.fillStyle=color('--muted-foreground');c.strokeStyle=color('--border');c.lineWidth=1;for(const v of [-max,0,max]){c.beginPath();c.moveTo(left,y(v));c.lineTo(right,y(v));c.stroke();c.textAlign='right';c.fillText(Number(v.toFixed(1)),left-6,y(v)+4);}for(const v of Array.from({length:5},(_,i)=&gt;start+(duration()-start)*i/4)){c.textAlign='center';c.fillText(v.toFixed(1)+'초',x(v),h-7);}c.textAlign='left';c.fillText(unit+(s.graph==='rate'?' · 가는 선=목표':s.graph==='residual'?' · 후반 자세' :' · 누적 회전각'),left,16);ds.forEach((d,i)=&gt;{c.strokeStyle=color(i===2?'--muted-foreground':i?'--viz-series-2':'--viz-series-1');c.lineWidth=i===2?1:2;c.setLineDash(i===1?[6,4]:[]);c.beginPath();d.forEach((p,j)=&gt;j?c.lineTo(x(p.t),y(p.a)):c.moveTo(x(p.t),y(p.a)));c.stroke();});c.setLineDash([]);if(t&gt;=start){c.strokeStyle=color('--foreground');c.lineWidth=1;c.beginPath();c.moveTo(x(t),top);c.lineTo(x(t),bottom);c.stroke();}}
+
+
+ let spectrumCache={};
  function blackbox(){
-  const el=$('bbTrace');if(!el||!pidTrajectory.length)return;
-  const {ctx:c,w,h}=setup(el),axis=$('bbAxis').value||'roll',k=axes.indexOf(axis),mode=$('bbMode').value;
-  const left=55,right=w-22,top=28,bottom=h-32;
-  c.fillStyle=color('--foreground');c.font='12px sans-serif';
-  const series=pidTrajectory.map(q=>({t:q.t,goal:q.targets[k]*180/Math.PI,gyro:q.rates[k]*180/Math.PI}));
-  const x=v=>left+(right-left)*v/10;
-  c.strokeStyle=color('--border');c.lineWidth=1;
-  for(let i=0;i<=5;i++){let xx=x(i*2);c.beginPath();c.moveTo(xx,top);c.lineTo(xx,bottom);c.stroke();c.textAlign='center';c.fillStyle=color('--muted-foreground');c.fillText((i*2)+'s',xx,h-10);}
+  if(!pidTrajectory.length)return;const {ctx:c,w,h}=setup($('bbTrace')),k=axes.indexOf($('bbAxis').value||'roll'),mode=$('bbMode').value,l=54,r=w-18,top=25,bot=h-30;
+  c.font='11px sans-serif';c.fillStyle='#b2c4da';c.strokeStyle='#263b52';c.textAlign='center';
   if(mode==='spectrum'){
-   const cacheKey=axis+'|'+pidTrajectory.length+'|'+pidTrajectory[0]?.rates[k]+'|'+pidTrajectory.at(-1)?.rates[k];
-   // Always redraw after setup() clears the canvas; never skip a frame.
-   lastSpectrumKey=cacheKey;lastSpectrumTime=t;
-   // DFT with Hann window; 100 Hz logged samples, 10-second observation, 0.1 Hz bins.
-   const rate=100,N=series.length,mean=series.reduce((a,p)=>a+(p.gyro-p.goal),0)/N;
-   const bins=[];for(let hz=1;hz<=45;hz+=.5){let re=0,im=0;for(let j=0;j<N;j++){const z=(series[j].gyro-series[j].goal-mean)*(.5-.5*Math.cos(2*Math.PI*j/(N-1)));const a=2*Math.PI*hz*j/rate;re+=z*Math.cos(a);im-=z*Math.sin(a);}bins.push({hz,amp:2*Math.hypot(re,im)/(N*.5)});}
-   const max=Math.max(.1,...bins.map(p=>p.amp)),fx=hz=>left+(right-left)*hz/45,fy=a=>bottom-a/max*(bottom-top);
-   // Frequency and amplitude axes are explicitly labeled for tuning.
-   c.font='10px sans-serif';c.strokeStyle=color('--border');c.lineWidth=1;
-   for(let hz=0;hz<=45;hz+=5){const xx=fx(hz);c.beginPath();c.moveTo(xx,top);c.lineTo(xx,bottom);c.stroke();c.fillStyle=color('--muted-foreground');c.textAlign='center';c.fillText(String(hz),xx,h-10);}
-   for(let j=0;j<=3;j++){const amp=max*j/3,yy=fy(amp);c.beginPath();c.moveTo(left,yy);c.lineTo(right,yy);c.stroke();c.textAlign='right';c.fillText(amp.toFixed(1),left-5,yy+3);}
-   c.textAlign='right';c.fillText('Hz',right,h-10);
-   c.strokeStyle='#f59e0b';c.lineWidth=2;c.beginPath();bins.forEach((p,j)=>j?c.lineTo(fx(p.hz),fy(p.amp)):c.moveTo(fx(p.hz),fy(p.amp)));c.stroke();
-   c.fillStyle=color('--foreground');c.textAlign='left';c.fillText('각속도 오차 진폭 (°/s) · 0–45Hz',left,16);
-   const peak=bins.reduce((a,b)=>b.amp>a.amp?b:a);$('bbStats').textContent=`${axis.toUpperCase()} · 주파수 피크 ${peak.hz.toFixed(1)}Hz / 진폭 ${peak.amp.toFixed(2)}°/s · 100Hz 기록 기반 (50Hz 이상 분석 불가)`;return;
+   if(!spectrumCache[k]){const q=pidTrajectory.filter(q=&gt;q.t&gt;=recoveryStart()&amp;&amp;!q.crash).slice(-4096),N=q.length,bins=[];const mean=q.reduce((a,v)=&gt;a+v.rates[k]-v.targets[k],0)/Math.max(1,N);
+    if(N&gt;2)for(let hz=1;hz&lt;=200;hz++){let re=0,im=0;for(let j=0;j&lt;N;j++){const v=((q[j].rates[k]-q[j].targets[k])-mean)*180/Math.PI*(.5-.5*Math.cos(2*Math.PI*j/(N-1))),ph=2*Math.PI*hz*j/500;re+=v*Math.cos(ph);im-=v*Math.sin(ph);}bins.push({hz,amp:4*Math.hypot(re,im)/N});}spectrumCache[k]=bins;}
+   const bins=spectrumCache[k],max=Math.max(.01,...bins.map(x=&gt;x.amp)),x=v=&gt;l+(r-l)*v/200,y=v=&gt;bot-(bot-top)*v/max;
+   for(let hz=0;hz&lt;=200;hz+=40){c.fillText(hz+'',x(hz),h-10);c.beginPath();c.moveTo(x(hz),top);c.lineTo(x(hz),bot);c.stroke();}
+   c.strokeStyle='#f3b35b';c.beginPath();bins.forEach((v,i)=&gt;i?c.lineTo(x(v.hz),y(v.amp)):c.moveTo(x(v.hz),y(v.amp)));c.stroke();c.textAlign='left';c.fillText('각속도 오차 진폭 °/s · Hz · 500Hz 기록 / Hann 창',l,15);
+   const peak=bins.reduce((a,b)=&gt;b.amp&gt;a.amp?b:a,{hz:0,amp:0});$('bbStats').textContent='기동 후 마지막 최대 8.192초 · 피크 '+peak.hz+'Hz / '+peak.amp.toFixed(3)+'°/s · 1Hz 간격 DFT · 250Hz 이상 분석 불가';return;
   }
-  const vals=series.flatMap(p=>mode==='error'?[p.gyro-p.goal]:[p.goal,p.gyro]);const max=Math.max(30,...vals.map(v=>Math.abs(v)))*1.15;
-  const y=v=>(top+bottom)/2-v/max*(bottom-top)/2;
-  for(let i=-2;i<=2;i++){const val=i*max/2;c.strokeStyle=color('--border');c.beginPath();c.moveTo(left,y(val));c.lineTo(right,y(val));c.stroke();c.fillStyle=color('--muted-foreground');c.textAlign='right';c.fillText(val.toFixed(0),left-5,y(val)+4);}
-  function plot(fn,stroke,dash){c.strokeStyle=stroke;c.lineWidth=1.8;c.setLineDash(dash);c.beginPath();series.forEach((p,j)=>j?c.lineTo(x(p.t),y(fn(p))):c.moveTo(x(p.t),y(fn(p))));c.stroke();c.setLineDash([]);}
-  if(mode==='error')plot(p=>p.gyro-p.goal,'#f59e0b',[]);else{plot(p=>p.goal,'#3b82f6',[6,4]);plot(p=>p.gyro,'#e87938',[]);}
-  c.strokeStyle='#a855f7';c.lineWidth=1.5;c.beginPath();c.moveTo(x(t),top);c.lineTo(x(t),bottom);c.stroke();
-  c.fillStyle=color('--foreground');c.textAlign='left';c.fillText(mode==='error'?'Gyro − Setpoint (°/s)':'Setpoint(파랑 점선) / Gyro(주황 실선) · °/s',left,16);
-  const err=series.map(p=>p.gyro-p.goal),rms=Math.sqrt(err.reduce((a,v)=>a+v*v,0)/err.length),peak=Math.max(...err.map(Math.abs));
-  const q=series[Math.min(series.length-1,Math.round(t*100))];$('bbStats').textContent=`${axis.toUpperCase()} · 현재 ${t.toFixed(2)}초 · 목표 ${q.goal.toFixed(1)}°/s · 자이로 ${q.gyro.toFixed(1)}°/s · 오차 RMS ${rms.toFixed(2)}°/s · 최대 절대오차 ${peak.toFixed(2)}°/s`;
+  const points=pidTrajectory.filter((_,i)=&gt;i%10===0),scale=180/Math.PI,max=Math.max(30,...points.flatMap(q=&gt;mode==='error'?[Math.abs(q.rates[k]-q.targets[k])*scale]:[Math.abs(q.rates[k])*scale,Math.abs(q.targets[k])*scale]))*1.1;
+  const x=v=&gt;l+(r-l)*v/30,y=v=&gt;(bot+top)/2-v/max*(bot-top)/2;
+  for(let j=0;j&lt;=6;j++){c.fillText(j*5+'s',x(j*5),h-10);c.beginPath();c.moveTo(x(j*5),top);c.lineTo(x(j*5),bot);c.stroke();}
+  for(const v of [-max,0,max]){c.textAlign='right';c.fillText(v.toFixed(0),l-5,y(v)+3);}
+  function plot(fn,col,dash){c.strokeStyle=col;c.setLineDash(dash);c.beginPath();points.forEach((q,i)=&gt;i?c.lineTo(x(q.t),y(fn(q)*scale)):c.moveTo(x(q.t),y(fn(q)*scale)));c.stroke();}
+  if(mode==='error')plot(q=&gt;q.rates[k]-q.targets[k],'#f3b35b',[]);else{plot(q=&gt;q.targets[k],'#69c9ff',[5,4]);plot(q=&gt;q.rates[k],'#ffb45a',[]);}c.setLineDash([]);c.strokeStyle='#d6edff';c.beginPath();c.moveTo(x(t),top);c.lineTo(x(t),bot);c.stroke();c.textAlign='left';c.fillStyle='#b2c4da';c.fillText('각속도 °/s · 점선 목표 / 실선 계산값',l,15);
+  const q=sampleAt(t);$('bbStats').textContent=axes[k].toUpperCase()+' · 목표 '+(q.targets[k]*scale).toFixed(1)+'°/s · 계산값 '+(q.rates[k]*scale).toFixed(1)+'°/s · D 적용 '+q.effectiveD[k].toFixed(1);
  }
+ function drawHorizon(R,P){
+  const {ctx:g,w:hw,h:hh}=setup($('attHorizon')),x=hw/2,y=hh/2,radius=Math.min(hw,hh)*.35;
+  // Equivalent upright Euler attitude: a half roll + half loop is level with reversed heading.
+  const bank=Math.atan2(Math.sin(R)*Math.cos(P),Math.cos(R)*Math.cos(P)),pitch=Math.asin(Math.sin(P));
+  g.fillStyle='#101e2e';g.fillRect(0,0,hw,hh);
+  g.save();g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.clip();g.translate(x,y);g.rotate(-bank);g.translate(0,pitch*radius*.8);
+  g.fillStyle='#3978a8';g.fillRect(-hw*2,-hh*3,hw*4,hh*3);g.fillStyle='#80694d';g.fillRect(-hw*2,0,hw*4,hh*3);
+  g.strokeStyle='#edf6ff';g.lineWidth=1.5;g.beginPath();g.moveTo(-hw,0);g.lineTo(hw,0);g.stroke();
+  for(const deg of [-30,-20,-10,10,20,30]){const py=-deg*Math.PI/180*radius*.8,len=Math.abs(deg)%20===0?radius*.35:radius*.2;g.lineWidth=1;g.beginPath();g.moveTo(-len,py);g.lineTo(len,py);g.stroke();}
+  g.restore();g.strokeStyle='#a7bfd3';g.lineWidth=2;g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.stroke();
+  // Fixed bank scale, moving pointer. Positive displayed bank moves to the right.
+  g.font='10px sans-serif';g.fillStyle='#e1ecf7';g.textAlign='center';g.textBaseline='middle';
+  for(const deg of [-90,-60,-30,-20,-10,0,10,20,30,60,90]){
+   const a=deg*Math.PI/180,major=deg===0||Math.abs(deg)&gt;=30,inner=radius+3,outer=radius+(major?12:8);
+   g.beginPath();g.moveTo(x+Math.sin(a)*inner,y-Math.cos(a)*inner);g.lineTo(x+Math.sin(a)*outer,y-Math.cos(a)*outer);g.stroke();
+   if(deg!==0){const textR=radius+21;g.fillText(Math.abs(deg)+'',x+Math.sin(a)*textR,y-Math.cos(a)*textR);}
+  }
+  const pointerRadius=radius-5,px=x+Math.sin(bank)*pointerRadius,py=y-Math.cos(bank)*pointerRadius;
+  g.save();g.translate(px,py);g.rotate(bank);g.fillStyle='#ffe07c';g.beginPath();g.moveTo(0,-5);g.lineTo(-5,6);g.lineTo(5,6);g.closePath();g.fill();g.restore();
+  g.strokeStyle='#ffe07c';g.lineWidth=3;g.beginPath();g.moveTo(x-radius*.55,y);g.lineTo(x-12,y);g.lineTo(x,y+6);g.lineTo(x+12,y);g.lineTo(x+radius*.55,y);g.stroke();
+  g.font='11px sans-serif';g.fillStyle='#e9f2fa';g.fillText('롤 '+(bank*180/Math.PI).toFixed(1)+'°',x,hh-12);g.textBaseline='alphabetic';
+ }
+
  function attitude(){
   if(!pidTrajectory.length)return;const q=pose(t),R=q.r,P=q.p,Y=q.y;
   const {ctx:c,w,h}=setup($('attQuad'));
   c.fillStyle='#17232f';c.fillRect(0,0,w,h);
   // Use the same nose (+X), lateral (+Y), and attitude as the chase camera.
   // Project into a clear 3/4 overhead view: nose (+X) points toward screen top.
-  const chaseYaw=(s.test==='split-left'||s.test==='split-right')?Math.PI*Math.max(0,Math.min(1,(t-2)/2)):s.test==='pulse'?Math.max(0,Math.min(1,(t-1)/2))*Math.PI/2:0;
+  const chaseYaw=s.test==='yaw'?q.y:s.test.startsWith('split-')?Math.PI*Math.max(0,Math.min(1,t-(sampleAt(t).rotationStart??Infinity)-.5)):0;
   const scale=Math.min(w/3.7,h/2.8),cx=w/2,cy=h/2+8;
-  const proj=p=>{
+  const proj=p=&gt;{
    const v=rotate3(p,R,P,Y);
    // Camera tracks behind the aircraft; its yaw follows the chase heading.
    const a=rotate3(v,0,0,-chaseYaw);
    return [cx+a[1]*scale,cy-a[0]*scale*.74+a[2]*scale*.44];
   };
-  const line=(a,b,col,width)=>{const A=proj(a),B=proj(b);c.strokeStyle=col;c.lineWidth=width;c.lineCap='round';c.beginPath();c.moveTo(...A);c.lineTo(...B);c.stroke()};
-  const circle=(p,r,col,outline)=>{const [x,y]=proj(p);c.beginPath();c.ellipse(x,y,r*scale,r*scale*.68,0,0,2*Math.PI);c.fillStyle=col;c.fill();c.strokeStyle=outline;c.lineWidth=2;c.stroke()};
+  const line=(a,b,col,width)=&gt;{const A=proj(a),B=proj(b);c.strokeStyle=col;c.lineWidth=width;c.lineCap='round';c.beginPath();c.moveTo(...A);c.lineTo(...B);c.stroke()};
+  const circle=(p,r,col,outline)=&gt;{const [x,y]=proj(p);c.beginPath();c.ellipse(x,y,r*scale,r*scale*.68,0,0,2*Math.PI);c.fillStyle=col;c.fill();c.strokeStyle=outline;c.lineWidth=2;c.stroke()};
   // X-shaped carbon arms, central fuselage and visible forward camera.
   for(const a of [-1,1])for(const b of [-1,1]){
    line([0,0,.03],[a*.72,b*.72,.03],'#263747',13);
@@ -2299,37 +2364,31 @@ html>body{padding:0}</style>
   line([-.35,0,-.11],[.35,0,-.11],'#344757',13);
   line([.25,0,-.15],[.73,0,-.15],'#e6bc4e',5);
   for(const a of [-1,1])for(const b of [-1,1]){
-   const p=[a*.72,b*.72,-.05],propColor=a>0?'#ef4444':'#2794ed';
+   const p=[a*.72,b*.72,-.05],propColor=a&gt;0?'#ef4444':'#2794ed';
    circle(p,.28,propColor+'30',propColor);
    const theta=t*38*(a*b);
    line([p[0]+Math.cos(theta)*.21,p[1]+Math.sin(theta)*.21,-.07],[p[0]-Math.cos(theta)*.21,p[1]-Math.sin(theta)*.21,-.07],propColor,3);
    circle(p,.065,'#cbd5e1','#3e5263');
   }
   c.fillStyle='#e2e8f0';c.font='11px sans-serif';c.fillText('NOSE +X RED / TAIL -X BLUE · CHASE ALIGNED',9,16);
-  const {ctx:g,w:hw,h:hh}=setup($('attHorizon'));g.fillStyle='#17232f';g.fillRect(0,0,hw,hh);const radius=Math.min(hw,hh)*.41,x=hw/2,y=hh/2;
-  g.save();g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.clip();g.translate(x,y);g.rotate(-R);g.translate(0,P*radius*.9);
-  g.fillStyle='#3978a8';g.fillRect(-hw,-hh,hw*2,hh);g.fillStyle='#94714e';g.fillRect(-hw,0,hw*2,hh*2);g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.moveTo(-hw,0);g.lineTo(hw,0);g.stroke();g.restore();
-  g.strokeStyle='#d5dee8';g.lineWidth=3;g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.stroke();g.strokeStyle='#facc15';g.lineWidth=3;g.beginPath();g.moveTo(x-radius*.5,y);g.lineTo(x-10,y);g.lineTo(x,y+7);g.lineTo(x+10,y);g.lineTo(x+radius*.5,y);g.stroke();
-  $('attNumbers').innerHTML=`<span>Roll ${(R*180/Math.PI).toFixed(2)}°</span><span>Pitch ${(P*180/Math.PI).toFixed(2)}°</span><span>Yaw ${(Y*180/Math.PI).toFixed(2)}°</span><span>자이로 Roll ${(pidTrajectory[Math.min(pidTrajectory.length-1,Math.round(t*100))].rates[0]*180/Math.PI).toFixed(1)}°/s</span><span>스로틀 ${(flightThrottle(t)*100).toFixed(1)}%</span>`;
+  drawHorizon(R,P);
+  $('attNumbers').innerHTML=`&lt;span&gt;Roll ${(R*180/Math.PI).toFixed(2)}°&lt;/span&gt;&lt;span&gt;Pitch ${(P*180/Math.PI).toFixed(2)}°&lt;/span&gt;&lt;span&gt;Yaw ${(Y*180/Math.PI).toFixed(2)}°&lt;/span&gt;&lt;span&gt;자이로 Roll ${(sampleAt(t).rates[0]*180/Math.PI).toFixed(1)}°/s&lt;/span&gt;&lt;span&gt;스로틀 ${(flightThrottle(t)*100).toFixed(1)}%&lt;/span&gt;`;
  }
- function draw(){for(const [name,fn] of [['A',()=>drone('A',0)],['B',()=>drone('B',1)],['attitude',attitude],['blackbox',blackbox]]){try{fn()}catch(err){console.error('TSD render '+name,err);}}updateAudio();$('scrub').value=t;$('clock').textContent=t.toFixed(2)+' / '+duration().toFixed(2)+'초';$('play').textContent=playing?'일시 정지':'재생';const p=profile(t);const sample=data[0].reduce((best,item)=>Math.abs(item.t-t)<Math.abs(best.t-t)?item:best,data[0][0]);
-  const trajectoryIndex=Math.max(0,Math.min(pidTrajectory.length-1,Math.round(t/.01)));
-  const currentAngles=pidTrajectory[trajectoryIndex]?.angles||[0,0,0];
-  const signatures=pidVibration(t);
-  const axisIndex=axes.indexOf(s.axis);
-  const actualAngle=(currentAngles[axisIndex]+signatures[axisIndex].angle)*180/Math.PI;
-  const targetAngle=nominalPose(t)[{roll:'r',pitch:'p',yaw:'y'}[s.axis]]*180/Math.PI;
-  const errorAngle=actualAngle-targetAngle;
-  $('command').textContent=`스로틀 ${(p.throttle*100).toFixed(1)}% · 목표 ${p.rate.toFixed(0)}°/s · ${p.phase}`;
-  $('liveTelemetry').textContent=`t=${t.toFixed(2)}s · ${axisNames[s.axis]} 목표 ${targetAngle.toFixed(2)}° / 실제 ${actualAngle.toFixed(2)}° / 오차 ${errorAngle.toFixed(2)}° · 회복 각속도 ${sample.v.toFixed(2)}°/s · 외란 ${s.force.toFixed(1)} · 자이로 잡음 ${s.noise.toFixed(2)} (교육용 단위)`;}
+ function draw(){if(!pidTrajectory.length)return;drone('A',0);drone('B',1);attitude();blackbox();updateAudio();$('scrub').value=t;$('clock').textContent=t.toFixed(2)+' / 30.00초';$('play').textContent=playing?'일시 정지':'재생';
+ const q=sampleAt(t),k=axes.indexOf(s.axis),deg=180/Math.PI;
+ $('command').textContent=q.phase+' · 전진 위치 '+q.pos[0].toFixed(1)+'m · 고도 '+(-q.pos[2]).toFixed(1)+'m · 스로틀 입력 '+(q.stickThrottle*100).toFixed(0)+'% / 보조 포함 '+(q.throttle*100).toFixed(0)+'%';
+ $('liveTelemetry').textContent=axisNames[s.axis]+' 목표 '+(q.reference[k]*deg).toFixed(2)+'° / 기체 '+(q.angles[k]*deg).toFixed(2)+'° / 오차 '+((q.angles[k]-q.reference[k])*deg).toFixed(2)+'° · 모터 '+q.motors.map(v=&gt;(v*100).toFixed(0)+'%').join(' / ');
+ const terms=q.terms[k];$('termTelemetry').textContent='제어량 · P '+terms.P.toFixed(3)+' / I '+terms.I.toFixed(3)+' / D '+terms.D.toFixed(3)+' / FF '+terms.FF.toFixed(3)+' · 소비량 모델 '+q.used.toFixed(1)+'mAh';
+}
+
  function pidStatus(){
   const risks=[];let invalid=false;
   for(const axis of axes){
    const g=s.pids[axis];
-   for(const k of pidKeys){const el=$('pid-'+axis+'-'+k),raw=el.valueAsNumber,max=k==='FF'?1000:250;
-    const bad=!Number.isInteger(raw)||raw<0||raw>max||(k==='Dmax'&&raw>0&&raw<Number($('pid-'+axis+'-D').value));
+   for(const k of pidKeys){const el=$('pid-'+axis+'-'+k),raw=el.valueAsNumber,max=k==='FF'?2000:250;
+    const bad=!Number.isInteger(raw)||raw&lt;0||raw&gt;max;
     el.classList.toggle('pid-invalid',bad);invalid=invalid||bad;
-    const risk=!bad&&((k==='P'&&(raw<20||raw>105))||(k==='D'&&(raw<10||raw>90))||(k==='I'&&raw<15)||(k==='FF'&&raw>450));
+    const risk=!bad&amp;&amp;((k==='P'&amp;&amp;(raw&lt;20||raw&gt;105))||(k==='D'&amp;&amp;axis!=='yaw'&amp;&amp;(raw&lt;10||raw&gt;90))||(k==='I'&amp;&amp;raw&lt;15)||(k==='FF'&amp;&amp;raw&gt;450));
     el.classList.toggle('pid-risk',risk);if(risk)risks.push(axis.toUpperCase()+' '+k);
    }
   }
@@ -2337,41 +2396,43 @@ html>body{padding:0}</style>
  }
  $('bbAxis').addEventListener('change',blackbox);$('bbMode').addEventListener('change',blackbox);
  pidStatus();
- for(const axis of axes)for(const k of pidKeys)$('pid-'+axis+'-'+k).addEventListener('input',()=>{const v=$('pid-'+axis+'-'+k).valueAsNumber,max=k==='FF'?1000:250;if(!Number.isInteger(v)||v<0||v>max){$('pidError').textContent='0~'+max+' 사이 정수를 입력하세요. 이전 유효값으로 계산 중입니다.';pidStatus();return;}const next={...s.pids[axis],[k]:v};if(next.Dmax>0&&next.Dmax<next.D){$('pidError').textContent='D 최대는 0(꺼짐)이거나 D 최소 이상이어야 합니다. 이전 유효값으로 계산 중입니다.';pidStatus();return;}s.pids[axis]=next;$('pidError').textContent='';pidStatus();update();save();});
- $('tuningMode').onchange=()=>{const values=Object.fromEntries(axes.map(axis=>[axis,gains(axis)]));s.pids=values;s.sliders=defaultSliders();s.tuningMode=$('tuningMode').value;pidControls();pidStatus();update();save();};
- for(const [k] of sliderDefs)$('slider-'+k).oninput=()=>{s.sliders[k]=Number($('slider-'+k).value);pidControls();pidStatus();update();save();};
- $('pidReset').onclick=()=>{s.pids=examplePids();s.sliders=defaultSliders();s.tuningMode='OFF';$('pidError').textContent='';pidControls();pidStatus();update();save();};
- for(const k of ['force','noise','throttle'])$(k).addEventListener('input',()=>{s[k]=k==='axis'?$(k).value:Number($(k).value);if(k==='axis'&&!['pulse','throttle'].includes(s.test))s.test='pulse';$('forceval').textContent=s.force;$('noiseval').textContent=s.noise;$('throttleval').textContent=s.throttle+'%';update();save();});
- for(const test of ['throttle','yaw','flip','roll','split-left','split-right','drop','climb'])$('test-'+test).onclick=()=>{s.test=test;if(test==='yaw')s.axis='yaw';if(test==='flip')s.axis='pitch';if(test==='roll'||test==='pulse'||test==='split-left'||test==='split-right')s.axis='roll';if(test==='drop'||test==='climb')s.axis='pitch';controls();pidStatus();update();playing=true;draw();save();};
- $('rotationRate').addEventListener('input',()=>{const v=$('rotationRate').valueAsNumber;if(!Number.isInteger(v)||v<60||v>1440){$('rateError').textContent='60~1440 사이 정수 각속도를 입력하세요. 이전 유효값을 사용합니다.';return;}$('rateError').textContent='';s.rotationRate=v;update();save();});
- $('audioToggle').onclick=async()=>{try{if(!audio)audio=makeAudio();await audio.ac.resume();audioOn=!audioOn;$('audioToggle').textContent=audioOn?'비행 소리 끄기':'비행 소리 켜기';$('audioToggle').setAttribute('aria-pressed',String(audioOn));$('audioStatus').textContent=audioOn?'비행 상태에 연동한 합성음':'소리 꺼짐';updateAudio();}catch(e){$('audioStatus').textContent='이 환경에서는 오디오를 시작할 수 없습니다.';}};
- $('volume').oninput=()=>{s.volume=Number($('volume').value);$('volumeVal').textContent=s.volume+'%';updateAudio();save();};
- document.addEventListener('visibilitychange',()=>{if(document.hidden){playing=false;draw();}});
- window.addEventListener('pagehide',()=>{audio?.ac.close();});
- const graphSelect=$('graph');if(graphSelect)graphSelect.onchange=()=>{s.graph=graphSelect.value;draw();save();};
- for(const group of Object.keys(presets))$(group).onchange=()=>{s[group]=$(group).value;if(s[group]!=='custom')Object.assign(s.hw,presets[group][s[group]]);$('hardwareError').textContent='';controls();update();save();};
- for(const [id,label,lo,hi,step,group] of fields)$('hw-'+id).addEventListener('change',()=>{const value=$('hw-'+id).valueAsNumber;if(!Number.isFinite(value)||value<lo||value>hi||(['cells','blades'].includes(id)&&!Number.isInteger(value))){$('hardwareError').textContent=`${label}: ${lo}~${hi} 범위를 입력하세요. 이전 유효값을 사용 중입니다.`;return;}s.hw[id]=value;if(group!=='assumed'){s[group]='custom';$(group).value='custom';}$('hardwareError').textContent='';specs();update();save();});
- $('speed').onchange=()=>{s.speed=Number($('speed').value);save();};
+ for(const axis of axes)for(const k of pidKeys)$('pid-'+axis+'-'+k).addEventListener('input',()=&gt;{const v=$('pid-'+axis+'-'+k).valueAsNumber,max=k==='FF'?2000:250;if(!Number.isInteger(v)||v&lt;0||v&gt;max){$('pidError').textContent='0~'+max+' 사이 정수를 입력하세요. 이전 유효값으로 계산 중입니다.';pidStatus();return;}const next={...s.pids[axis],[k]:v};s.pids[axis]=next;$('pidError').textContent='';pidStatus();update();save();});
+ $('tuningMode').onchange=()=&gt;{const values=Object.fromEntries(axes.map(axis=&gt;[axis,gains(axis)]));s.pids=values;s.sliders=defaultSliders();s.tuningMode=$('tuningMode').value;pidControls();pidStatus();update();save();};
+ for(const [k] of sliderDefs)$('slider-'+k).oninput=()=&gt;{s.sliders[k]=Number($('slider-'+k).value);pidControls();pidStatus();update();save();};
+ $('pidReset').onclick=()=&gt;{s.pids=examplePids();s.sliders=defaultSliders();s.tuningMode='OFF';$('pidError').textContent='';pidControls();pidStatus();update();save();};
+ for(const k of ['force','noise','throttle'])$(k).addEventListener('input',()=&gt;{s[k]=k==='axis'?$(k).value:Number($(k).value);if(k==='axis'&amp;&amp;!['pulse','throttle'].includes(s.test))s.test='pulse';$('forceval').textContent=s.force;$('noiseval').textContent=s.noise;$('throttleval').textContent=s.throttle+'%';update();save();});
+ for(const test of ['throttle','yaw','flip','roll','split-left','split-right','drop','climb','takeoff'])$('test-'+test).onclick=()=&gt;{s.test=test;if(test==='yaw')s.axis='yaw';if(test==='flip')s.axis='pitch';if(test==='roll'||test==='pulse'||test==='split-left'||test==='split-right')s.axis='roll';if(test==='drop'||test==='climb'||test==='takeoff')s.axis='pitch';controls();pidStatus();update();playing=true;draw();save();};
+ for(const axis of axes)for(const key of pidKeys)$('pid-'+axis+'-'+key).addEventListener('blur',()=&gt;{const el=$('pid-'+axis+'-'+key);if(!el.checkValidity()){el.value=gains(axis)[key];pidStatus();}});
+ $('rotationRate').addEventListener('input',()=&gt;{const v=$('rotationRate').valueAsNumber;if(!Number.isInteger(v)||v&lt;60||v&gt;1440){$('rateError').textContent='60~1440 사이 정수 각속도를 입력하세요. 이전 유효값을 사용합니다.';return;}$('rateError').textContent='';s.rotationRate=v;update();save();});
+ $('audioToggle').onclick=async()=&gt;{try{if(!audio)audio=makeAudio();await audio.ac.resume();audioOn=!audioOn;$('audioToggle').textContent=audioOn?'비행 소리 끄기':'비행 소리 켜기';$('audioToggle').setAttribute('aria-pressed',String(audioOn));$('audioStatus').textContent=audioOn?'비행 상태에 연동한 합성음':'소리 꺼짐';updateAudio();}catch(e){$('audioStatus').textContent='이 환경에서는 오디오를 시작할 수 없습니다.';}};
+ $('volume').oninput=()=&gt;{s.volume=Number($('volume').value);$('volumeVal').textContent=s.volume+'%';updateAudio();save();};
+ document.addEventListener('visibilitychange',()=&gt;{if(document.hidden){playing=false;draw();}});
+ window.addEventListener('pagehide',()=&gt;{audio?.ac.close();});
+ const graphSelect=$('graph');if(graphSelect)graphSelect.onchange=()=&gt;{s.graph=graphSelect.value;draw();save();};
+ for(const group of Object.keys(presets))$(group).onchange=()=&gt;{s[group]=$(group).value;if(s[group]!=='custom')Object.assign(s.hw,presets[group][s[group]]);$('hardwareError').textContent='';controls();update();save();};
+ for(const [id,label,lo,hi,step,group] of fields)$('hw-'+id).addEventListener('change',()=&gt;{const value=$('hw-'+id).valueAsNumber;if(!Number.isFinite(value)||value&lt;lo||value&gt;hi||(['cells','blades'].includes(id)&amp;&amp;!Number.isInteger(value))){$('hardwareError').textContent=`${label}: ${lo}~${hi} 범위를 입력하세요. 이전 유효값을 사용 중입니다.`;return;}s.hw[id]=value;if(group!=='assumed'){s[group]='custom';$(group).value='custom';}$('hardwareError').textContent='';specs();update();save();});
+ for(const key of ['punchDuration','punchStrength'])$(key).addEventListener('change',()=&gt;{const el=$(key),v=el.valueAsNumber;if(!el.checkValidity()||!Number.isFinite(v)){el.value=s[key];return;}s[key]=v;update();save();});
+ $('speed').onchange=()=&gt;{s.speed=Number($('speed').value);save();};
 
- $('scrub').oninput=()=>{t=Number($('scrub').value);playing=false;draw();};
- $('arrival').onclick=()=>{t=recoveryStart();playing=false;draw();};
- $('play').onclick=()=>{if(t>=duration())t=0;playing=!playing;draw();};$('replay').onclick=()=>{t=0;playing=true;draw();};$('reset').onclick=()=>{s=defaults();playing=true;controls();update();save();};
- s=normalize(window.openai?.widgetState?.modelContent);if(s.test==='pulse')s.test='split-left';controls();update();
- window.addEventListener('openai:set_globals',e=>{if(e.detail?.globals?.widgetState){s=normalize(e.detail.globals.widgetState.modelContent);controls();update();}});
- new ResizeObserver(()=>draw()).observe(root);
+ $('scrub').oninput=()=&gt;{t=Number($('scrub').value);playing=false;draw();};
+ $('arrival').onclick=()=&gt;{t=recoveryStart();playing=false;draw();};
+ $('play').onclick=()=&gt;{if(t&gt;=duration())t=0;playing=!playing;draw();};$('replay').onclick=()=&gt;{t=0;playing=true;draw();};$('reset').onclick=()=&gt;{s=defaults();playing=true;controls();update();save();};
+ s=normalize(JSON.parse(localStorageSafeGet()||'null'));if(s.test==='pulse')s.test='split-left';controls();update();
+ window.addEventListener('openai:set_globals',e=&gt;{if(e.detail?.globals?.widgetState){s=normalize(e.detail.globals.widgetState.modelContent);controls();update();}});
+ new ResizeObserver(()=&gt;draw()).observe(root);
  function frame(now){const dt=last?Math.min(.05,(now-last)/1000):0;last=now;if(playing){t=Math.min(duration(),t+dt*s.speed);if(t===duration())playing=false;draw();}requestAnimationFrame(frame);}requestAnimationFrame(frame);
 })();
-</script>
-<script src="https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js"></script>
-<script src="https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js"></script>
-<script>
-(() => {
+&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
   if (window.FloatingUIDOM == null) {
     return;
   }
   const { autoUpdate, computePosition, flip, offset, shift, size } =
     window.FloatingUIDOM;
-  const tooltipPlacements = new Set(["top", "right", "bottom", "left"]);
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
   const tooltipId = `codex-visualization-tooltip-${
     window.crypto?.randomUUID?.() ?? Date.now().toString(36)
   }`;
@@ -2388,35 +2449,35 @@ html>body{padding:0}</style>
   let lastPointerWasTouch = false;
   let pinnedByTouch = false;
 
-  const getTrigger = (event) => {
+  const getTrigger = (event) =&gt; {
     for (const target of event.composedPath()) {
       if (target?.nodeType === Node.ELEMENT_NODE) {
-        const trigger = target.closest("[data-tooltip]");
+        const trigger = target.closest(&quot;[data-tooltip]&quot;);
         if (trigger) return trigger;
       }
     }
     return null;
   };
-  const containsTarget = (trigger, target) =>
-    target?.nodeType != null && trigger.contains(target);
-  const getContent = (trigger) =>
-    trigger.getAttribute("data-tooltip")?.trim() ?? "";
-  const getPlacement = (trigger) => {
-    const placement = trigger.getAttribute("data-tooltip-placement");
-    return tooltipPlacements.has(placement) ? placement : "top";
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
   };
-  const getTooltip = () => {
+  const getTooltip = () =&gt; {
     if (tooltip == null) {
-      tooltip = document.createElement("div");
+      tooltip = document.createElement(&quot;div&quot;);
       tooltip.id = tooltipId;
-      tooltip.className = "tooltip";
-      tooltip.setAttribute("role", "tooltip");
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
     }
     return tooltip;
   };
-  const setDescribedBy = (trigger, described) => {
+  const setDescribedBy = (trigger, described) =&gt; {
     const ids = new Set(
-      (trigger.getAttribute("aria-describedby") ?? "")
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
         .split(/\s+/)
         .filter(Boolean),
     );
@@ -2426,19 +2487,19 @@ html>body{padding:0}</style>
       ids.delete(tooltipId);
     }
     if (ids.size === 0) {
-      trigger.removeAttribute("aria-describedby");
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
     } else {
-      trigger.setAttribute("aria-describedby", [...ids].join(" "));
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
     }
   };
-  const clearOpenTimeout = () => {
+  const clearOpenTimeout = () =&gt; {
     if (openTimeout != null) {
       window.clearTimeout(openTimeout);
       openTimeout = null;
     }
     pendingTrigger = null;
   };
-  const closeTooltip = (activateSkipDelay = true) => {
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
     clearOpenTimeout();
     pinnedByTouch = false;
     positionRequest += 1;
@@ -2454,7 +2515,7 @@ html>body{padding:0}</style>
       skipDelayUntil = Date.now() + skipDelay;
     }
   };
-  const updatePosition = (trigger, floating) => {
+  const updatePosition = (trigger, floating) =&gt; {
     const request = ++positionRequest;
     void computePosition(trigger, floating, {
       middleware: [
@@ -2465,34 +2526,34 @@ html>body{padding:0}</style>
           padding: tooltipGap,
           apply({ availableHeight, availableWidth, elements }) {
             elements.floating.style.setProperty(
-              "--tooltip-available-width",
+              &quot;--tooltip-available-width&quot;,
               `${Math.max(0, availableWidth)}px`,
             );
             elements.floating.style.setProperty(
-              "--tooltip-available-height",
+              &quot;--tooltip-available-height&quot;,
               `${Math.max(0, availableHeight)}px`,
             );
           },
         }),
       ],
       placement: getPlacement(trigger),
-      strategy: "fixed",
+      strategy: &quot;fixed&quot;,
     })
-      .then(({ x, y }) => {
+      .then(({ x, y }) =&gt; {
         if (activeTrigger !== trigger || request !== positionRequest) {
           return;
         }
         const scale = window.devicePixelRatio || 1;
         floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
-        floating.style.visibility = "visible";
+        floating.style.visibility = &quot;visible&quot;;
       })
-      .catch(() => {
-        if (activeTrigger === trigger && request === positionRequest) {
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
           closeTooltip(false);
         }
       });
   };
-  const openTooltip = (trigger) => {
+  const openTooltip = (trigger) =&gt; {
     const content = getContent(trigger);
     if (!trigger.isConnected || content.length === 0) {
       return;
@@ -2504,16 +2565,16 @@ html>body{padding:0}</style>
     closeTooltip();
     const floating = getTooltip();
     floating.textContent = content;
-    floating.style.visibility = "hidden";
-    floating.style.transform = "translate(0, 0)";
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
     document.body.appendChild(floating);
     activeTrigger = trigger;
     setDescribedBy(trigger, true);
-    autoUpdateCleanup = autoUpdate(trigger, floating, () => {
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
       updatePosition(trigger, floating);
     });
   };
-  const requestOpen = (trigger, immediate = false) => {
+  const requestOpen = (trigger, immediate = false) =&gt; {
     if (
       getContent(trigger).length === 0 ||
       activeTrigger === trigger ||
@@ -2524,21 +2585,21 @@ html>body{padding:0}</style>
     clearOpenTimeout();
     pendingTrigger = trigger;
     const delay =
-      immediate || activeTrigger != null || Date.now() < skipDelayUntil
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
         ? 0
         : hoverDelay;
     if (delay === 0) {
       openTooltip(trigger);
       return;
     }
-    openTimeout = window.setTimeout(() => {
+    openTimeout = window.setTimeout(() =&gt; {
       openTimeout = null;
       pendingTrigger = null;
       openTooltip(trigger);
     }, delay);
   };
-  const handlePointerOpen = (event) => {
-    if (event.pointerType === "touch") {
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
       return;
     }
     const trigger = getTrigger(event);
@@ -2547,12 +2608,12 @@ html>body{padding:0}</style>
     }
     requestOpen(trigger);
   };
-  const handlePointer = (event) => {
+  const handlePointer = (event) =&gt; {
     lastPointerWasTouch =
-      event.type === "pointerdown" && event.pointerType === "touch";
+      event.type === &quot;pointerdown&quot; &amp;&amp; event.pointerType === &quot;touch&quot;;
   };
-  const handleTouchClick = (event) => {
-    const isTouch = event.pointerType === "touch" || lastPointerWasTouch;
+  const handleTouchClick = (event) =&gt; {
+    const isTouch = event.pointerType === &quot;touch&quot; || lastPointerWasTouch;
     lastPointerWasTouch = false;
     if (!isTouch || event.detail === 0) {
       return;
@@ -2562,7 +2623,7 @@ html>body{padding:0}</style>
       trigger == null ||
       !trigger.isConnected ||
       getContent(trigger).length === 0 ||
-      (pinnedByTouch && activeTrigger === trigger)
+      (pinnedByTouch &amp;&amp; activeTrigger === trigger)
     ) {
       if (pinnedByTouch) {
         closeTooltip();
@@ -2571,13 +2632,13 @@ html>body{padding:0}</style>
     }
     openTooltip(trigger);
     pinnedByTouch = activeTrigger === trigger;
-    window.setTimeout(() => {
-      if (activeTrigger === trigger && !trigger.isConnected) {
+    window.setTimeout(() =&gt; {
+      if (activeTrigger === trigger &amp;&amp; !trigger.isConnected) {
         closeTooltip(false);
       }
     }, 0);
   };
-  const handleLeave = (event) => {
+  const handleLeave = (event) =&gt; {
     if (pinnedByTouch) {
       return;
     }
@@ -2589,18 +2650,18 @@ html>body{padding:0}</style>
       closeTooltip();
     }
   };
-  const handleFocusIn = (event) => {
+  const handleFocusIn = (event) =&gt; {
     const trigger = getTrigger(event);
-    if (trigger?.matches(":focus-visible")) {
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
       requestOpen(trigger, true);
     }
   };
-  const handleKeyDown = (event) => {
-    if (event.key === "Escape") {
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
       closeTooltip();
     }
   };
-  const handleContextMenu = (event) => {
+  const handleContextMenu = (event) =&gt; {
     lastPointerWasTouch = false;
     const trigger = getTrigger(event);
     if (activeTrigger === trigger || pendingTrigger === trigger) {
@@ -2620,42 +2681,42 @@ html>body{padding:0}</style>
   };
   const roots = new Map();
   const handledEvents = new WeakSet();
-  const handleEvent = (event) => {
+  const handleEvent = (event) =&gt; {
     if (handledEvents.has(event)) return;
     handledEvents.add(event);
     handlers[event.type](event);
   };
-  const discoverRoots = (node) => {
+  const discoverRoots = (node) =&gt; {
     if (node.shadowRoot) listen(node.shadowRoot);
-    for (const element of node.querySelectorAll("*")) {
+    for (const element of node.querySelectorAll(&quot;*&quot;)) {
       if (element.shadowRoot) listen(element.shadowRoot);
     }
   };
-  const listen = (root) => {
+  const listen = (root) =&gt; {
     if (roots.has(root)) return;
     for (const type of Object.keys(handlers)) root.addEventListener(type, handleEvent);
-    const observer = new window.MutationObserver((records) => {
+    const observer = new window.MutationObserver((records) =&gt; {
       for (const { addedNodes } of records) {
         for (const node of addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) discoverRoots(node);
         }
       }
       for (const [root, cleanup] of roots) {
-        if (root.host && !root.host.isConnected) {
+        if (root.host &amp;&amp; !root.host.isConnected) {
           cleanup();
           roots.delete(root);
         }
       }
-      if (activeTrigger && !activeTrigger.isConnected) closeTooltip(false);
+      if (activeTrigger &amp;&amp; !activeTrigger.isConnected) closeTooltip(false);
     });
     observer.observe(root, { childList: true, subtree: true });
-    roots.set(root, () => {
+    roots.set(root, () =&gt; {
       observer.disconnect();
       for (const type of Object.keys(handlers)) root.removeEventListener(type, handleEvent);
     });
     discoverRoots(root);
   };
-  const destroy = () => {
+  const destroy = () =&gt; {
     closeTooltip(false);
     lastPointerWasTouch = false;
     for (const cleanup of roots.values()) cleanup();
@@ -2665,50 +2726,50 @@ html>body{padding:0}</style>
 
   // Events between children of one shadow root never reach the document.
   listen(document);
-  window.addEventListener("pagehide", destroy, { once: true });
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
 })();
-</script>
-<script id="codex-visualization-tabs">
-(() => {
-  const selector = '.nav[role="tablist"] [role="tab"]';
-  const disabled = ':disabled,[aria-disabled="true"]';
-  const selectTab = (selected) => {
-    const panelId = selected.getAttribute("aria-controls");
-    for (const tab of selected.closest('[role="tablist"]').querySelectorAll('[role="tab"]')) {
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-tabs&quot;&gt;
+(() =&gt; {
+  const selector = '.nav[role=&quot;tablist&quot;] [role=&quot;tab&quot;]';
+  const disabled = ':disabled,[aria-disabled=&quot;true&quot;]';
+  const selectTab = (selected) =&gt; {
+    const panelId = selected.getAttribute(&quot;aria-controls&quot;);
+    for (const tab of selected.closest('[role=&quot;tablist&quot;]').querySelectorAll('[role=&quot;tab&quot;]')) {
       const active = tab === selected;
-      tab.classList.toggle("active", active);
-      tab.setAttribute("aria-selected", String(active));
-      const id = tab.getAttribute("aria-controls");
-      const panel = id && document.getElementById(id);
+      tab.classList.toggle(&quot;active&quot;, active);
+      tab.setAttribute(&quot;aria-selected&quot;, String(active));
+      const id = tab.getAttribute(&quot;aria-controls&quot;);
+      const panel = id &amp;&amp; document.getElementById(id);
       if (panel != null) {
         panel.hidden = id !== panelId;
-        if (!panel.hidden && selected.id) {
-          panel.setAttribute("aria-labelledby", selected.id);
+        if (!panel.hidden &amp;&amp; selected.id) {
+          panel.setAttribute(&quot;aria-labelledby&quot;, selected.id);
         }
       }
     }
   };
-  const interact = (event) => {
+  const interact = (event) =&gt; {
     const tab = event.target?.closest?.(selector);
     if (event.defaultPrevented || tab == null || tab.matches(disabled)) {
       return;
     }
-    if (event.type === "click") {
+    if (event.type === &quot;click&quot;) {
       selectTab(tab);
       return;
     }
     const tabs = Array.from(
-      tab.closest('[role="tablist"]').querySelectorAll('[role="tab"]'),
-    ).filter((candidate) => !candidate.matches(disabled));
+      tab.closest('[role=&quot;tablist&quot;]').querySelectorAll('[role=&quot;tab&quot;]'),
+    ).filter((candidate) =&gt; !candidate.matches(disabled));
     const current = tabs.indexOf(tab);
     let next;
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+    if (event.key === &quot;ArrowRight&quot; || event.key === &quot;ArrowDown&quot;) {
       next = (current + 1) % tabs.length;
-    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+    } else if (event.key === &quot;ArrowLeft&quot; || event.key === &quot;ArrowUp&quot;) {
       next = (current + tabs.length - 1) % tabs.length;
-    } else if (event.key === "Home") {
+    } else if (event.key === &quot;Home&quot;) {
       next = 0;
-    } else if (event.key === "End") {
+    } else if (event.key === &quot;End&quot;) {
       next = tabs.length - 1;
     } else {
       return;
@@ -2718,38 +2779,38 @@ html>body{padding:0}</style>
     selectTab(tabs[next]);
   };
 
-  for (const list of document.querySelectorAll('.nav[role="tablist"]')) {
+  for (const list of document.querySelectorAll('.nav[role=&quot;tablist&quot;]')) {
     const selected =
-      list.querySelector('[role="tab"][aria-selected="true"]') ??
-      list.querySelector('[role="tab"].active') ??
-      list.querySelector('[role="tab"]');
+      list.querySelector('[role=&quot;tab&quot;][aria-selected=&quot;true&quot;]') ??
+      list.querySelector('[role=&quot;tab&quot;].active') ??
+      list.querySelector('[role=&quot;tab&quot;]');
     if (selected != null) {
       selectTab(selected);
     }
   }
-  document.addEventListener("click", interact);
-  document.addEventListener("keydown", interact);
-  window.addEventListener("pagehide", () => {
-    document.removeEventListener("click", interact);
-    document.removeEventListener("keydown", interact);
+  document.addEventListener(&quot;click&quot;, interact);
+  document.addEventListener(&quot;keydown&quot;, interact);
+  window.addEventListener(&quot;pagehide&quot;, () =&gt; {
+    document.removeEventListener(&quot;click&quot;, interact);
+    document.removeEventListener(&quot;keydown&quot;, interact);
   }, { once: true });
 })();
-</script>
-<script id="codex-visualization-carousel">
-  (() => {
-    for (const root of document.querySelectorAll(".viz-carousel")) {
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-carousel&quot;&gt;
+  (() =&gt; {
+    for (const root of document.querySelectorAll(&quot;.viz-carousel&quot;)) {
       const panels = Array.from(
-        root.querySelectorAll(":scope > [data-variant]"),
+        root.querySelectorAll(&quot;:scope &gt; [data-variant]&quot;),
       );
       if (panels.length === 0) {
         continue;
       }
-      root.setAttribute("role", "group");
-      panels.forEach((panel, index) => {
+      root.setAttribute(&quot;role&quot;, &quot;group&quot;);
+      panels.forEach((panel, index) =&gt; {
         panel.hidden = index !== 0;
-        panel.setAttribute("role", "group");
-        if (!panel.hasAttribute("aria-label")) {
-          panel.setAttribute("aria-label", panel.dataset.variant);
+        panel.setAttribute(&quot;role&quot;, &quot;group&quot;);
+        if (!panel.hasAttribute(&quot;aria-label&quot;)) {
+          panel.setAttribute(&quot;aria-label&quot;, panel.dataset.variant);
         }
       });
       root.dataset.activeVariant = panels[0].dataset.variant;
@@ -2757,47 +2818,47 @@ html>body{padding:0}</style>
         continue;
       }
 
-      const controls = document.createElement("div");
-      controls.className = "viz-carousel-controls";
+      const controls = document.createElement(&quot;div&quot;);
+      controls.className = &quot;viz-carousel-controls&quot;;
       // Portable copy of the settings dropdown's legacy glyph; no 14px icon-package preset matches it.
       // https://github.com/openai/openai/blob/master/codex/codex-apps/webview/src/icons/chevron.svg
       controls.innerHTML = `
-      <button type="button" class="viz-carousel-previous cursor-interaction"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
-      <details class="viz-carousel-picker">
-        <summary class="cursor-interaction">
-          <span class="viz-carousel-count tabular-nums"></span>
-          <span class="viz-carousel-name"></span>
-          <svg class="viz-carousel-caret" width="14" height="14" viewBox="0 0 20 21" fill="none" aria-hidden="true" focusable="false">
-            <path d="M15.2793 7.71101C15.539 7.45131 15.961 7.45131 16.2207 7.71101C16.4804 7.97071 16.4804 8.39272 16.2207 8.65242L10.4707 14.4024C10.211 14.6621 9.78902 14.6621 9.52932 14.4024L3.77932 8.65242L3.69436 8.54792C3.52385 8.28979 3.55205 7.93828 3.77932 7.71101C4.00659 7.48374 4.3581 7.45554 4.61623 7.62605L4.72073 7.71101L10 12.9903L15.2793 7.71101Z" fill="currentColor" stroke="currentColor" stroke-width="0.6" />
-          </svg>
-        </summary>
-        <div class="viz-carousel-options"></div>
-      </details>
-      <button type="button" class="viz-carousel-next cursor-interaction"><i data-lucide="chevron-right" aria-hidden="true"></i></button>`;
-      const previous = controls.querySelector(".viz-carousel-previous");
-      const next = controls.querySelector(".viz-carousel-next");
-      const picker = controls.querySelector(".viz-carousel-picker");
-      const summary = picker.querySelector("summary");
-      const count = controls.querySelector(".viz-carousel-count");
-      const name = controls.querySelector(".viz-carousel-name");
-      const options = controls.querySelector(".viz-carousel-options");
-      const status = document.createElement("span");
-      status.className = "sr-only";
-      status.setAttribute("role", "status");
-      status.setAttribute("aria-live", "polite");
-      status.setAttribute("aria-atomic", "true");
+      &lt;button type=&quot;button&quot; class=&quot;viz-carousel-previous cursor-interaction&quot;&gt;&lt;i data-lucide=&quot;chevron-left&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;details class=&quot;viz-carousel-picker&quot;&gt;
+        &lt;summary class=&quot;cursor-interaction&quot;&gt;
+          &lt;span class=&quot;viz-carousel-count tabular-nums&quot;&gt;&lt;/span&gt;
+          &lt;span class=&quot;viz-carousel-name&quot;&gt;&lt;/span&gt;
+          &lt;svg class=&quot;viz-carousel-caret&quot; width=&quot;14&quot; height=&quot;14&quot; viewBox=&quot;0 0 20 21&quot; fill=&quot;none&quot; aria-hidden=&quot;true&quot; focusable=&quot;false&quot;&gt;
+            &lt;path d=&quot;M15.2793 7.71101C15.539 7.45131 15.961 7.45131 16.2207 7.71101C16.4804 7.97071 16.4804 8.39272 16.2207 8.65242L10.4707 14.4024C10.211 14.6621 9.78902 14.6621 9.52932 14.4024L3.77932 8.65242L3.69436 8.54792C3.52385 8.28979 3.55205 7.93828 3.77932 7.71101C4.00659 7.48374 4.3581 7.45554 4.61623 7.62605L4.72073 7.71101L10 12.9903L15.2793 7.71101Z&quot; fill=&quot;currentColor&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;0.6&quot; /&gt;
+          &lt;/svg&gt;
+        &lt;/summary&gt;
+        &lt;div class=&quot;viz-carousel-options&quot;&gt;&lt;/div&gt;
+      &lt;/details&gt;
+      &lt;button type=&quot;button&quot; class=&quot;viz-carousel-next cursor-interaction&quot;&gt;&lt;i data-lucide=&quot;chevron-right&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;`;
+      const previous = controls.querySelector(&quot;.viz-carousel-previous&quot;);
+      const next = controls.querySelector(&quot;.viz-carousel-next&quot;);
+      const picker = controls.querySelector(&quot;.viz-carousel-picker&quot;);
+      const summary = picker.querySelector(&quot;summary&quot;);
+      const count = controls.querySelector(&quot;.viz-carousel-count&quot;);
+      const name = controls.querySelector(&quot;.viz-carousel-name&quot;);
+      const options = controls.querySelector(&quot;.viz-carousel-options&quot;);
+      const status = document.createElement(&quot;span&quot;);
+      status.className = &quot;sr-only&quot;;
+      status.setAttribute(&quot;role&quot;, &quot;status&quot;);
+      status.setAttribute(&quot;aria-live&quot;, &quot;polite&quot;);
+      status.setAttribute(&quot;aria-atomic&quot;, &quot;true&quot;);
       previous.setAttribute(
-        "aria-label",
-        root.dataset.previousLabel ?? "Previous variant",
+        &quot;aria-label&quot;,
+        root.dataset.previousLabel ?? &quot;Previous variant&quot;,
       );
-      next.setAttribute("aria-label", root.dataset.nextLabel ?? "Next variant");
+      next.setAttribute(&quot;aria-label&quot;, root.dataset.nextLabel ?? &quot;Next variant&quot;);
 
       let active = 0;
       let mousePointerId = null;
       let summaryPointerHandled = false;
-      summary.addEventListener("pointerdown", (event) => {
+      summary.addEventListener(&quot;pointerdown&quot;, (event) =&gt; {
         summaryPointerHandled =
-          event.pointerType === "mouse" && event.button === 0 && !event.ctrlKey;
+          event.pointerType === &quot;mouse&quot; &amp;&amp; event.button === 0 &amp;&amp; !event.ctrlKey;
         if (!summaryPointerHandled) {
           return;
         }
@@ -2806,25 +2867,25 @@ html>body{padding:0}</style>
         picker.open = !picker.open;
         mousePointerId = picker.open ? event.pointerId : null;
       });
-      summary.addEventListener("click", (event) => {
-        if (summaryPointerHandled && event.detail > 0) {
+      summary.addEventListener(&quot;click&quot;, (event) =&gt; {
+        if (summaryPointerHandled &amp;&amp; event.detail &gt; 0) {
           event.preventDefault();
         }
       });
-      const choices = panels.map((panel, index) => {
-        const choice = document.createElement("button");
-        choice.type = "button";
-        choice.className = "cursor-interaction";
+      const choices = panels.map((panel, index) =&gt; {
+        const choice = document.createElement(&quot;button&quot;);
+        choice.type = &quot;button&quot;;
+        choice.className = &quot;cursor-interaction&quot;;
         choice.textContent = panel.dataset.variant;
-        choice.addEventListener("click", () => {
+        choice.addEventListener(&quot;click&quot;, () =&gt; {
           select(index);
           summary.focus();
         });
-        choice.addEventListener("pointerup", (event) => {
+        choice.addEventListener(&quot;pointerup&quot;, (event) =&gt; {
           if (
-            picker.open &&
-            event.pointerType === "mouse" &&
-            event.button === 0 &&
+            picker.open &amp;&amp;
+            event.pointerType === &quot;mouse&quot; &amp;&amp;
+            event.button === 0 &amp;&amp;
             event.pointerId === mousePointerId
           ) {
             choice.click();
@@ -2833,13 +2894,13 @@ html>body{padding:0}</style>
         options.appendChild(choice);
         return choice;
       });
-      const select = (index) => {
+      const select = (index) =&gt; {
         const changed = active !== index;
         active = index;
-        panels.forEach((panel, position) => {
+        panels.forEach((panel, position) =&gt; {
           panel.hidden = position !== active;
           choices[position].setAttribute(
-            "aria-current",
+            &quot;aria-current&quot;,
             String(position === active),
           );
         });
@@ -2852,14 +2913,14 @@ html>body{padding:0}</style>
           status.textContent = `${count.textContent}: ${name.textContent}`;
         }
       };
-      previous.addEventListener("click", () =>
+      previous.addEventListener(&quot;click&quot;, () =&gt;
         select((active + panels.length - 1) % panels.length),
       );
-      next.addEventListener("click", () =>
+      next.addEventListener(&quot;click&quot;, () =&gt;
         select((active + 1) % panels.length),
       );
-      picker.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && picker.open) {
+      picker.addEventListener(&quot;keydown&quot;, (event) =&gt; {
+        if (event.key === &quot;Escape&quot; &amp;&amp; picker.open) {
           event.preventDefault();
           picker.open = false;
           mousePointerId = null;
@@ -2871,13 +2932,13 @@ html>body{padding:0}</style>
         }
         const index = choices.indexOf(document.activeElement);
         let nextIndex;
-        if (event.key === "ArrowDown") {
-          nextIndex = index < 0 ? active : (index + 1) % choices.length;
-        } else if (event.key === "ArrowUp") {
-          nextIndex = index < 0 ? active : (index + choices.length - 1) % choices.length;
-        } else if (picker.open && event.key === "Home") {
+        if (event.key === &quot;ArrowDown&quot;) {
+          nextIndex = index &lt; 0 ? active : (index + 1) % choices.length;
+        } else if (event.key === &quot;ArrowUp&quot;) {
+          nextIndex = index &lt; 0 ? active : (index + choices.length - 1) % choices.length;
+        } else if (picker.open &amp;&amp; event.key === &quot;Home&quot;) {
           nextIndex = 0;
-        } else if (picker.open && event.key === "End") {
+        } else if (picker.open &amp;&amp; event.key === &quot;End&quot;) {
           nextIndex = choices.length - 1;
         } else {
           return;
@@ -2886,13 +2947,13 @@ html>body{padding:0}</style>
         picker.open = true;
         choices[nextIndex].focus();
       });
-      picker.addEventListener("focusout", (event) => {
+      picker.addEventListener(&quot;focusout&quot;, (event) =&gt; {
         if (!picker.contains(event.relatedTarget)) {
           picker.open = false;
           mousePointerId = null;
         }
       });
-      const dismiss = (event) => {
+      const dismiss = (event) =&gt; {
         if (!summary.contains(event.target)) {
           mousePointerId = null;
         }
@@ -2900,29 +2961,29 @@ html>body{padding:0}</style>
           picker.open = false;
         }
       };
-      const endPointerSelection = () => {
+      const endPointerSelection = () =&gt; {
         mousePointerId = null;
       };
-      const sizePicker = () => {
+      const sizePicker = () =&gt; {
         root.style.setProperty(
-          "--viz-carousel-picker-height",
+          &quot;--viz-carousel-picker-height&quot;,
           `${picker.open ? options.offsetHeight : 0}px`,
         );
       };
-      picker.addEventListener("toggle", sizePicker);
-      window.addEventListener("resize", sizePicker);
-      document.addEventListener("pointerdown", dismiss);
-      document.addEventListener("pointerup", endPointerSelection);
-      document.addEventListener("pointercancel", endPointerSelection);
-      window.addEventListener("blur", endPointerSelection);
+      picker.addEventListener(&quot;toggle&quot;, sizePicker);
+      window.addEventListener(&quot;resize&quot;, sizePicker);
+      document.addEventListener(&quot;pointerdown&quot;, dismiss);
+      document.addEventListener(&quot;pointerup&quot;, endPointerSelection);
+      document.addEventListener(&quot;pointercancel&quot;, endPointerSelection);
+      window.addEventListener(&quot;blur&quot;, endPointerSelection);
       window.addEventListener(
-        "pagehide",
-        () => {
-          document.removeEventListener("pointerdown", dismiss);
-          document.removeEventListener("pointerup", endPointerSelection);
-          document.removeEventListener("pointercancel", endPointerSelection);
-          window.removeEventListener("blur", endPointerSelection);
-          window.removeEventListener("resize", sizePicker);
+        &quot;pagehide&quot;,
+        () =&gt; {
+          document.removeEventListener(&quot;pointerdown&quot;, dismiss);
+          document.removeEventListener(&quot;pointerup&quot;, endPointerSelection);
+          document.removeEventListener(&quot;pointercancel&quot;, endPointerSelection);
+          window.removeEventListener(&quot;blur&quot;, endPointerSelection);
+          window.removeEventListener(&quot;resize&quot;, sizePicker);
         },
         { once: true },
       );
@@ -2930,11 +2991,11 @@ html>body{padding:0}</style>
       select(0);
     }
   })();
-</script>
-<script async="" id="codex-visualization-lucide" src="https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js"></script>
-<script>
-(() => {
-  const initialize = () => {
+&lt;/script&gt;
+&lt;script async=&quot;&quot; id=&quot;codex-visualization-lucide&quot; src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
     globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
   };
   if (globalThis.lucide != null) {
@@ -2942,10 +3003,11 @@ html>body{padding:0}</style>
     return;
   }
   document
-    .getElementById("codex-visualization-lucide")
-    ?.addEventListener("load", initialize, { once: true });
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
 })();
-</script>
-<script>window.addEventListener('error',function(e){const el=document.getElementById('demo-error');if(el){el.hidden=false;el.textContent='실행 오류: '+e.message;}});</script>
-</body>
-</html>
+&lt;/script&gt;
+&lt;script&gt;window.addEventListener('error',function(e){const el=document.getElementById('demo-error');if(el){el.hidden=false;el.textContent='실행 오류: '+e.message;}});&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;" sandbox="allow-scripts" allow="autoplay" title="TSD FPV PID 교육용 비행 시뮬레이터"></iframe>
+</body></html>
