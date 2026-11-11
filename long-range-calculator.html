@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>장거리 비행 계산기 | TSD 기술 연구소</title>
+<style>
+:root{
+ color-scheme:dark;
+ --bg:#08111f;--panel:#142338;
+ --accent:#38bdf8;--text:#eaf2fc;
+ --muted:#a9bbcf;--line:#29405c;
+ --field:#0d1a2c;--warn:#e5c45a;
+ --ok:#4cc38a;--bad:#ef6b6b;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;background:var(--bg);color:var(--text);
+ font-family:Arial,"Malgun Gothic",sans-serif;
+ line-height:1.7
+}
+a{color:inherit;text-decoration:none}
+header{
+ position:sticky;top:0;z-index:10;
+ background:#08111ff0;border-bottom:1px solid #28405a;
+ padding:15px 6%;display:flex;
+ justify-content:space-between;align-items:center;
+ flex-wrap:wrap;gap:15px
+}
+.logo{font-weight:800;font-size:20px;color:var(--accent)}
+nav{display:flex;flex-wrap:wrap;gap:15px}
+nav a:hover,nav a[aria-current="page"]{color:var(--accent)}
+.page-shell{
+ max-width:760px;margin:auto;padding:45px 5%;
+ min-height:calc(100vh - 170px)
+}
+.page-heading{text-align:center;margin-bottom:30px}
+.page-heading h1{
+ color:var(--accent);
+ font-size:clamp(28px,4vw,40px);
+ line-height:1.2;margin:0 0 14px
+}
+.page-heading p{margin:0;color:var(--muted)}
+h2{font-size:20px;color:var(--accent);margin:0 0 12px}
+section{
+ background:var(--panel);border:1px solid var(--line);
+ border-radius:16px;padding:22px;margin-bottom:18px
+}
+label{
+ display:block;font-size:13px;color:var(--muted);
+ margin:12px 0 5px
+}
+select,input{
+ width:100%;padding:11px 12px;border-radius:9px;
+ border:1px solid #365a78;background:var(--field);
+ color:var(--text);font:inherit
+}
+select:focus,input:focus{
+ outline:3px solid var(--accent);outline-offset:1px
+}
+input.invalid{border:2px solid var(--bad)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.result{border-left:4px solid var(--accent)}
+.big{
+ font-size:36px;font-weight:700;
+ margin:4px 0 12px;line-height:1.2
+}
+.big small{font-size:15px;font-weight:400;color:var(--muted)}
+.badge{
+ display:inline-block;padding:6px 12px;border-radius:20px;
+ background:#223b55;border:1px solid #365a78;
+ font-size:13px;margin:0 6px 8px 0
+}
+.badge.ok{border-color:var(--ok);color:var(--ok)}
+.badge.bad{border-color:var(--bad);color:var(--bad)}
+.badge.chk{border-color:var(--warn);color:var(--warn)}
+.hide{display:none}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td{padding:7px 0;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right}
+.warns p,#windVerdict p{margin:8px 0;font-size:14px}
+.w{color:var(--warn)}
+.b{color:var(--bad)}
+.o{color:var(--ok)}
+.error{color:var(--bad);font-size:13px;white-space:pre-line}
+footer{
+ border-top:1px solid #28405a;padding:30px 6%;
+ color:#9cb1c8;font-size:13px;text-align:center
+}
+@media(max-width:600px){
+ header{padding:12px 5%}
+ nav{font-size:13px;gap:10px}
+ .page-shell{padding:30px 5%}
+ .row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+<a class="logo" href="./index.html">TSD Aero Systems</a>
+<nav aria-label="주 메뉴">
+<a href="./education.html">체험교육</a>
+<a href="./index.html" aria-current="page">기술연구소</a>
+<a href="./contact.html">문의</a>
+</nav>
+</header>
+
+<main class="page-shell">
+
+<div class="page-heading">
+<h1>장거리 비행 계산기</h1>
+<p>
+배터리 에너지, 순항 전력, 풍속을 이용하여
+이론적인 비행 시간과 왕복 가능 거리를 계산합니다.
+실제 비행 전 시험비행으로 검증하세요.
+</p>
+</div>
+
+<section id="secBat">
+<h2>배터리</h2>
+<div class="row">
+<div>
+<label for="cells">직렬 셀 수 (S)</label>
+<input id="cells" type="number" value="6" min="1" max="24" step="1">
+</div>
+<div>
+<label for="mah">총 용량 (mAh)</label>
+<input id="mah" type="number" value="6000" min="1" max="200000" step="any">
+</div>
+</div>
+<div class="row">
+<div>
+<label for="chem">배터리 종류</label>
+<select id="chem">
+<option value="3.7|80">LiPo (3.7V)</option>
+<option value="3.8|80">LiPo HV (3.8V)</option>
+<option value="3.6|90">Li-ion (3.6V)</option>
+</select>
+</div>
+<div>
+<label for="usable">사용 가능 비율 (%)</label>
+<input id="usable" type="number" value="80" min="1" max="100" step="1">
+</div>
+</div>
+<p class="note">
+공칭 전압을 사용합니다. 실제 사용 가능한 에너지는
+방전율, 온도, 전압 강하 및 배터리 상태에 따라 달라집니다.
+</p>
+</section>
+
+<section id="secAir">
+<h2>기체</h2>
+<div class="row">
+<div>
+<label for="mass">총 중량 (g, 배터리 포함)</label>
+<input id="mass" type="number" value="1200" min="1" max="100000" step="any">
+</div>
+<div>
+<label for="spd">순항 대기속도 (km/h)</label>
+<input id="spd" type="number" value="60" min="1" max="500" step="any">
+</div>
+</div>
+<label for="pmode">순항 전력 계산 방식</label>
+<select id="pmode">
+<option value="direct">직접 입력 (W)</option>
+<option value="est">중량·효율로 추정 (g/W)</option>
+</select>
+<div id="pDirect">
+<label for="pw">순항 전력 (W)</label>
+<input id="pw" type="number" value="160" min="1" max="100000" step="any">
+</div>
+<div id="pEst" class="hide">
+<div class="row">
+<div>
+<label for="eff">추진 효율 (g/W)</label>
+<input id="eff" type="number" value="8" min="0.1" max="100" step="any">
+</div>
+<div>
+<label for="fac">호버 대비 순항 전력 배율</label>
+<input id="fac" type="number" value="1" min="0.1" max="10" step="any">
+</div>
+</div>
+<p class="note">
+정지 추력 효율을 이용한 근사 모델입니다.
+실제 순항 전력은 비행 로그로 측정하는 것이 좋습니다.
+</p>
+</div>
+</section>
+
+<section id="secClimb">
+<h2>상승 조건</h2>
+<div class="row">
+<div>
+<label for="alt">상승 고도 (m)</label>
+<input id="alt" type="number" value="100" min="0" max="10000" step="any">
+</div>
+<div>
+<label for="climbSpeed">상승 속도 (m/s)</label>
+<input id="climbSpeed" type="number" value="3" min="0.1" max="50" step="any">
+</div>
+</div>
+<label for="climbPower">상승 중 평균 총소비전력 (W)</label>
+<input id="climbPower" type="number" value="250" min="1" max="100000" step="any">
+<p class="note">
+상승 중 평균 총소비전력은 기체 유지에 필요한
+전력을 포함한 값입니다.
+실제 측정값을 권장합니다.
+상승 고도는 비행 시작 지점 대비 고도 차이입니다.
+</p>
+</section>
+
+<section id="secCond">
+<h2>비행 조건</h2>
+<div class="row">
+<div>
+<label for="wind">왕복 경로 방향 바람 (m/s)</label>
+<input id="wind" type="number" value="3" min="0" max="100" step="any">
+</div>
+<div>
+<label for="res">예비 에너지 (%)</label>
+<input id="res" type="number" value="25" min="0" max="99" step="any">
+</div>
+</div>
+<div class="row">
+<div>
+<label for="link">링크 편도 한계 (km, 선택)</label>
+<input id="link" type="number" min="0.001" max="10000" step="any" placeholder="링크 계산기 결과">
+</div>
+<div>
+<label for="target">목표 왕복 총거리 (km)</label>
+<input id="target" type="number" value="20" min="0.01" max="10000" step="any">
+</div>
+</div>
+<p class="note">
+목표 왕복 총거리는 출발점에서 목적지까지 이동한 뒤
+동일한 경로로 복귀하는 전체 거리입니다.
+</p>
+<p class="note">
+<a href="./link-budget.html" style="text-decoration:underline">영상 링크 버짓 계산기</a>에서
+영상 및 제어 링크 중 더 짧은 편도 한계를
+입력할 수 있습니다.
+실제 통신 품질을 보장하지 않습니다.
+</p>
+</section>
+
+<section class="result" id="secOut" aria-live="polite">
+<h2>계산 결과</h2>
+<div id="errors" class="error" role="alert"></div>
+<p class="big" id="rt">–</p>
+<table>
+<tr><td>공칭 배터리 에너지</td><td id="eNom">–</td></tr>
+<tr><td>사용 가능 배터리 에너지</td><td id="eTot">–</td></tr>
+<tr><td>상승에 사용되는 에너지</td><td id="eClimb">–</td></tr>
+<tr><td>예비 에너지</td><td id="eReserve">–</td></tr>
+<tr><td>순항에 사용할 에너지</td><td id="eCru">–</td></tr>
+<tr><td>순항 전력</td><td id="pOut">–</td></tr>
+<tr><td>순항 가능 시간</td><td id="tOut">–</td></tr>
+<tr><td>무풍 왕복 총거리</td><td id="calmTot">–</td></tr>
+<tr><td>맞바람 단방향 최대거리</td><td id="owHead">–</td></tr>
+<tr><td>뒷바람 단방향 최대거리</td><td id="owTail">–</td></tr>
+<tr><td>왕복 가능 편도 반경</td><td id="radius">–</td></tr>
+<tr><td>무풍 에너지 소모율</td><td id="whkm">–</td></tr>
+</table>
+<div class="warns" id="warns"></div>
+</section>
+
+<section id="secWind">
+<h2>바람 한계 (목표 왕복 거리 기준)</h2>
+<div id="windVerdict"></div>
+<div id="chartBox"></div>
+<p class="note">
+풍속 그래프는 일정한 대기속도, 순항 전력,
+정면풍 및 동일한 왕복 경로를 가정합니다.
+모델상 여유는 실제 비행 안전을 보증하지 않습니다.
+</p>
+</section>
+</main>
+
+<footer>
+<p>TSD Aero Systems · 장거리 비행 계산기</p>
+<p>
+계산 결과는 교육 및 비행 계획 참고용입니다.
+실제 운용 전 기체 성능과 배터리 상태를 확인하세요.
+</p>
+<p>
+비행 시 적용되는 공역, 고도, 가시거리 및
+전파 관련 규정을 준수하세요.
+</p>
+</footer>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const outputIds = [
+  "eNom","eTot","eClimb","eReserve","eCru",
+  "pOut","tOut","calmTot","owHead",
+  "owTail","radius","whkm"
+];
+
+function fmt(value,unit=""){
+  if(!Number.isFinite(value)) return "–";
+  const n=Math.abs(value)>=100
+    ?Math.round(value).toString()
+    :value.toFixed(2);
+  return n+(unit?" "+unit:"");
+}
+
+function readNumber(id,min,max,required=true,integer=false){
+  const el=$(id);
+  const raw=el.value.trim();
+  const label=document.querySelector('label[for="'+id+'"]');
+  const name=label?label.textContent:id;
+  el.classList.remove("invalid");
+
+  if(raw===""){
+    if(!required) return {value:null,error:null};
+    el.classList.add("invalid");
+    return {value:null,error:name+": 값을 입력하세요."};
+  }
+
+  const value=Number(raw);
+  if(!Number.isFinite(value) ||
+     value<min || value>max ||
+     (integer&&!Number.isInteger(value))){
+    el.classList.add("invalid");
+    return {
+      value:null,
+      error:name+": "+min+"~"+max+
+        (integer?" 사이의 정수":" 사이의 숫자")+"를 입력하세요."
+    };
+  }
+  return {value,error:null};
+}
+
+function clearOutput(){
+  outputIds.forEach(id=>$(id).textContent="–");
+  $("rt").textContent="–";
+  $("warns").innerHTML="";
+  $("windVerdict").innerHTML="";
+  $("chartBox").innerHTML="";
+}
+
+function nice(range){
+  if(!(range>0)) return 1;
+  const raw=range/5;
+  const p=Math.pow(10,Math.floor(Math.log10(raw)));
+  const f=raw/p;
+  return (f<1.5?1:f<3.5?2:f<7.5?5:10)*p;
+}
+
+// T: 순항 가능 시간(h)
+// v: 대기속도(km/h)
+// wms: 왕복 경로와 평행한 풍속(m/s)
+function distanceAtWind(T,v,wms){
+  const w=wms*3.6;
+  if(!(T>0)||!(v>w)) return 0;
+  return T*(v*v-w*w)/v;
+}
+
+function makeChart(T,v,D,wmax,wcur){
+  const W=340,H=240,L=46,R=12,TP=12,B=40;
+  const pw=W-L-R,ph=H-TP-B;
+  const vmax=v/3.6;
+  const xMax=Math.max(
+    0.1,
+    Math.min(vmax,Math.max(
+      wmax===null?0:wmax*1.4,
+      wcur*1.15,2
+    ))
+  );
+  const yMax=Math.max(v*T,D,0.1)*1.12;
+  const X=x=>L+x/xMax*pw;
+  const Y=y=>TP+ph-y/yMax*ph;
+  const fx=n=>Number(n).toFixed(2);
+
+  let s='<svg viewBox="0 0 '+W+' '+H+
+    '" role="img" aria-label="풍속별 왕복 거리 그래프"'+
+    ' style="width:100%;height:auto">';
+
+  function zone(a,b,color,opacity){
+    a=Math.max(0,a);
+    b=Math.min(xMax,b);
+    if(b<=a) return "";
+    return '<rect x="'+fx(X(a))+
+      '" y="'+TP+
+      '" width="'+fx(X(b)-X(a))+
+      '" height="'+ph+
+      '" style="fill:'+color+
+      ';opacity:'+opacity+'"/>';
+  }
+
+  if(wmax!==null){
+    s+=zone(0,wmax*.6,'var(--ok)',.16);
+    s+=zone(wmax*.6,wmax*.8,'var(--warn)',.16);
+    s+=zone(wmax*.8,wmax,'var(--bad)',.12);
+    s+=zone(wmax,xMax,'var(--bad)',.28);
+  }else{
+    s+=zone(0,xMax,'var(--bad)',.2);
+  }
+
+  const sx=nice(xMax);
+  const sy=nice(yMax);
+
+  for(let x=0;x<=xMax+1e-9;x+=sx){
+    s+='<text x="'+fx(X(x))+
+      '" y="'+(TP+ph+14)+
+      '" text-anchor="middle"'+
+      ' style="fill:var(--muted);font-size:10px">'+
+      Number(x.toFixed(1))+'</text>';
+  }
+
+  for(let y=0;y<=yMax+1e-9;y+=sy){
+    s+='<line x1="'+L+
+      '" x2="'+(W-R)+
+      '" y1="'+fx(Y(y))+
+      '" y2="'+fx(Y(y))+
+      '" style="stroke:var(--line)"/>';
+    s+='<text x="'+(L-6)+
+      '" y="'+fx(Y(y)+3)+
+      '" text-anchor="end"'+
+      ' style="fill:var(--muted);font-size:10px">'+
+      Number(y.toFixed(1))+'</text>';
+  }
+
+  let path="";
+  for(let i=0;i<=80;i++){
+    const x=xMax*i/80;
+    const y=distanceAtWind(T,v,x);
+    path+=(i?"L":"M")+fx(X(x))+" "+fx(Y(y));
+  }
+
+  s+='<path d="'+path+
+    '" style="fill:none;stroke:var(--text);stroke-width:2"/>';
+
+  s+='<line x1="'+L+
+    '" x2="'+(W-R)+
+    '" y1="'+fx(Y(D))+
+    '" y2="'+fx(Y(D))+
+    '" style="stroke:var(--accent);stroke-dasharray:5 4"/>';
+
+  s+='<text x="'+(W-R-2)+
+    '" y="'+fx(Y(D)-4)+
+    '" text-anchor="end"'+
+    ' style="fill:var(--accent);font-size:10px">목표 '+
+    D.toFixed(1)+' km</text>';
+
+  if(wcur>=0&&wcur<=xMax){
+    s+='<line x1="'+fx(X(wcur))+
+      '" x2="'+fx(X(wcur))+
+      '" y1="'+TP+
+      '" y2="'+(TP+ph)+
+      '" style="stroke:var(--warn);stroke-dasharray:2 3"/>';
+  }
+
+  s+='<text x="'+fx(L+pw/2)+
+    '" y="'+(H-6)+
+    '" text-anchor="middle"'+
+    ' style="fill:var(--muted);font-size:10px">'+
+    '풍속 (m/s)</text>';
+
+  s+='<text transform="translate(10 '+
+    fx(TP+ph/2)+') rotate(-90)"'+
+    ' text-anchor="middle"'+
+    ' style="fill:var(--muted);font-size:10px">'+
+    '왕복 총거리 (km)</text></svg>';
+
+  return s;
+}
+
+function windPanel(T,v,D,wcur,link){
+  const box=$("windVerdict");
+  const cb=$("chartBox");
+  const calm=v*T;
+  const linkLimited=link!==null&&link<D/2;
+
+  if(!(T>0)){
+    box.innerHTML='<p class="b">순항 가능 에너지가 없습니다.</p>';
+    cb.innerHTML="";
+    return;
+  }
+
+  if(D>calm){
+    box.innerHTML=
+      '<span class="badge bad">목표 불가</span>'+
+      '<p class="b">무풍 조건에서도 목표 왕복거리에'+
+      ' 도달할 수 없습니다.</p>';
+    cb.innerHTML=makeChart(T,v,D,null,wcur);
+    return;
+  }
+
+  const root=Math.max(0,v*v-D*v/T);
+  const wmax=Math.sqrt(root)/3.6;
+  const safe=.6*wmax;
+  const caut=.8*wmax;
+
+  let cls,txt;
+  if(wcur<=safe){
+    cls="ok";txt="모델상 여유";
+  }else if(wcur<=caut){
+    cls="chk";txt="여유 감소";
+  }else if(wcur<=wmax){
+    cls="bad";txt="한계 근접";
+  }else{
+    cls="bad";txt="목표 불가";
+  }
+
+  box.innerHTML=
+    '<p class="big">'+wmax.toFixed(2)+
+    ' <small>m/s · 목표거리 한계 풍속</small></p>'+
+    '<span class="badge ok">여유 구간 ≤ '+
+    safe.toFixed(2)+'</span>'+
+    '<span class="badge chk">여유 감소 ≤ '+
+    caut.toFixed(2)+'</span>'+
+    '<span class="badge bad">한계 ≤ '+
+    wmax.toFixed(2)+'</span>'+
+    '<p>입력 풍속 '+wcur.toFixed(2)+
+    ' m/s: <span class="badge '+cls+'">'+txt+'</span></p>'+
+    '<p class="note">풍속 구간은 교육용 가정이며'+
+    ' 실제 안전 판정 기준이 아닙니다.'+
+    ' 한계에서는 순항용 에너지를 모두 사용하고'+
+    ' 사전에 제외한 예비 에너지만 남습니다.</p>';
+
+  if(linkLimited){
+    box.innerHTML+=
+      '<p class="b">통신 링크의 편도 한계가'+
+      ' 목표 편도거리보다 짧습니다.'+
+      ' 풍속과 무관하게 목표 운용이 제한됩니다.</p>';
+  }
+
+  cb.innerHTML=makeChart(T,v,D,wmax,wcur);
+}
+
+function calc(){
+  const specs=[
+    ["cells",1,24,true,true],
+    ["mah",1,200000,true,false],
+    ["usable",1,100,true,false],
+    ["mass",1,100000,true,false],
+    ["spd",1,500,true,false],
+    ["alt",0,10000,true,false],
+    ["climbSpeed",0.1,50,true,false],
+    ["climbPower",1,100000,true,false],
+    ["wind",0,100,true,false],
+    ["res",0,99,true,false],
+    ["link",0.001,10000,false,false],
+    ["target",0.01,10000,true,false]
+  ];
+
+  if($("pmode").value==="direct"){
+    specs.push(["pw",1,100000,true,false]);
+  }else{
+    specs.push(["eff",0.1,100,true,false]);
+    specs.push(["fac",0.1,10,true,false]);
+  }
+
+  const data={};
+  const errors=[];
+
+  ["pw","eff","fac"].forEach(id=>
+    $(id).classList.remove("invalid")
+  );
+
+  specs.forEach(spec=>{
+    const [id,min,max,required,integer]=spec;
+    const result=readNumber(id,min,max,required,integer);
+    data[id]=result.value;
+    if(result.error)errors.push(result.error);
+  });
+
+  $("errors").textContent=errors.join("\n");
+
+  if(errors.length){
+    clearOutput();
+    return;
+  }
+
+  const S=data.cells;
+  const mah=data.mah;
+  const vn=Number($("chem").value.split("|")[0]);
+  const usable=data.usable/100;
+  const m=data.mass;
+  const v=data.spd;
+  const wms=data.wind;
+  const res=data.res/100;
+  const h=data.alt;
+  const link=data.link;
+  const D=data.target;
+
+  const P=$("pmode").value==="direct"
+    ?data.pw
+    :(m/data.eff)*data.fac;
+
+  // 에너지 단위: Wh
+  const eNom=S*vn*mah/1000;
+  const eTot=eNom*usable;
+
+  // 상승 중 총전력 기준
+  const climbTime=h/data.climbSpeed;
+  const eClimb=data.climbPower*climbTime/3600;
+
+  // 예비분은 사용 가능 에너지에서 별도 제외
+  const eReserve=eTot*res;
+  const eCru=Math.max(0,eTot-eReserve-eClimb);
+  const T=eCru/P;
+
+  const w=wms*3.6;
+  const rad=distanceAtWind(T,v,wms)/2;
+
+  const owHead=T*Math.max(0,v-w);
+  const owTail=T*(v+w);
+
+  const operatingRadius=link===null
+    ?rad
+    :Math.min(rad,link);
+
+  $("eNom").textContent=fmt(eNom,"Wh");
+  $("eTot").textContent=fmt(eTot,"Wh");
+  $("eClimb").textContent=fmt(eClimb,"Wh");
+  $("eReserve").textContent=fmt(eReserve,"Wh");
+  $("eCru").textContent=fmt(eCru,"Wh");
+  $("pOut").textContent=fmt(P,"W");
+  $("tOut").textContent=fmt(T*60,"분");
+  $("calmTot").textContent=fmt(v*T,"km");
+  $("owHead").textContent=fmt(owHead,"km");
+  $("owTail").textContent=fmt(owTail,"km");
+  $("radius").textContent=fmt(rad,"km");
+  $("whkm").textContent=fmt(P/v,"Wh/km");
+
+  $("rt").innerHTML=
+    fmt(operatingRadius*2,"km")+
+    ' <small>운용 왕복 총거리'+
+    ' (편도 '+fmt(operatingRadius,"km")+')</small>';
+
+  const warns=[];
+
+  if(eCru<=0){
+    warns.push(["b",
+      "상승 에너지와 예비분을 제외하면 순항할 에너지가 없습니다."
+    ]);
+  }
+
+  if(w>=v){
+    warns.push(["b",
+      "바람이 순항 대기속도 이상입니다. 맞바람 방향으로 전진할 수 없습니다."
+    ]);
+  }else if(w>=v*.5){
+    warns.push(["w",
+      "풍속이 순항 대기속도의 절반 이상입니다."
+    ]);
+  }
+
+  if(link!==null){
+    if(link<rad){
+      warns.push(["w",
+        "배터리보다 통신 링크가 먼저 편도 운용 반경을 제한합니다."
+      ]);
+    }else{
+      warns.push(["o",
+        "입력한 링크 한계는 계산상 배터리 반경보다 깁니다."
+      ]);
+    }
+  }
+
+  if(data.res<20){
+    warns.push(["w",
+      "예비 에너지가 20% 미만입니다. 충분한 여유를 확보하세요."
+    ]);
+  }
+
+  if(data.usable>90){
+    warns.push(["w",
+      "배터리 사용 비율이 90%를 초과합니다. 실제 방전 특성을 확인하세요."
+    ]);
+  }
+
+  if(eClimb>eTot-eReserve){
+    warns.push(["b",
+      "상승에 필요한 에너지가 예비분 제외 가용 에너지를 초과합니다."
+    ]);
+  }
+
+  if(D>operatingRadius*2){
+    warns.push(["b",
+      "입력 조건에서 목표 왕복거리를 달성할 수 없습니다."
+    ]);
+  }
+
+  warns.push(["w",
+    "순항 전력은 바람과 속도 변화에도 일정하다고 가정했습니다."
+  ]);
+
+  warns.push(["w",
+    "하강·착륙·우회에 필요한 에너지는 별도로 모델링하지 않았습니다."
+  ]);
+
+  warns.push(["w",
+    "실제 비행 전 소비 전력과 배터리 잔량을 측정하세요."
+  ]);
+
+  $("warns").innerHTML=warns.map(item=>
+    '<p class="'+item[0]+'">'+item[1]+'</p>'
+  ).join("");
+
+  windPanel(T,v,D,wms,link);
+}
+
+$("chem").addEventListener("change",()=>{
+  $("usable").value=$("chem").value.split("|")[1];
+  calc();
+});
+
+$("pmode").addEventListener("change",()=>{
+  const direct=$("pmode").value==="direct";
+  $("pDirect").classList.toggle("hide",!direct);
+  $("pEst").classList.toggle("hide",direct);
+  calc();
+});
+
+document.querySelectorAll("input,select").forEach(el=>{
+  el.addEventListener("input",calc);
+  el.addEventListener("change",calc);
+});
+
+calc();
+</script>
+</body>
+</html>
