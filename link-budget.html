@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>영상 링크 버짓 계산기 | TSD 기술 연구소</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#08111f; --panel:#142338; --accent:#38bdf8; --text:#eaf2fc; --muted:#a9bbcf;
+  --line:#29405c; --field:#0d1a2c; --warn:#e5c45a; --ok:#4cc38a; --bad:#ef6b6b;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Malgun Gothic",sans-serif;line-height:1.7}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:10;background:#08111ff0;border-bottom:1px solid #28405a;padding:15px 6%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px}
+.logo{font-weight:800;font-size:20px;color:var(--accent)}
+nav{display:flex;flex-wrap:wrap;gap:15px}
+nav a:hover{color:var(--accent)}
+nav a[aria-current="page"]{color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:4px}
+.page-shell{max-width:760px;margin:auto;padding:45px 5%;min-height:calc(100vh - 170px)}
+.page-heading{text-align:center;margin-bottom:30px}
+.page-heading h1{color:var(--accent);font-size:clamp(28px,4vw,40px);line-height:1.2;margin:0 0 14px}
+.page-heading p{margin:0;color:var(--muted)}
+h2{font-size:20px;color:var(--accent);margin:0 0 12px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+select,input{width:100%;padding:11px 12px;border-radius:9px;border:1px solid #365a78;background:var(--field);color:var(--text);font:inherit}
+select:focus,input:focus{outline:3px solid var(--accent);outline-offset:1px}
+input:disabled{opacity:.55}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.flag{color:var(--warn)}
+.result{border-left:4px solid var(--accent)}
+.big{font-size:36px;font-weight:700;margin:4px 0 12px;line-height:1.2}
+.big small{font-size:15px;font-weight:400;color:var(--muted)}
+.badge{display:inline-block;padding:6px 12px;border-radius:20px;background:#223b55;border:1px solid #365a78;font-size:13px;margin:0 6px 8px 0}
+.badge.ok{border-color:var(--ok);color:var(--ok)}
+.badge.bad{border-color:var(--bad);color:var(--bad)}
+.badge.chk{border-color:var(--warn);color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td{padding:7px 0;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right}
+.warns p,#compat p{margin:8px 0;font-size:14px}
+.w{color:var(--warn)} .b{color:var(--bad)} .o{color:var(--ok)}
+footer{border-top:1px solid #28405a;padding:30px 6%;color:#9cb1c8;font-size:13px;text-align:center}
+footer ul{list-style:none;padding:0;margin:8px 0}
+footer a{color:#9cb1c8;text-decoration:underline}
+@media (max-width:600px){header{padding:12px 5%}nav{font-size:13px;gap:10px}.page-shell{padding:30px 5%}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><a class="logo" href="./index.html">TSD Aero Systems</a><nav aria-label="주 메뉴"><a href="./education.html">체험교육</a><a href="./index.html" aria-current="page">기술연구소</a><a href="./contact.html">문의</a></nav></header>
+<main class="page-shell">
+<div class="page-heading"><h1>영상 링크 버짓 계산기</h1><p>자유공간 기준 이론 거리입니다. 실제 비행에서는 지형, 간섭, 기체 자세 때문에 이보다 짧아집니다.</p></div>
+<section>
+<h2>송신 (기체 VTX)</h2>
+<label for="vtx">VTX 제품</label>
+<select id="vtx"></select>
+<div class="row">
+  <div><label for="ptx">송신 출력 (mW)</label><input id="ptx" type="number" min="0" step="any"></div>
+  <div><label for="gtx">송신 안테나 이득 (dBi)</label><input id="gtx" type="number" step="any"></div>
+</div>
+<p class="note" id="vtxNote"></p>
+<label for="aptx">송신 안테나 제품</label>
+<select id="aptx"></select>
+<p class="note" id="atxNote"></p>
+<label for="atx">송신 안테나 형태</label>
+<select id="atx">
+  <option value="omni">옴니 (다이폴·파고다·롤리팝)</option>
+  <option value="patch">패치</option>
+  <option value="helical">헬리컬</option>
+</select>
+<label for="ptxType">송신 편파</label>
+<select id="ptxType"><option>RHCP</option><option>LHCP</option><option>선형</option></select>
+</section>
+
+<section>
+<h2>수신 (고글/수신기)</h2>
+<label for="vrx">고글·수신기 제품</label>
+<select id="vrx"></select>
+<div class="row">
+  <div><label for="sens">수신 감도 (dBm)</label><input id="sens" type="number" step="any"></div>
+  <div><label for="grx">수신 안테나 이득 (dBi)</label><input id="grx" type="number" step="any"></div>
+</div>
+<p class="note" id="vrxNote"></p>
+<label for="aprx">수신 안테나 제품</label>
+<select id="aprx"></select>
+<p class="note" id="arxNote"></p>
+<label for="arx">수신 안테나 형태</label>
+<select id="arx">
+  <option value="omni">옴니</option><option value="patch">패치</option><option value="helical">헬리컬</option>
+</select>
+<label for="prxType">수신 편파</label>
+<select id="prxType"><option>RHCP</option><option>LHCP</option><option>선형</option></select>
+</section>
+
+<section>
+<h2>조건</h2>
+<div class="row">
+  <div><label for="freq">주파수 (MHz)</label><input id="freq" type="number" value="5800"></div>
+  <div><label for="loss">케이블·커넥터·어댑터 손실 (dB)</label><input id="loss" type="number" value="0.5" step="0.1"></div>
+</div>
+<label for="margin">페이딩 마진 (dB)</label>
+<input id="margin" type="number" value="10" step="1">
+<p class="note">마진이 클수록 결과 거리는 짧아지고 안정적인 값이 됩니다. 영상이 끊기기 직전이 아니라 쓸 만한 화질을 기준으로 보세요.</p>
+</section>
+
+<section class="result" aria-live="polite">
+<h2>결과</h2>
+<div id="compat"></div>
+<p class="big" id="dist">–</p>
+<table>
+  <tr><td>EIRP (송신 출력 + 안테나 이득 − 손실)</td><td id="eirp">–</td></tr>
+  <tr><td>편파 불일치 손실</td><td id="pol">–</td></tr>
+  <tr><td>허용 경로 손실</td><td id="pl">–</td></tr>
+  <tr><td>제조사 공개 최대 거리</td><td id="rated">–</td></tr>
+</table>
+<div class="warns" id="warns"></div>
+</section>
+</main>
+
+<footer>
+<p><b>데이터 출처</b> (제조사·공식 문서에서 확인한 값만 사용, 그 외는 직접 입력)</p>
+<ul>
+<li><a href="https://www.dji.com/au/o4-air-unit/specs">DJI O4 Air Unit 사양</a> · <a href="https://www.dji.com/o4-air-unit/specs?startPoint=0">전송 거리</a></li>
+<li><a href="https://www.hobbyrc.co.uk/tbs-unify-pro32-hv-mmcx">TBS Unify Pro32 HV (판매처 표기)</a> · <a href="https://team-blacksheep.com/media/files/tbs-unify-pro32-manual.pdf">TBS 매뉴얼</a></li>
+<li><a href="https://manuals.plus/skyzone/steadyview-x-high-performance-receiver-manual">Skyzone SteadyView X 매뉴얼</a> · <a href="https://www.myfpvstore.com/?p=115951">SKY04X Pro (판매처)</a></li>
+<li><a href="https://www.getfpv.com/fpv/antennas/lumenier-axii-2/lumenier-axii-2-5-8ghz-antenna-rhcp-2-pcs.html">Lumenier AXII 2</a> · <a href="https://www.getfpv.com/fpv/antennas/lumenier-axii-2/lumenier-double-axii-2-long-range-right-angle-5-8ghz-antenna-rhcp.html">Double AXII 2</a></li>
+<li><a href="https://www.myfpvstore.com/xwc5">Walksnail Avatar V2 VTX (판매처)</a> · <a href="https://www.myfpvstore.com/cju6">Goggles X (판매처)</a> · <a href="https://zbotic.in/product/walksnail-patch-antenna-v2-for-avatar-hd-goggles-x/">Patch V2 (판매처)</a></li>
+<li><a href="https://hd-zero.github.io/hdzero-vtx-docs/latest/vtx_targets">HDZero VTX 목록</a></li>
+<li><a href="https://www.readymaderc.com/products/details/hdzero-vrx4-video-receiver">HDZero VRX 사양 (판매처 표기)</a></li>
+</ul>
+<p>목록에 없는 제품(ImmersionRC, Rush, Foxeer 등)은 직접 입력으로 계산하세요. 비행 전 현지 전파법을 확인하세요.</p>
+</footer>
+
+<script>
+// 값이 null이면 제조사가 공개하지 않은 항목입니다. 사용자가 직접 입력합니다.
+const VTX = [
+  {n:"직접 입력", sys:null, conn:null, p:null, g:null, note:"출력과 안테나 이득을 직접 입력하세요."},
+  {n:"[아날로그] TBS Unify Pro32 HV (25mW)", sys:"ana", conn:"MMCX", p:25, g:null, note:"출력 단계: 25/100/400/1000mW+. 고출력은 지역 규정(HAM 면허 등)을 확인하세요. SMA 변환 피그테일이 동봉됩니다."},
+  {n:"[아날로그] TBS Unify Pro32 HV (400mW)", sys:"ana", conn:"MMCX", p:400, g:null, note:"고출력 구간입니다. 사용 지역의 허용 출력을 확인하세요."},
+  {n:"[아날로그] TBS Unify Pro32 HV (1000mW)", sys:"ana", conn:"MMCX", p:1000, g:null, note:"제조사 표기 '1000mW+'의 최소값으로 계산합니다. 지역 규정을 확인하세요."},
+  {n:"[HDZero] Freestyle V2 (200mW)", sys:"hdz", conn:"U.FL", p:200, g:null, note:"출력은 공식 문서 기준. 번들 안테나는 RHCP지만 이득은 미공개입니다.", pol:"RHCP"},
+  {n:"[HDZero] Freestyle (1W, 조건부 옵션)", sys:"hdz", conn:"U.FL", p:1000, g:null, note:"500mW/1W는 공식 문서에서 조건부 표기입니다. 지역 규정을 확인하세요.", pol:"RHCP"},
+  {n:"[HDZero] Race V2 / Whoop Lite (200mW)", sys:"hdz", conn:"U.FL", p:200, g:null, note:"출력은 공식 문서·판매처 표기 기준. 안테나 이득은 미공개입니다."},
+  {n:"[Walksnail] Avatar V2 VTX (FCC, 30dBm EIRP)", sys:"wsn", conn:"U.FL", eirp:30, pol:"LHCP", note:"EIRP는 제조사 표기값(FCC 30 / CE 14 / SRRC 20 / MIC 25dBm). 번들 안테나는 LHCP입니다. 이득·손실 입력은 무시됩니다."},
+  {n:"[Walksnail] Avatar V2 VTX (CE, 14dBm EIRP)", sys:"wsn", conn:"U.FL", eirp:14, pol:"LHCP", note:"CE 지역 기준입니다. 번들 안테나는 LHCP입니다."},
+  {n:"[DJI] O4 Air Unit Pro (FCC, 33dBm EIRP)", sys:"dji", conn:null, eirp:33, rated:"15 km (FCC, Goggles 3/N3)", note:"DJI는 안테나 이득이 포함된 EIRP로 공개합니다. 이득·손실 입력은 무시됩니다."},
+  {n:"[DJI] O4 Air Unit Pro (CE, 14dBm EIRP)", sys:"dji", conn:null, eirp:14, rated:"8 km (CE, Goggles 3/N3)", note:"CE 지역 기준입니다. 이득·손실 입력은 무시됩니다."}
+];
+const VRX = [
+  {n:"직접 입력", sys:null, conn:null, s:null, g:null, note:"감도와 안테나 이득을 직접 입력하세요."},
+  {n:"[아날로그] Skyzone SteadyView X / SKY04X 계열 수신기", sys:"ana", conn:"SMA", s:-98, g:null, note:"감도 -98dBm ±1 (제조사 매뉴얼). 2개의 SMA 포트. 번들 안테나는 제품에 따라 다릅니다."},
+  {n:"[아날로그] Skyzone SKY04X Pro (번들 2dB 안테나)", sys:"ana", conn:"SMA", s:-98, g:2, note:"감도는 제조사 매뉴얼, 번들 안테나 2dB는 판매처 표기입니다. 편파는 미공개입니다."},
+  {n:"[HDZero] VRX", sys:"hdz", conn:"SMA", s:-105, g:null, note:"감도는 판매처가 표기한 사양입니다. 안테나 이득은 미공개입니다."},
+  {n:"[Walksnail] Avatar HD Goggles X", sys:"wsn", alt:["ana","hdz"], conn:"RP-SMA", s:null, g:null, note:"수신 감도는 확인하지 못했습니다(직접 입력). 판매처는 수신 모듈 교체로 아날로그·HDZero도 쓸 수 있다고 안내합니다. 번들 스터비 안테나는 RP-SMA입니다."},
+  {n:"[DJI] Goggles 3 / N3", sys:"dji", conn:"RP-SMA", s:null, g:null, note:"DJI는 수신 감도와 안테나 이득을 공개하지 않습니다. 커넥터는 안테나 판매처 안내(RP-SMA) 기준이라 제품별로 확인하세요."}
+];
+// 안테나: g=제조사 공개 이득(dBi/dBic), pol=편파, type=형태, conn=커넥터(null이면 여러 종류 판매)
+const ANT = [
+  {n:"직접 입력", g:null, pol:null, type:null, conn:null, note:""},
+  {n:"Lumenier AXII 2 (RHCP)", g:2.2, pol:"RHCP", type:"omni", conn:null, note:"2.2dBic. SMA/MMCX/U.FL 등 커넥터 버전이 여러 종류라 구매 시 확인하세요."},
+  {n:"Walksnail Avatar V2 번들 안테나 (LHCP)", g:1.9, pol:"LHCP", type:"omni", conn:"U.FL", note:"1.9dBi, IPEX-1(U.FL). 판매처 표기 사양입니다."},
+  {n:"Walksnail Patch V2 for Goggles X (LHCP)", g:6.7, pol:"LHCP", type:"patch", conn:"RP-SMA", note:"6.7dBi, 빔폭 127° (판매처 표기). 지향성이라 빔 밖에서는 이득이 줄어듭니다."},
+  {n:"Lumenier Double AXII 2 (RHCP, 직각 SMA)", g:4.7, pol:"RHCP", type:"omni", conn:"SMA", note:"4.7dBic. 도넛형 패턴이라 송신보다 수신용으로 권장됩니다. 기체가 기울면 null 구간에 들어갈 수 있습니다."}
+];
+const $ = id => document.getElementById(id);
+function fill(sel, arr){ arr.forEach((o,i)=>{ const e=document.createElement("option"); e.value=i; e.textContent=o.n; sel.appendChild(e); }); }
+fill($("vtx"), VTX); fill($("vrx"), VRX); fill($("aptx"), ANT); fill($("aprx"), ANT);
+
+function applyVtx(){
+  const o = VTX[$("vtx").value];
+  $("ptx").value = o.p ?? ""; $("gtx").value = o.g ?? "";
+  const dji = o.eirp != null;
+  $("ptx").disabled = dji; $("gtx").disabled = dji;
+  if(o.pol) $("ptxType").value = o.pol;
+  $("vtxNote").innerHTML = o.note + ((o.p==null && !dji)?"":"") ;
+  if(!dji && o.g==null && o.p!=null) $("vtxNote").innerHTML += ' <span class="flag">안테나 이득 직접 입력 필요</span>';
+  calc();
+}
+function applyVrx(){
+  const o = VRX[$("vrx").value];
+  $("sens").value = o.s ?? ""; $("grx").value = o.g ?? "";
+  $("vrxNote").innerHTML = o.note;
+  calc();
+}
+
+function polLoss(a,b){
+  const circ = x => x==="RHCP"||x==="LHCP";
+  if(circ(a)&&circ(b)) return a===b ? 0 : 20;
+  if(circ(a)!==circ(b)) return 3;
+  return 0; // 선형↔선형: 정렬이 맞는 경우. 실제로는 자세에 따라 달라집니다.
+}
+
+function calc(){
+  if(!compat()){ $("dist").innerHTML="연동 불가"; $("eirp").textContent=$("pol").textContent=$("pl").textContent="–"; $("warns").innerHTML=""; return; }
+  const v = VTX[$("vtx").value], f = +$("freq").value, loss = +$("loss").value||0, mg = +$("margin").value||0;
+  const sens = parseFloat($("sens").value), grx = parseFloat($("grx").value);
+  const w = [];
+  let eirp;
+  if(v.eirp != null){ eirp = v.eirp; }
+  else{
+    const p = parseFloat($("ptx").value), g = parseFloat($("gtx").value);
+    if(isNaN(p)||p<=0||isNaN(g)){ eirp = NaN; }
+    else eirp = 10*Math.log10(p) + g - loss;
+  }
+  const pl = polLoss($("ptxType").value, $("prxType").value);
+  const dji = v.sys==="dji";
+  if(dji) w.push(["w","DJI는 O4 고유 편파·MIMO 방식이라 편파 입력은 참고용입니다."]);
+  $("rated").textContent = v.rated || "–";
+  $("eirp").textContent = isNaN(eirp) ? "–" : eirp.toFixed(1)+" dBm";
+  $("pol").textContent = dji ? "계산 제외" : pl+" dB";
+
+  if(isNaN(eirp)||isNaN(sens)||isNaN(grx)||!f){
+    $("dist").innerHTML = "–"; $("pl").textContent = "–";
+    const miss=[]; if(isNaN(eirp)) miss.push("송신 출력·이득"); if(isNaN(sens)) miss.push("수신 감도"); if(isNaN(grx)) miss.push("수신 안테나 이득");
+    $("warns").innerHTML = miss.length ? '<p class="w">입력이 필요합니다: '+miss.join(", ")+'</p>' : "";
+    return;
+  }
+  const rxLoss = dji ? 0 : pl;
+  const allowed = eirp + grx - rxLoss - mg - sens; // 허용 경로 손실(dB)
+  const dKm = Math.pow(10, (allowed - 32.44 - 20*Math.log10(f))/20);
+  $("pl").textContent = allowed.toFixed(1)+" dB";
+  $("dist").innerHTML = (dKm>=1 ? dKm.toFixed(1)+" <small>km</small>" : Math.round(dKm*1000)+" <small>m</small>");
+
+  if(!dji && pl>=10) w.push(["b","편파가 반대입니다(RHCP↔LHCP). 약 20dB 손실이 발생합니다."]);
+  else if(!dji && pl>0) w.push(["w","선형↔원편파 조합은 약 3dB 손실입니다."]);
+  if($("atx").value!=="omni"||$("arx").value!=="omni") w.push(["w","패치·헬리컬은 빔폭 안에서만 이득이 유효합니다. 기체 뒤쪽이나 빔 밖에서는 거리가 크게 줄어듭니다."]);
+  if(v.eirp==null && $("atx").value!=="omni") w.push(["w","기체 쪽 지향성 안테나는 자세 변화에 약합니다. 일반적으로 기체에는 옴니나 원편파 안테나를 씁니다."]);
+  if(dKm>20) w.push(["w","20km를 넘는 값은 지구 곡률과 가시거리에 막힙니다. 실제로는 도달하기 어렵습니다."]);
+  if(v.rated) w.push(["o","제조사 공개 거리와 비교해 보세요. 계산값과 크게 다르면 입력한 감도가 현실과 다를 수 있습니다."]);
+  if(mg<6) w.push(["w","페이딩 마진이 6dB 미만이면 실제 비행에서 쉽게 끊깁니다."]);
+  $("warns").innerHTML = w.map(x=>'<p class="'+x[0]+'">'+x[1]+'</p>').join("");
+}
+
+$("vtx").addEventListener("change", applyVtx);
+$("vrx").addEventListener("change", applyVrx);
+["ptx","gtx","sens","grx","freq","loss","margin","atx","arx","ptxType","prxType"].forEach(id=>$(id).addEventListener("input", calc));
+
+const SYS={ana:"아날로그",hdz:"HDZero",dji:"DJI",wsn:"Walksnail"};
+function applyAnt(side){
+  const o=ANT[$(side==="tx"?"aptx":"aprx").value];
+  if(o.g!=null) $(side==="tx"?"gtx":"grx").value=o.g;
+  if(o.pol) $(side==="tx"?"ptxType":"prxType").value=o.pol;
+  if(o.type) $(side==="tx"?"atx":"arx").value=o.type;
+  $(side==="tx"?"atxNote":"arxNote").textContent=o.note;
+  calc();
+}
+function connNeed(dev,ant){
+  if(!dev||!ant) return null;
+  if(dev===ant) return false;
+  return true;
+}
+function compat(){
+  const v=VTX[$("vtx").value], r=VRX[$("vrx").value], at=ANT[$("aptx").value], ar=ANT[$("aprx").value];
+  let h="", ok=true;
+  if(v.sys&&r.sys){
+    if(v.sys!==r.sys && r.alt && r.alt.includes(v.sys)){
+      h+='<span class="badge chk">모듈 교체 시 가능 — 확인 필요</span><p class="w">'+r.n+'는 수신 모듈을 바꾸면 '+SYS[v.sys]+'도 받을 수 있다고 안내됩니다. 현재 모듈과 설정을 확인하세요.</p>';
+    } else if(v.sys!==r.sys){
+      ok=false;
+      h+='<span class="badge bad">연동 불가</span><p class="b">'+SYS[v.sys]+' VTX는 '+SYS[r.sys]+' 고글·수신기와 영상이 연결되지 않습니다. 같은 방식끼리 조합하세요.</p>';
+    } else h+='<span class="badge ok">영상 방식 일치 ('+SYS[v.sys]+')</span>';
+  } else h+='<span class="badge chk">영상 방식 확인 필요</span>';
+  const ct=connNeed(v.conn,at.conn), cr=connNeed(r.conn,ar.conn);
+  if(ct) h+='<p class="w">송신: VTX '+v.conn+' ↔ 안테나 '+at.conn+' — 어댑터/피그테일이 필요합니다. (손실 약 0.2~1dB, 위 손실값에 반영하세요)</p>';
+  if(cr) h+='<p class="w">수신: 고글 '+r.conn+' ↔ 안테나 '+ar.conn+' — 어댑터가 필요합니다. SMA와 RP-SMA는 서로 결합되지 않습니다.</p>';
+  if(ct===null||cr===null) h+='<p class="w">커넥터 호환은 제품 선택 정보가 부족해 확인하지 못했습니다.</p>';
+  $("compat").innerHTML=h;
+  return ok;
+}
+$("aptx").addEventListener("change",()=>applyAnt("tx"));
+$("aprx").addEventListener("change",()=>applyAnt("rx"));
+applyVtx(); applyVrx();
+</script>
+</body>
+</html>
