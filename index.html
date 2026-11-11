@@ -1,5 +1,11 @@
 <!DOCTYPE html>
-<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="PID 비행 실습과 QGroundControl 임무비행 실습을 제공하는 TSD 기술 연구소"><title>TSD 기술 연구소 | TSD Aero Systems</title><style>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="TSD Aero Systems 기술 연구소: FPV PID 비행 실습, QGroundControl 자동 임무비행, 영상 링크 버짓 분석, 장거리 비행 계산기를 제공하는 드론 기술 교육 플랫폼.">
+<title>TSD 기술 연구소 | TSD Aero Systems</title>
+<style>
 :root {
   color-scheme: dark;
   --bg: #08111f;
@@ -139,98 +145,293 @@ footer {
   .simulator-box { padding: 20px; }
 }
 .lab-banners { display: grid; gap: 24px; }
-.lab-banner { max-width: none; width: 100%; border-left: 4px solid var(--accent); }
+.lab-banner {
+  max-width: none;
+  width: 100%;
+  border-left: 4px solid var(--accent);
+}
 .lab-banner p { max-width: 800px; }
-.lab-label { color: var(--accent); font-size: 12px; font-weight: bold; letter-spacing: 1.6px; margin-bottom: 12px; }
+.lab-label {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1.6px;
+  margin-bottom: 12px;
+}
 .lab-note { font-size: 13px; margin-bottom: 0; }
 .mission-banner { border-left-color: #e5c45a; }
 .mission-banner .lab-label { color: #e5c45a; }
 .mission-banner .btn { background: #e5c45a; }
 .mission-banner .btn:hover { background: #f6dc8b; }
 section[id], article[id] { scroll-margin-top: 95px; }
-.btn:focus-visible, nav a:focus-visible { outline: 3px solid white; outline-offset: 5px; }
-
-nav a[aria-current="page"] { color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
+.btn:focus-visible, nav a:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 5px;
+}
+nav a[aria-current="page"] {
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 4px;
+}
 .page-shell { min-height: calc(100vh - 170px); }
 .page-heading { text-align: center; margin-bottom: 34px; }
-.page-heading h1 { color: var(--accent); font-size: clamp(30px, 4vw, 42px); margin: 0 0 14px; }
+.page-heading h1 {
+  color: var(--accent);
+  font-size: clamp(30px, 4vw, 42px);
+  margin: 0 0 14px;
+}
 .page-heading p { margin: 0; }
-</style></head><body>
-<header><a class="logo" href="./index.html">TSD Aero Systems</a><nav aria-label="주 메뉴"><a href="./education.html">체험교육</a><a href="./index.html" aria-current="page">기술연구소</a><a href="./contact.html">문의</a></nav></header>
-<main class="page-shell"><section id="technology" aria-labelledby="technology-title">
-  <div class="page-heading"><h1 id="technology-title">TSD 기술 연구소</h1><p class="muted">비행제어 원리부터 자동 임무비행 절차까지, 세 가지 실습실에서 직접 경험하세요.</p></div>
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="./index.html">TSD Aero Systems</a>
+  <nav aria-label="주 메뉴">
+    <a href="./education.html">체험교육</a>
+    <a href="./index.html" aria-current="page">기술연구소</a>
+    <a href="./contact.html">문의</a>
+  </nav>
+</header>
+
+<main class="page-shell">
+<section id="technology" aria-labelledby="technology-title">
+
+  <div class="page-heading">
+    <h1 id="technology-title">TSD 기술 연구소</h1>
+    <p class="muted">
+      FPV 비행제어부터 자동 임무비행, 영상통신 분석과
+      장거리 비행계획까지.
+      네 가지 기술 실습실에서 직접 경험하고 분석해 보세요.
+    </p>
+  </div>
+
   <div class="lab-banners">
+
     <article class="simulator-box lab-banner" id="simulator">
       <h3>PID 비행 실습</h3>
-      <p>Roll, Pitch, Yaw의 P · I · D와 Feedforward를 조정하고,
-      스틱 입력과 비행 기동에 따른 기체 반응을 관찰해 보세요.</p>
+      <p>
+        Roll, Pitch, Yaw의 P · I · D와 Feedforward를 조정하고,
+        스틱 입력과 비행 기동에 따른 기체 반응을 관찰해 보세요.
+      </p>
       <div class="features">
-        <span>P / I / D / FF</span><span>Roll · Pitch · Yaw</span>
-        <span>스로틀·스틱 입력</span><span>비행 기동</span><span>추적·FPV 카메라</span>
+        <span>P / I / D / FF</span>
+        <span>Roll · Pitch · Yaw</span>
+        <span>스로틀·스틱 입력</span>
+        <span>비행 기동</span>
+        <span>추적·FPV 카메라</span>
       </div>
-      <a class="btn" href="./fpv-flight-lab.html">PID 실습 시작하기 <span aria-hidden="true">→</span></a>
-      <p class="muted lab-note">비행제어 학습용 모델입니다. 실제 Betaflight 알고리즘과 기체별 튜닝 결과를 그대로 재현하지 않습니다.</p>
+      <a class="btn" href="./fpv-flight-lab.html">
+        PID 실습 시작하기
+        <span aria-hidden="true">→</span>
+      </a>
+      <p class="muted lab-note">
+        비행제어 학습용 모델입니다.
+        실제 Betaflight 알고리즘과 기체별 튜닝 결과를
+        그대로 재현하지 않습니다.
+      </p>
     </article>
-    <article class="simulator-box lab-banner mission-banner" id="mission-lab">
+
+    <article class="simulator-box lab-banner mission-banner"
+             id="mission-lab">
       <h3>QGroundControl 임무비행 실습</h3>
-      <p>지도 위에 경로를 만들고, 임무 업로드와 비행 전 점검부터
-      이륙·일시정지·복귀·착륙까지 자동비행 절차를 연습해 보세요.</p>
+      <p>
+        지도 위에 경로를 만들고, 임무 업로드와
+        비행 전 점검부터 이륙·일시정지·복귀·착륙까지
+        자동비행 절차를 연습해 보세요.
+      </p>
       <div class="features">
-        <span>실제 지도·위성영상</span><span>웨이포인트</span><span>지형 추종</span>
-        <span>OSD·기수 방향</span><span>DMS · UTM · MGRS</span><span>비상상황 훈련</span>
+        <span>실제 지도·위성영상</span>
+        <span>웨이포인트</span>
+        <span>지형 추종</span>
+        <span>OSD·기수 방향</span>
+        <span>DMS · UTM · MGRS</span>
+        <span>비상상황 훈련</span>
       </div>
-      <a class="btn" href="./qgc-mission-lab.html" target="_blank" rel="noopener">임무비행 실습 시작하기 <span aria-hidden="true">→</span></a>
-      <p class="muted lab-note">QGC의 주요 절차를 참고한 독립 교육용 데모입니다. 실제 PX4 펌웨어·기체 통신·장애물 회피를 구현한 제품은 아닙니다.</p>
+      <a class="btn"
+         href="./qgc-mission-lab.html"
+         target="_blank"
+         rel="noopener">
+        임무비행 실습 시작하기
+        <span aria-hidden="true">→</span>
+      </a>
+      <p class="muted lab-note">
+        QGC의 주요 절차를 참고한 독립 교육용 데모입니다.
+        실제 PX4 펌웨어·기체 통신·장애물 회피를
+        구현한 제품은 아닙니다.
+      </p>
     </article>
+
     <article class="simulator-box lab-banner" id="link-budget">
       <h3>영상 링크 버짓 계산기</h3>
-      <p>VTX·고글·안테나를 고르면 이론 영상 거리를 계산하고,
-      장비끼리 연동되는지 알려줍니다.</p>
+      <p>
+        VTX·고글·안테나를 고르면 이론 영상 거리를 계산하고,
+        장비끼리 연동되는지 알려줍니다.
+      </p>
       <div class="features">
-        <span>아날로그</span><span>HDZero</span><span>DJI</span><span>Walksnail</span><span>안테나 편파·커넥터</span><span>연동 확인</span>
+        <span>아날로그</span>
+        <span>HDZero</span>
+        <span>DJI</span>
+        <span>Walksnail</span>
+        <span>안테나 편파·커넥터</span>
+        <span>연동 확인</span>
       </div>
-      <a class="btn" href="./link-budget.html">계산기 열기 <span aria-hidden="true">→</span></a>
-      <p class="muted lab-note">제조사 공개 사양 기준의 이론값입니다. 실제 거리는 지형·간섭·기체 자세에 따라 크게 달라집니다.</p>
+      <a class="btn" href="./link-budget.html">
+        계산기 열기
+        <span aria-hidden="true">→</span>
+      </a>
+      <p class="muted lab-note">
+        제조사 공개 사양 기준의 이론값입니다.
+        실제 거리는 지형·간섭·기체 자세에 따라
+        크게 달라집니다.
+      </p>
     </article>
-    
-<article class="simulator-box lab-banner" id="long-range">
-  <h3>장거리 비행 계산기</h3>
-  <p>
-    배터리 용량과 소비 전력, 기체 중량,
-    순항 속도 및 바람의 영향을 분석하여
-    이론적인 왕복 비행거리와 귀환 가능 반경을
-    계산합니다.
-  </p>
 
-  <div class="features">
-    <span>LiPo / Li-ion</span>
-    <span>배터리 에너지</span>
-    <span>순항 전력</span>
-    <span>상승 에너지</span>
-    <span>맞바람·뒷바람</span>
-    <span>왕복 가능 반경</span>
-    <span>풍속 한계 그래프</span>
-    <span>영상·제어 링크 한계</span>
-  </div>
-
-  <a class="btn" href="./long-range-calculator.html">
-    장거리 비행 계산기 열기
-    <span aria-hidden="true">→</span>
-  </a>
-
-  <p class="muted lab-note">
-    배터리와 비행 조건을 이용한 이론적 추정
-    모델입니다. 실제 비행 가능 거리와
-    안전성을 보증하지 않습니다.
-    시험비행과 실측 데이터로 검증하세요.
-  </p>
-</article>
+    <article class="simulator-box lab-banner" id="long-range">
+      <h3>장거리 비행 계산기</h3>
+      <p>
+        배터리 용량과 소비 전력, 기체 중량,
+        순항 속도 및 바람의 영향을 분석하여
+        이론적인 왕복 비행거리와 귀환 가능 반경을 계산합니다.
+      </p>
+      <div class="features">
+        <span>LiPo / Li-ion</span>
+        <span>배터리 에너지</span>
+        <span>순항 전력</span>
+        <span>상승 에너지</span>
+        <span>맞바람·뒷바람</span>
+        <span>왕복 가능 반경</span>
+        <span>풍속 한계 그래프</span>
+        <span>영상·제어 링크 한계</span>
+      </div>
+      <a class="btn" href="./long-range-calculator.html">
+        장거리 비행 계산기 열기
+        <span aria-hidden="true">→</span>
+      </a>
+      <p class="muted lab-note">
+        배터리와 비행 조건을 이용한 이론적 추정 모델입니다.
+        실제 비행 가능 거리와 안전성을 보증하지 않습니다.
+        시험비행과 실측 데이터로 검증하세요.
+      </p>
+    </article>
 
   </div>
-<article style="margin-top:30px;padding:28px;border:1px solid #345169;border-radius:16px;background:#102137"><h2>영상 연결 시스템 메커니즘</h2><a class="btn" href="./equipment-lab.html">비밀번호로 연구실 열기 →</a></article></section></main>
+
+  <article style="margin-top:30px;padding:28px;border:1px solid #345169;border-radius:16px;background:#102137">
+    <h2>영상 연결 시스템 메커니즘</h2>
+    <a class="btn" href="./equipment-lab.html">
+      비밀번호로 연구실 열기 →
+    </a>
+  </article>
+
+</section>
+</main>
+
 <footer>
   © 2026 TSD Aero Systems
-<button id="protectedDownload" style="margin-left:20px;padding:8px 15px">페이지 다운로드</button></footer>
-<dialog id="downloadGate" style="background:#172636;color:white;border:1px solid #62bad8;border-radius:12px;padding:25px;max-width:360px"><form id="gateForm"><h3>비밀번호 확인</h3><p id="gatePurpose">다운로드하려면 비밀번호를 입력하세요.</p><input id="gatePassword" type="password" autocomplete="off" aria-label="비밀번호" required style="width:100%;padding:10px;box-sizing:border-box"><p id="gateError" role="alert"></p><button type="submit">확인</button> <button id="gateCancel" type="button">취소</button></form></dialog><script>
-(()=>{const expected='7bdacc02706cecc07f481e49973f821dd4fc3a0b99c3088624e4c4097846f06b',gate=document.getElementById('downloadGate'),input=document.getElementById('gatePassword');let action=null;function ask(fn,copy=false){action=fn;input.value='';document.getElementById('gateError').textContent='';document.getElementById('gatePurpose').textContent=copy?'선택한 내용을 복사하려면 비밀번호를 입력하세요.':'페이지를 다운로드하려면 비밀번호를 입력하세요.';if(!gate.open)gate.showModal();input.focus();}document.getElementById('gateCancel').onclick=()=>{gate.close();action=null;};gate.addEventListener('cancel',()=>action=null);document.getElementById('gateForm').onsubmit=async e=>{e.preventDefault();const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(input.value));const hash=Array.from(new Uint8Array(bytes),n=>n.toString(16).padStart(2,'0')).join('');if(hash!==expected){document.getElementById('gateError').textContent='비밀번호가 올바르지 않습니다.';input.value='';input.focus();return;}const fn=action;action=null;input.value='';gate.close();try{await fn?.();}catch{alert('작업을 완료하지 못했습니다. 브라우저 권한을 확인하고 다시 시도하세요.');}};document.getElementById('protectedDownload').onclick=()=>ask(()=>{const blob=new Blob(['<!doctype html>\n'+document.documentElement.outerHTML],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='TSD-technology-lab.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});document.addEventListener('copy',e=>{if(gate.open)return;const text=window.getSelection()?.toString();if(!text)return;e.preventDefault();ask(()=>navigator.clipboard.writeText(text),true);});})();
-</script></body></html>
+  <button id="protectedDownload"
+    style="margin-left:20px;padding:8px 15px">
+    페이지 다운로드
+  </button>
+</footer>
+
+<dialog id="downloadGate"
+  style="background:#172636;color:white;border:1px solid #62bad8;border-radius:12px;padding:25px;max-width:360px">
+  <form id="gateForm">
+    <h3>비밀번호 확인</h3>
+    <p id="gatePurpose">
+      다운로드하려면 비밀번호를 입력하세요.
+    </p>
+    <input id="gatePassword"
+      type="password"
+      autocomplete="off"
+      aria-label="비밀번호"
+      required
+      style="width:100%;padding:10px;box-sizing:border-box">
+    <p id="gateError" role="alert"></p>
+    <button type="submit">확인</button>
+    <button id="gateCancel" type="button">취소</button>
+  </form>
+</dialog>
+
+<script>
+(()=>{
+  const expected='7bdacc02706cecc07f481e49973f821dd4fc3a0b99c3088624e4c4097846f06b';
+  const gate=document.getElementById('downloadGate');
+  const input=document.getElementById('gatePassword');
+  let action=null;
+
+  function ask(fn,copy=false){
+    action=fn;
+    input.value='';
+    document.getElementById('gateError').textContent='';
+    document.getElementById('gatePurpose').textContent=
+      copy
+      ?'선택한 내용을 복사하려면 비밀번호를 입력하세요.'
+      :'페이지를 다운로드하려면 비밀번호를 입력하세요.';
+    if(!gate.open) gate.showModal();
+    input.focus();
+  }
+
+  document.getElementById('gateCancel').onclick=()=>{
+    gate.close();
+    action=null;
+  };
+
+  gate.addEventListener('cancel',()=>action=null);
+
+  document.getElementById('gateForm').onsubmit=async e=>{
+    e.preventDefault();
+    const bytes=await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(input.value)
+    );
+    const hash=Array.from(
+      new Uint8Array(bytes),
+      n=>n.toString(16).padStart(2,'0')
+    ).join('');
+
+    if(hash!==expected){
+      document.getElementById('gateError').textContent=
+        '비밀번호가 올바르지 않습니다.';
+      input.value='';
+      input.focus();
+      return;
+    }
+
+    const fn=action;
+    action=null;
+    input.value='';
+    gate.close();
+
+    try{
+      await fn?.();
+    }catch{
+      alert('작업을 완료하지 못했습니다. 브라우저 권한을 확인하고 다시 시도하세요.');
+    }
+  };
+
+  document.getElementById('protectedDownload').onclick=()=>ask(()=>{
+    const blob=new Blob(
+      ['<!doctype html>\n'+document.documentElement.outerHTML],
+      {type:'text/html;charset=utf-8'}
+    );
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='TSD-technology-lab.html';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
+
+  document.addEventListener('copy',e=>{
+    if(gate.open)return;
+    const text=window.getSelection()?.toString();
+    if(!text)return;
+    e.preventDefault();
+    ask(()=>navigator.clipboard.writeText(text),true);
+  });
+})();
+</script>
+</body>
+</html>
