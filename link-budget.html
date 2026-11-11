@@ -366,9 +366,37 @@ function applyRx(){
  $('rxG').value=x.g??'';
  $('rxPol').value=x.pol||'unknown';
  $('rxNote').textContent=x.note||'제조사 미공개 수신 감도는 직접 확인해야 합니다.';
- calculate();
+ 
+const antennaPolicy = {
+  'DJI Goggles 3':'locked',
+  'DJI Goggles N3':'locked',
+  'DJI Goggles 2':'mmcx',
+  'DJI Goggles Integra':'locked',
+  'DJI FPV Goggles V2':'unverified'
+};
+const policy=antennaPolicy[x.n]||'custom';
+const antennaSelect=$('rxAnt');
+antennaSelect.disabled=policy==='locked'||policy==='unverified'||policy==='mmcx';
+if(antennaSelect.disabled){
+  antennaSelect.value='0';
+  $('rxG').value='';
+  $('rxPol').value='unknown';
+}
+$('rxG').disabled=policy==='locked'||policy==='unverified';
+$('rxAntNote').textContent=
+  policy==='mmcx'
+    ?'공식 MMCX 교체 지원. 현재 범용 목록에는 커넥터 검증이 없어 선택을 잠금 처리했습니다.'
+    :policy==='locked'
+      ?'제조사 승인 교체형 안테나가 확인되지 않아 변경할 수 없습니다.'
+      :policy==='unverified'
+        ?'안테나 교체 조건을 검증하기 전까지 변경을 제한합니다.'
+        :'호환 안테나를 선택할 수 있습니다.';
+  
+calculate();
 }
 function applyAnt(side){
+if(side==='rx' && $('rxAnt').disabled) return;
+if(side==='tx' && $('txAnt').disabled) return;
  const x=ANT[Number($(side+'Ant').value)];
  if(x.g!==null)$(side+'G').value=x.g;
  if(x.pol!=='unknown')$(side+'Pol').value=x.pol;
