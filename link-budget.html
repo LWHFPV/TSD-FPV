@@ -33,6 +33,7 @@ input:disabled{opacity:.55}
 .note{font-size:13px;color:var(--muted);margin:8px 0 0}
 .flag{color:var(--warn)}
 .result{border-left:4px solid var(--accent)}
+.bad-card{border:2px solid var(--bad)!important;box-shadow:0 0 0 4px rgba(239,107,107,.18)}
 .big{font-size:36px;font-weight:700;margin:4px 0 12px;line-height:1.2}
 .big small{font-size:15px;font-weight:400;color:var(--muted)}
 .badge{display:inline-block;padding:6px 12px;border-radius:20px;background:#223b55;border:1px solid #365a78;font-size:13px;margin:0 6px 8px 0}
@@ -54,7 +55,7 @@ footer a{color:#9cb1c8;text-decoration:underline}
 <header><a class="logo" href="./index.html">TSD Aero Systems</a><nav aria-label="주 메뉴"><a href="./education.html">체험교육</a><a href="./index.html" aria-current="page">기술연구소</a><a href="./contact.html">문의</a></nav></header>
 <main class="page-shell">
 <div class="page-heading"><h1>영상 링크 버짓 계산기</h1><p>자유공간 기준 이론 거리입니다. 실제 비행에서는 지형, 간섭, 기체 자세 때문에 이보다 짧아집니다.</p></div>
-<section>
+<section id="secTx">
 <h2>송신 (기체 VTX)</h2>
 <label for="vtx">VTX 제품</label>
 <select id="vtx"></select>
@@ -76,7 +77,7 @@ footer a{color:#9cb1c8;text-decoration:underline}
 <select id="ptxType"><option>RHCP</option><option>LHCP</option><option>선형</option></select>
 </section>
 
-<section>
+<section id="secRx">
 <h2>수신 (고글/수신기)</h2>
 <label for="vrx">고글·수신기 제품</label>
 <select id="vrx"></select>
@@ -107,7 +108,7 @@ footer a{color:#9cb1c8;text-decoration:underline}
 <p class="note">마진이 클수록 결과 거리는 짧아지고 안정적인 값이 됩니다. 영상이 끊기기 직전이 아니라 쓸 만한 화질을 기준으로 보세요.</p>
 </section>
 
-<section class="result" aria-live="polite">
+<section id="secRes" class="result" aria-live="polite">
 <h2>결과</h2>
 <div id="compat"></div>
 <p class="big" id="dist">–</p>
@@ -265,10 +266,14 @@ function compat(){
     } else h+='<span class="badge ok">영상 방식 일치 ('+SYS[v.sys]+')</span>';
   } else h+='<span class="badge chk">영상 방식 확인 필요</span>';
   const ct=connNeed(v.conn,at.conn), cr=connNeed(r.conn,ar.conn);
-  if(ct) h+='<p class="w">송신: VTX '+v.conn+' ↔ 안테나 '+at.conn+' — 어댑터/피그테일이 필요합니다. (손실 약 0.2~1dB, 위 손실값에 반영하세요)</p>';
-  if(cr) h+='<p class="w">수신: 고글 '+r.conn+' ↔ 안테나 '+ar.conn+' — 어댑터가 필요합니다. SMA와 RP-SMA는 서로 결합되지 않습니다.</p>';
+  if(ct) h+='<span class="badge bad">송신 커넥터 결합 불가</span><p class="b">VTX '+v.conn+' ↔ 안테나 '+at.conn+' — 그대로는 연결되지 않습니다. 어댑터/피그테일이 필요하며 손실 약 0.2~1dB를 위 손실값에 반영하세요.</p>';
+  if(cr) h+='<span class="badge bad">수신 커넥터 결합 불가</span><p class="b">고글 '+r.conn+' ↔ 안테나 '+ar.conn+' — 그대로는 연결되지 않습니다. 어댑터가 필요합니다. SMA와 RP-SMA는 서로 결합되지 않습니다.</p>';
   if(ct===null||cr===null) h+='<p class="w">커넥터 호환은 제품 선택 정보가 부족해 확인하지 못했습니다.</p>';
   $("compat").innerHTML=h;
+  const sysBad=!ok;
+  $("secTx").classList.toggle("bad-card", sysBad||ct===true);
+  $("secRx").classList.toggle("bad-card", sysBad||cr===true);
+  $("secRes").classList.toggle("bad-card", sysBad||ct===true||cr===true);
   return ok;
 }
 $("aptx").addEventListener("change",()=>applyAnt("tx"));
