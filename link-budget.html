@@ -647,11 +647,6 @@ $("ctlRx").addEventListener("change",ctlApplyRx);
 ["ctlRate","ctlP","ctlTG","ctlRG","ctlPol","margin","loss","recEnv","recAlt","recHp","recAvgH","recMaxH","recExtra","recRidge","recObsD"].forEach(id=>{ $(id).addEventListener("input",ctlCalc); $(id).addEventListener("change",ctlCalc); });
 ctlApplySrc(); ctlApplyRx(); updateSummary();
 
-/* TSD 공식 장비 목록 보강 패치 v1
- * 위치: 기존 </script> 바로 위
- * 기존 VTX / VRX / ANT 선언은 삭제하지 않습니다.
- */
-
 (function tsdDevicePatch() {
   "use strict";
 
