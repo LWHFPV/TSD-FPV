@@ -1,1304 +1,641 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>영상 링크 버짓 계산기 | TSD 기술 연구소</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSD 영상 링크 버짓 계산기 | TSD Aero Systems</title>
 <style>
 :root{
-  color-scheme:dark;
-  --bg:#08111f; --panel:#142338; --accent:#38bdf8; --text:#eaf2fc; --muted:#a9bbcf;
-  --line:#29405c; --field:#0d1a2c; --warn:#e5c45a; --ok:#4cc38a; --bad:#ef6b6b;
+ color-scheme:dark;
+ --bg:#08111f;--panel:#142338;--field:#0d1a2c;
+ --line:#29405c;--fg:#eaf2fc;--muted:#a9bbcf;
+ --blue:#38bdf8;--ok:#4cc38a;--warn:#e5c45a;--bad:#ef6b6b
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Malgun Gothic",sans-serif;line-height:1.7}
-a{color:inherit;text-decoration:none}
-header{position:sticky;top:0;z-index:10;background:#08111ff0;border-bottom:1px solid #28405a;padding:15px 6%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px}
-.logo{font-weight:800;font-size:20px;color:var(--accent)}
-nav{display:flex;flex-wrap:wrap;gap:15px}
-nav a:hover{color:var(--accent)}
-nav a[aria-current="page"]{color:var(--accent);border-bottom:2px solid var(--accent);padding-bottom:4px}
-.page-shell{max-width:760px;margin:auto;padding:45px 5%;min-height:calc(100vh - 170px)}
-.page-heading{text-align:center;margin-bottom:30px}
-.page-heading h1{color:var(--accent);font-size:clamp(28px,4vw,40px);line-height:1.2;margin:0 0 14px}
-.page-heading p{margin:0;color:var(--muted)}
-h2{font-size:20px;color:var(--accent);margin:0 0 12px}
-section{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px}
-label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
-select,input{width:100%;padding:11px 12px;border-radius:9px;border:1px solid #365a78;background:var(--field);color:var(--text);font:inherit}
-select:focus,input:focus{outline:3px solid var(--accent);outline-offset:1px}
-input:disabled{opacity:.55}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.note{font-size:13px;color:var(--muted);margin:8px 0 0}
-.flag{color:var(--warn)}
-.result{border-left:4px solid var(--accent)}
-.bad-card{border:2px solid var(--bad)!important;box-shadow:0 0 0 4px rgba(239,107,107,.18)}
-.big{font-size:36px;font-weight:700;margin:4px 0 12px;line-height:1.2}
-.big small{font-size:15px;font-weight:400;color:var(--muted)}
-.badge{display:inline-block;padding:6px 12px;border-radius:20px;background:#223b55;border:1px solid #365a78;font-size:13px;margin:0 6px 8px 0}
-.badge.ok{border-color:var(--ok);color:var(--ok)}
-.badge.bad{border-color:var(--bad);color:var(--bad)}
-.badge.chk{border-color:var(--warn);color:var(--warn)}
-.btn{display:inline-block;background:var(--accent);color:#06111c;border:0;border-radius:9px;padding:9px 16px;font:inherit;font-weight:bold;cursor:pointer;margin-top:8px}
-.btn:hover{background:#7dd3fc}
-.rec{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0;background:var(--field)}
-.rec.ok{border-color:var(--ok)} .rec.chk{border-color:var(--warn)} .rec.bad{border-color:var(--bad)}
-.rec p{margin:4px 0;font-size:14px}
-.rec .nt{color:var(--muted);font-size:13px}
-.hide{display:none}
-table{width:100%;border-collapse:collapse;font-size:14px}
-td{padding:7px 0;border-bottom:1px solid var(--line)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 Arial,"Malgun Gothic",sans-serif}
+header{padding:14px 5%;background:#08111ff0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+header strong{color:var(--blue);font-size:20px}
+a{color:var(--blue)}
+nav{display:flex;gap:15px}
+nav a{color:var(--fg);text-decoration:none}
+main{max-width:920px;margin:auto;padding:25px 4% 55px}
+h1{font-size:clamp(24px,4vw,36px);color:var(--blue);margin:10px 0}
+h2{color:var(--blue);font-size:20px;margin:0 0 10px}
+h3{margin:12px 0 5px;font-size:16px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:19px;margin:15px 0}
+p{margin:8px 0}
+.muted,small{color:var(--muted)}
+label{display:block;color:var(--muted);font-size:13px;margin:10px 0 4px}
+input,select{width:100%;background:var(--field);border:1px solid #365a78;border-radius:8px;color:var(--fg);padding:10px;font:inherit}
+input:focus,select:focus{outline:2px solid var(--blue)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.result{border-left:4px solid var(--blue)}
+.ok{color:var(--ok)}
+.warn{color:var(--warn)}
+.bad{color:var(--bad)}
+.box{background:var(--field);border:1px solid var(--line);padding:12px;border-radius:9px;margin:10px 0}
+.box.ok{border-color:var(--ok)}
+.box.warn{border-color:var(--warn)}
+.box.bad{border-color:var(--bad)}
+.large{font-size:28px;font-weight:700}
+.hidden{display:none}
+table{width:100%;border-collapse:collapse}
+td{padding:7px;border-bottom:1px solid var(--line)}
 td:last-child{text-align:right}
-.warns p,#compat p{margin:8px 0;font-size:14px}
-.w{color:var(--warn)} .b{color:var(--bad)} .o{color:var(--ok)}
-footer{border-top:1px solid #28405a;padding:30px 6%;color:#9cb1c8;font-size:13px;text-align:center}
-footer ul{list-style:none;padding:0;margin:8px 0}
-footer a{color:#9cb1c8;text-decoration:underline}
-@media (max-width:600px){header{padding:12px 5%}nav{font-size:13px;gap:10px}.page-shell{padding:30px 5%}.row{grid-template-columns:1fr}}
+footer{text-align:center;padding:25px;color:var(--muted);border-top:1px solid var(--line)}
+@media(max-width:620px){
+ .grid,.grid3{grid-template-columns:1fr}
+ header{position:static}
+ main{padding:16px 4%}
+}
 </style>
 </head>
 <body>
-<header><a class="logo" href="./index.html">TSD Aero Systems</a><nav aria-label="주 메뉴"><a href="./education.html">체험교육</a><a href="./index.html" aria-current="page">기술연구소</a><a href="./contact.html">문의</a></nav></header>
-<main class="page-shell">
-<div class="page-heading"><h1>영상 링크 버짓 계산기</h1><p>자유공간 기준 이론 거리입니다. 실제 비행에서는 지형, 간섭, 기체 자세 때문에 이보다 짧아집니다.</p></div>
-<section id="secTx">
-<h2>송신 (기체 VTX)</h2>
-<label for="vtx">VTX 제품</label>
-<select id="vtx"></select>
-<div class="row">
-  <div><label for="ptx">송신 출력 (mW)</label><input id="ptx" type="number" min="0" step="any"></div>
-  <div><label for="gtx">송신 안테나 이득 (dBi)</label><input id="gtx" type="number" step="any"></div>
-</div>
-<p class="note" id="vtxNote"></p>
-<label for="atx">송신 안테나 형태 (먼저 고르세요)</label>
-<select id="atx">
-  <option value="omni">옴니 (다이폴·파고다·롤리팝)</option>
-  <option value="patch">패치</option>
-  <option value="helical">헬리컬</option>
-</select>
-<label for="aptx">송신 안테나 제품 (위에서 고른 형태만 표시)</label>
-<select id="aptx"></select>
-<p class="note" id="atxNote"></p>
-<label for="ptxType">송신 편파</label>
-<select id="ptxType"><option>RHCP</option><option>LHCP</option><option>선형</option></select>
-</section>
+<header>
+<strong>TSD Aero Systems</strong>
+<nav>
+<a href="./index.html">기술연구소</a>
+<a href="./education.html">체험교육</a>
+<a href="./contact.html">문의</a>
+</nav>
+</header>
+<main>
+<h1>영상 링크 버짓 계산기</h1>
+<p class="muted">영상·제어 링크의 이론적 자유공간 거리 및 기체·수신기·모니터 출력 호환성 진단. 공식 확인되지 않은 수치는 임의로 채우지 않습니다.</p>
 
-<section id="secRx">
-<h2>수신 (고글/수신기)</h2>
-<label for="vrx">고글·수신기 제품</label>
-<select id="vrx"></select>
-<div class="row">
-  <div><label for="sens">수신 감도 (dBm)</label><input id="sens" type="number" step="any"></div>
-  <div><label for="grx">수신 안테나 이득 (dBi)</label><input id="grx" type="number" step="any"></div>
+<section>
+<h2>1. 영상 송신 장치</h2>
+<label for="vtx">VTX 모델</label>
+<select id="vtx"></select>
+<p id="txNote" class="muted"></p>
+<div class="grid3">
+<div><label for="txP">송신 출력 (mW)</label><input id="txP" type="number" min="0" step="any" placeholder="미공개 시 직접 입력"></div>
+<div><label for="txG">송신 안테나 이득 (dBi)</label><input id="txG" type="number" step="any" placeholder="직접 입력"></div>
+<div><label for="txPol">송신 편파</label><select id="txPol"><option value="unknown">미확인</option><option>RHCP</option><option>LHCP</option><option value="linear">선형</option></select></div>
 </div>
-<p class="note" id="vrxNote"></p>
-<label for="arx">수신 안테나 형태 (먼저 고르세요)</label>
-<select id="arx">
-  <option value="omni">옴니</option><option value="patch">패치</option><option value="helical">헬리컬</option>
-</select>
-<label for="aprx">수신 안테나 제품 (위에서 고른 형태만 표시)</label>
-<select id="aprx"></select>
-<p class="note" id="arxNote"></p>
-<label for="prxType">수신 편파</label>
-<select id="prxType"><option>RHCP</option><option>LHCP</option><option>선형</option></select>
+<label for="txAnt">송신 안테나</label>
+<select id="txAnt"></select>
+<p id="txAntNote" class="muted"></p>
 </section>
 
 <section>
-<h2>조건</h2>
-<div class="row">
-  <div><label for="freq">주파수 (MHz)</label><input id="freq" type="number" value="5800"></div>
-  <div><label for="loss">케이블·커넥터·어댑터 손실 (dB)</label><input id="loss" type="number" value="0.5" step="0.1"></div>
+<h2>2. 영상 수신 장치</h2>
+<label for="vrx">고글 / 수신기</label>
+<select id="vrx"></select>
+<p id="rxNote" class="muted"></p>
+<div class="grid3">
+<div><label for="rxS">수신 감도 (dBm)</label><input id="rxS" type="number" step="any" placeholder="미공개 시 직접 입력"></div>
+<div><label for="rxG">수신 안테나 이득 (dBi)</label><input id="rxG" type="number" step="any" placeholder="직접 입력"></div>
+<div><label for="rxPol">수신 편파</label><select id="rxPol"><option value="unknown">미확인</option><option>RHCP</option><option>LHCP</option><option value="linear">선형</option></select></div>
 </div>
-<label for="margin">페이딩 마진 (dB)</label>
-<input id="margin" type="number" value="10" step="1">
-<p class="note">마진이 클수록 결과 거리는 짧아지고 안정적인 값이 됩니다. 영상이 끊기기 직전이 아니라 쓸 만한 화질을 기준으로 보세요.</p>
+<label for="rxAnt">수신 안테나</label>
+<select id="rxAnt"></select>
+<label for="module">외부 영상 수신 모듈 (실제 설치한 경우에만 선택)</label>
+<select id="module">
+<option value="none">없음</option>
+<option value="analog">아날로그 5.8GHz 모듈 설치</option>
+<option value="hdz">HDZero VRX 설치</option>
+<option value="ws">Walksnail VRX 설치</option>
+</select>
+<p id="rxAntNote" class="muted"></p>
 </section>
 
-<section id="secRes" class="result" aria-live="polite">
-<h2>결과</h2>
-<div id="compat"></div>
-<p class="big" id="dist">–</p>
+<section>
+<h2>3. 링크 조건</h2>
+<div class="grid3">
+<div><label for="freq">영상 주파수 (MHz)</label><input id="freq" type="number" value="5800" min="1"></div>
+<div><label for="loss">전체 RF 손실 (dB)</label><input id="loss" type="number" value="0.5" min="0" step="0.1"></div>
+<div><label for="margin">페이딩 마진 (dB)</label><input id="margin" type="number" value="10" min="0" step="1"></div>
+</div>
+<p class="muted">EIRP가 공식적으로 주어진 경우 출력·안테나 이득을 중복 가산하지 않습니다. 케이블 손실은 비-EIRP 계산에만 반영됩니다.</p>
+</section>
+
+<section class="result">
+<h2>4. 영상 링크 계산 결과</h2>
+<div id="videoStatus"></div>
+<p class="large" id="videoDistance">—</p>
 <table>
-  <tr><td>EIRP (송신 출력 + 안테나 이득 − 손실)</td><td id="eirp">–</td></tr>
-  <tr><td>편파 불일치 손실</td><td id="pol">–</td></tr>
-  <tr><td>허용 경로 손실</td><td id="pl">–</td></tr>
-  <tr><td>제조사 공개 최대 거리</td><td id="rated">–</td></tr>
+<tr><td>송신 EIRP</td><td id="videoEirp">—</td></tr>
+<tr><td>허용 경로 손실</td><td id="videoLoss">—</td></tr>
+<tr><td>편파 손실</td><td id="videoPol">—</td></tr>
+<tr><td>제조사 공시 거리</td><td id="videoRated">—</td></tr>
 </table>
-<div class="warns" id="warns"></div>
+<p class="muted">이론적 FSPL 결과는 제조사 공시 거리나 실제 운용 가능 거리가 아닙니다. MIMO·적응형 전송·장애물·간섭·지구 곡률은 단순 FSPL에 포함되지 않습니다.</p>
 </section>
-<section id="secCtl">
-<h2>제어 링크 (조종기 · 수신기)</h2>
-<p class="note">영상 링크와 별개입니다. 기체가 영상보다 먼저 조종 신호를 잃을 수도 있어서, 둘 중 짧은 쪽이 실제 한계입니다.</p>
-<label for="ctlMode">송신 방식</label>
-<select id="ctlMode"><option value="int">조종기 내장 모듈</option><option value="ext">외부 모듈 (JR 베이)</option></select>
-<label for="ctlRadio">조종기 (라디오)</label>
-<select id="ctlRadio"></select>
-<div id="ctlModBox" class="hide"><label for="ctlMod">외부 모듈</label><select id="ctlMod"></select></div>
-<p class="note" id="ctlSrcNote"></p>
-<div class="row">
-  <div><label for="ctlP">송신 출력 (mW)</label><input id="ctlP" type="number" min="0" step="any"></div>
-  <div><label for="ctlTG">송신 안테나 이득 (dBi)</label><input id="ctlTG" type="number" step="any"></div>
+
+<section>
+<h2>5. 제어 링크 (별도)</h2>
+<div class="grid">
+<div><label for="ctlSystem">프로토콜</label><select id="ctlSystem">
+<option value="none">선택 안 함</option>
+<option value="elrs24">ExpressLRS 2.4GHz</option>
+<option value="elrs900">ExpressLRS 900MHz</option>
+<option value="crossfire">TBS Crossfire 868/915MHz</option>
+<option value="dji">DJI 전용 제어 링크</option>
+<option value="autel">Autel 전용 제어 링크</option>
+</select></div>
+<div><label for="ctlRate">패킷 레이트 / 수신 감도</label><select id="ctlRate"></select></div>
 </div>
-<label for="ctlRx">수신기</label>
-<select id="ctlRx"></select>
-<p class="note" id="ctlRxNote"></p>
-<div class="row">
-  <div><label for="ctlRate">패킷 레이트·대역</label><select id="ctlRate"></select></div>
-  <div><label for="ctlRG">수신 안테나 이득 (dBi)</label><input id="ctlRG" type="number" step="any"></div>
+<div class="grid3">
+<div><label for="ctlP">출력 (mW)</label><input id="ctlP" type="number" placeholder="직접 입력" min="0"></div>
+<div><label for="ctlTxG">송신 이득 (dBi)</label><input id="ctlTxG" type="number" placeholder="직접 입력"></div>
+<div><label for="ctlRxG">수신 이득 (dBi)</label><input id="ctlRxG" type="number" placeholder="직접 입력"></div>
 </div>
-<label for="ctlPol">편파 불일치 손실 (dB)</label>
-<input id="ctlPol" type="number" value="3" step="0.5">
-<p class="note">조종기와 기체 안테나는 대부분 선형 편파라서 기체 자세에 따라 약 3dB 이상 손실을 가정합니다. 마진과 케이블 손실은 위 "조건" 값을 씁니다.</p>
-<div id="ctlCompat"></div>
-<p class="big" id="ctlDist">–</p>
-<table>
-  <tr><td>EIRP</td><td id="ctlEirp">–</td></tr>
-  <tr><td>허용 경로 손실</td><td id="ctlPL">–</td></tr>
-  <tr><td>현재 환경 반영 거리</td><td id="ctlEnv">–</td></tr>
-</table>
-<div class="warns" id="ctlWarns"></div>
+<p id="ctlStatus" class="muted"></p>
+<p class="large" id="ctlDistance">—</p>
 </section>
-<section id="secSum">
-<h2>영상 vs 제어 링크</h2>
-<div id="sumBody"></div>
+
+<section>
+<h2>6. 환경별 거리 추정</h2>
+<div class="grid3">
+<div><label for="env">환경</label><select id="env"><option value="open">개활지</option><option value="urban">도심</option><option value="mount">산악</option></select></div>
+<div><label for="extraLoss">추가 환경 손실 (dB)</label><input id="extraLoss" type="number" value="0" min="0" step="1"></div>
+<div><label for="target">목표 거리 (km)</label><input id="target" type="number" value="5" min="0.1" step="0.1"></div>
+</div>
+<p class="muted">도심·산악의 추가 손실은 측정값을 직접 입력합니다. 장애물 회절·프레넬 영역을 모르는 상태에서 임의의 확정 거리를 생성하지 않습니다.</p>
+<div id="environmentResult"></div>
 </section>
-<section id="secRec">
-<h2>부품 추천</h2>
-<p class="note">목표 거리와 환경을 넣으면 등록된 제품 조합 중 맞는 것을 찾아줍니다. 주파수·손실·페이딩 마진은 위 "조건" 값을 그대로 씁니다.</p>
-<div class="row">
-  <div><label for="recTarget">목표 거리 (km)</label><input id="recTarget" type="number" value="5" min="0.1" step="any"></div>
-  <div><label for="recEnv">환경</label><select id="recEnv"><option value="open">개활지</option><option value="urban">도심 (건물)</option><option value="mount">산악 (능선)</option></select></div>
-</div>
-<div class="row">
-  <div><label for="recAlt">비행 고도 (m, 이륙점 기준)</label><input id="recAlt" type="number" value="100" step="any"></div>
-  <div><label for="recHp">조종자 안테나 높이 (m)</label><input id="recHp" type="number" value="1.7" step="any"></div>
-</div>
-<div id="recUrban" class="hide">
-  <div class="row">
-    <div><label for="recAvgH">평균 건물 높이 (m)</label><input id="recAvgH" type="number" value="25" step="any"></div>
-    <div><label for="recMaxH">최고 건물 높이 (m)</label><input id="recMaxH" type="number" value="80" step="any"></div>
-  </div>
-  <div class="row">
-    <div><label for="recDens">건물 밀집도</label><select id="recDens"><option value="3">낮음</option><option value="6" selected>중간</option><option value="10">높음</option></select></div>
-    <div><label for="recExtra">추가 도심 손실 (dB)</label><input id="recExtra" type="number" value="6" step="any"></div>
-  </div>
-  <p class="note">추가 손실은 반사·산란을 감안한 가정값입니다. 실측이 있으면 직접 고치세요.</p>
-</div>
-<div id="recMount" class="hide">
-  <label for="recRidge">장애 능선 높이 (m, 이륙점보다 높은 만큼)</label><input id="recRidge" type="number" value="150" step="any">
-</div>
-<div id="recPosBox" class="hide">
-  <label for="recObsD">첫 장애물까지 거리 (km, 이륙 지점 기준)</label><input id="recObsD" type="number" value="1" min="0.05" step="any">
-  <p class="note">가장 가까운 건물군 또는 능선까지의 거리입니다. 그 너머로 날아갈 때 회절 손실이 생깁니다.</p>
-</div>
-<label for="recPmax">최대 허용 출력 (mW)</label><input id="recPmax" type="number" value="1000" step="any">
-<p class="note">사용하는 지역의 전파 규정을 확인한 뒤 맞춰 입력하세요.</p>
-<div class="row">
-  <div><label for="recMkTx">VTX 제조사</label><select id="recMkTx"></select></div>
-  <div><label for="recMkRx">고글·수신기 제조사</label><select id="recMkRx"></select></div>
-</div>
-<label for="recMkAnt">안테나 제조사</label><select id="recMkAnt"></select>
-<div id="recList" aria-live="polite"></div>
-<p class="note">도심·산악 손실은 단일 장애물 회절 근사(ITU-R P.526 식)와 가정값으로 추정한 것이라 실제와 크게 다를 수 있습니다. 시험비행으로 확인하세요.</p>
+
+<section>
+<h2>7. 완성형 기체 · 고글 · 조종기 · 모니터</h2>
+<p class="muted">단계별 판정: 기체→수신 장치→조종기→모니터. 앞 단계가 불가하면 다음 단계도 불가입니다. 미확인은 긍정으로 간주하지 않습니다.</p>
+<label for="aircraft">완성형 기체</label>
+<select id="aircraft"></select>
+<label for="device">고글 / 조종기</label>
+<select id="device"></select>
+<label for="radio">별도 조종기 (고글 선택 시)</label>
+<select id="radio"></select>
+<label for="display">외부 화면 출력 경로</label>
+<select id="display">
+<option value="none">외부 모니터 사용 안 함</option>
+<option value="hdmi">조종기 HDMI → 모니터</option>
+<option value="wireless">조종기 HDMI → 무선 HDMI → 모니터</option>
+<option value="capture">조종기 HDMI → 캡처 장치 → 태블릿</option>
+<option value="usb">고글 USB-C → 공식 지원 앱의 화면 공유</option>
+</select>
+<div id="chainResult" aria-live="polite"></div>
+</section>
+
+<section>
+<h2>8. 부품 및 구성 추천 안내</h2>
+<p id="recommendation">목표 거리와 링크 데이터를 입력하면 계산 가능 여부를 확인합니다.</p>
+<p class="muted">제조사 수신 감도가 미공개인 장비를 임의 수치로 보완해 추천하지 않습니다. 출력 제한은 사용 국가의 전파 규정을 별도 확인해야 합니다.</p>
+</section>
+
+<section>
+<h2>공식 확인 자료</h2>
+<p><a href="https://www.dji.com/o4-air-unit/specs" target="_blank" rel="noopener">DJI O4 Air Unit 사양</a> · <a href="https://www.dji.com/avata-2/faq" target="_blank" rel="noopener">DJI Avata 2 FAQ</a> · <a href="https://www.dji.com/rc-pro/specs" target="_blank" rel="noopener">DJI RC Pro 사양</a></p>
+<p><a href="https://wiki.caddxfpv.com/en/Avatar-HD-Series/compatible" target="_blank" rel="noopener">Walksnail 호환표</a> · <a href="https://hd-zero.github.io/hdzero-vtx-docs/latest/vtx_targets" target="_blank" rel="noopener">HDZero VTX 문서</a> · <a href="https://www.expresslrs.org/info/signal-health/" target="_blank" rel="noopener">ExpressLRS 감도 자료</a></p>
+<p><a href="https://www.autelrobotics.com/" target="_blank" rel="noopener">Autel Robotics 공식 사이트</a> · <a href="https://team-blacksheep.com/" target="_blank" rel="noopener">TBS 공식 사이트</a> · <a href="https://www.radiomasterrc.com/" target="_blank" rel="noopener">RadioMaster 공식 사이트</a></p>
 </section>
 </main>
-
-<footer>
-<p><b>데이터 출처</b> (제조사·공식 문서에서 확인한 값만 사용, 그 외는 직접 입력)</p>
-<ul>
-<li><a href="https://www.dji.com/au/o4-air-unit/specs">DJI O4 Air Unit 사양</a> · <a href="https://www.dji.com/o4-air-unit/specs?startPoint=0">전송 거리</a></li>
-<li><a href="https://www.hobbyrc.co.uk/tbs-unify-pro32-hv-mmcx">TBS Unify Pro32 HV (판매처 표기)</a> · <a href="https://team-blacksheep.com/media/files/tbs-unify-pro32-manual.pdf">TBS 매뉴얼</a></li>
-<li><a href="https://manuals.plus/skyzone/steadyview-x-high-performance-receiver-manual">Skyzone SteadyView X 매뉴얼</a> · <a href="https://www.myfpvstore.com/?p=115951">SKY04X Pro (판매처)</a></li>
-<li><a href="https://www.getfpv.com/fpv/antennas/lumenier-axii-2/lumenier-axii-2-5-8ghz-antenna-rhcp-2-pcs.html">Lumenier AXII 2</a> · <a href="https://www.getfpv.com/fpv/antennas/lumenier-axii-2/lumenier-double-axii-2-long-range-right-angle-5-8ghz-antenna-rhcp.html">Double AXII 2</a></li>
-<li><a href="https://www.onedrone.com/store/tags/Patch">TBS 패치 안테나 (판매처 표기)</a></li>
-<li><a href="https://www.myfpvstore.com/xwc5">Walksnail Avatar V2 VTX (판매처)</a> · <a href="https://www.myfpvstore.com/cju6">Goggles X (판매처)</a> · <a href="https://zbotic.in/product/walksnail-patch-antenna-v2-for-avatar-hd-goggles-x/">Patch V2 (판매처)</a></li>
-<li><b>제조사 공식 사이트</b>: <a href="https://team-blacksheep.com">TBS</a> · <a href="https://www.hd-zero.com/dealers">HDZero(공식 딜러 목록)</a> · <a href="https://www.dji.com/au/o4-air-unit/specs">DJI</a> · <a href="https://caddxfpv.com/products/walksnail-avatar-hd-goggles-x">Caddx·Walksnail</a> · <a href="https://shop.lumenier.com/products/lumenier-double-axii-2-long-range-5-8ghz-antenna-rhcp">Lumenier</a> · <a href="https://www.radiomasterrc.com">RadioMaster</a> · <a href="https://www.expresslrs.org/info/signal-health">ExpressLRS 감도표</a> (Skyzone은 공식 링크를 확인하지 못했습니다)</li>
-<li>참고(비공식 블로그): <a href="https://oscarliang.com/radiomaster-boxer/">Oscar Liang · Boxer</a> · <a href="https://oscarliang.com/lq-rssi">LQ·RSSI·감도표</a></li>
-<li>제어 링크 출처: <a href="https://team-blacksheep.com/media/files/tbs-crossfire-manual.pdf">TBS Crossfire 매뉴얼</a> · <a href="https://www.radiomasterrc.com/products/dbr4-dual-band-xross-gemini-expresslrs-receiver">RadioMaster DBR4</a> · <a href="https://radiomasterrc.com/products/boxer-radio-controller-m2">RadioMaster Boxer</a></li>
-<li><a href="https://hd-zero.github.io/hdzero-vtx-docs/latest/vtx_targets">HDZero VTX 목록</a></li>
-<li><a href="https://www.readymaderc.com/products/details/hdzero-vrx4-video-receiver">HDZero VRX 사양 (판매처 표기)</a></li>
-</ul>
-<p>목록에 없는 제품(ImmersionRC, Rush, Foxeer 등)은 직접 입력으로 계산하세요. 비행 전 현지 전파법을 확인하세요.</p>
-</footer>
-
+<footer>TSD Aero Systems · 교육용 RF 링크 추정 도구 · 비행 전 공식 매뉴얼과 국내 전파·비행 규정을 확인하세요.</footer>
 <script>
-// 값이 null이면 제조사가 공개하지 않은 항목입니다. 사용자가 직접 입력합니다.
-const VTX = [
-  {n:"직접 입력", sys:null, conn:null, p:null, g:null, note:"출력과 안테나 이득을 직접 입력하세요."},
-  {n:"[아날로그] TBS Unify Pro32 HV (25mW)", sys:"ana", conn:"MMCX", p:25, g:null, note:"출력 단계: 25/100/400/1000mW+. 고출력은 지역 규정(HAM 면허 등)을 확인하세요. SMA 변환 피그테일이 동봉됩니다."},
-  {n:"[아날로그] TBS Unify Pro32 HV (400mW)", sys:"ana", conn:"MMCX", p:400, g:null, note:"고출력 구간입니다. 사용 지역의 허용 출력을 확인하세요."},
-  {n:"[아날로그] TBS Unify Pro32 HV (1000mW)", sys:"ana", conn:"MMCX", p:1000, g:null, note:"제조사 표기 '1000mW+'의 최소값으로 계산합니다. 지역 규정을 확인하세요."},
-  {n:"[HDZero] Freestyle V2 (200mW)", sys:"hdz", conn:"U.FL", p:200, g:null, note:"출력은 공식 문서 기준. 번들 안테나는 RHCP지만 이득은 미공개입니다.", pol:"RHCP"},
-  {n:"[HDZero] Freestyle (1W, 조건부 옵션)", sys:"hdz", conn:"U.FL", p:1000, g:null, note:"500mW/1W는 공식 문서에서 조건부 표기입니다. 지역 규정을 확인하세요.", pol:"RHCP"},
-  {n:"[HDZero] Race V2 / Whoop Lite (200mW)", sys:"hdz", conn:"U.FL", p:200, g:null, note:"출력은 공식 문서·판매처 표기 기준. 안테나 이득은 미공개입니다."},
-  {n:"[Walksnail] Avatar V2 VTX (FCC, 30dBm EIRP)", sys:"wsn", conn:"U.FL", eirp:30, pol:"LHCP", note:"EIRP는 제조사 표기값(FCC 30 / CE 14 / SRRC 20 / MIC 25dBm). 번들 안테나는 LHCP입니다. 이득·손실 입력은 무시됩니다."},
-  {n:"[Walksnail] Avatar V2 VTX (CE, 14dBm EIRP)", sys:"wsn", conn:"U.FL", eirp:14, pol:"LHCP", note:"CE 지역 기준입니다. 번들 안테나는 LHCP입니다."},
-  {n:"[DJI] O4 Air Unit Pro (FCC, 33dBm EIRP)", sys:"dji", conn:null, eirp:33, rated:"15 km (FCC, Goggles 3/N3)", note:"DJI는 안테나 이득이 포함된 EIRP로 공개합니다. 이득·손실 입력은 무시됩니다."},
-  {n:"[DJI] O4 Air Unit Pro (CE, 14dBm EIRP)", sys:"dji", conn:null, eirp:14, rated:"8 km (CE, Goggles 3/N3)", note:"CE 지역 기준입니다. 이득·손실 입력은 무시됩니다."}
-];
-const VRX = [
-  {n:"직접 입력", sys:null, conn:null, s:null, g:null, note:"감도와 안테나 이득을 직접 입력하세요."},
-  {n:"[아날로그] Skyzone SteadyView X / SKY04X 계열 수신기", sys:"ana", conn:"SMA", s:-98, g:null, note:"감도 -98dBm ±1 (제조사 매뉴얼). 2개의 SMA 포트. 번들 안테나는 제품에 따라 다릅니다."},
-  {n:"[아날로그] Skyzone SKY04X Pro (번들 2dB 안테나)", sys:"ana", conn:"SMA", s:-98, g:2, note:"감도는 제조사 매뉴얼, 번들 안테나 2dB는 판매처 표기입니다. 편파는 미공개입니다."},
-  {n:"[HDZero] VRX", sys:"hdz", conn:"SMA", s:-105, g:null, note:"감도는 판매처가 표기한 사양입니다. 안테나 이득은 미공개입니다."},
-  {n:"[Walksnail] Avatar HD Goggles X", sys:"wsn", alt:["ana","hdz"], conn:"RP-SMA", s:null, g:null, note:"수신 감도는 확인하지 못했습니다(직접 입력). 판매처는 수신 모듈 교체로 아날로그·HDZero도 쓸 수 있다고 안내합니다. 번들 스터비 안테나는 RP-SMA입니다."},
-  {n:"[DJI] Goggles 3 / N3", sys:"dji", conn:"RP-SMA", s:null, g:null, note:"DJI는 수신 감도와 안테나 이득을 공개하지 않습니다. 커넥터는 안테나 판매처 안내(RP-SMA) 기준이라 제품별로 확인하세요."}
-];
-// 안테나: g=제조사 공개 이득(dBi/dBic), pol=편파, type=형태, conn=커넥터(null이면 여러 종류 판매)
-const ANT = [
-  {n:"직접 입력", g:null, pol:null, type:null, conn:null, note:""},
-  {n:"Lumenier AXII 2 (RHCP)", g:2.2, pol:"RHCP", type:"omni", conn:null, note:"2.2dBic. SMA/MMCX/U.FL 등 커넥터 버전이 여러 종류라 구매 시 확인하세요."},
-  {n:"Walksnail Avatar V2 번들 안테나 (LHCP)", g:1.9, pol:"LHCP", type:"omni", conn:"U.FL", note:"1.9dBi, IPEX-1(U.FL). 판매처 표기 사양입니다."},
-  {n:"Walksnail Patch V2 for Goggles X (LHCP)", g:6.7, pol:"LHCP", type:"patch", conn:"RP-SMA", note:"6.7dBi, 빔폭 127° (판매처 표기). 지향성이라 빔 밖에서는 이득이 줄어듭니다."},
-  {n:"TBS 패치 안테나 (RHCP, 5dBi)", g:5, pol:"RHCP", type:"patch", conn:"RP-SMA", note:"5dBi, RP-SMA (판매처 표기). 지향성이라 기체가 빔 밖이면 이득이 줄어듭니다. 수신용입니다."},
-  {n:"Lumenier Double AXII 2 (RHCP, 직각 SMA)", g:4.7, pol:"RHCP", type:"omni", conn:"SMA", note:"4.7dBic. 제조사는 송·수신 모두 쓸 수 있다고 안내합니다. 도넛형 패턴이라 기체가 기울면 이득이 빠질 수 있습니다."}
-];
-const $ = id => document.getElementById(id);
-let lastVid=null, lastCtl=null;
-function fill(sel, arr){ arr.forEach((o,i)=>{ const e=document.createElement("option"); e.value=i; e.textContent=o.n; sel.appendChild(e); }); }
-fill($("vtx"), VTX); fill($("vrx"), VRX);
-function fillAnt(side){
-  const sel=$(side==="tx"?"aptx":"aprx"), type=$(side==="tx"?"atx":"arx").value, cur=sel.value;
-  sel.innerHTML="";
-  ANT.forEach((o,i)=>{ if(i===0||o.type===type){ const e=document.createElement("option"); e.value=i; e.textContent=o.n; sel.appendChild(e); } });
-  sel.value=[...sel.options].some(o=>o.value===cur)?cur:"0";
-}
-fillAnt("tx"); fillAnt("rx");
 
-function applyVtx(){
-  const o = VTX[$("vtx").value];
-  $("ptx").value = o.p ?? ""; $("gtx").value = o.g ?? "";
-  const dji = o.eirp != null;
-  $("ptx").disabled = dji; $("gtx").disabled = dji;
-  if(o.pol) $("ptxType").value = o.pol;
-  $("vtxNote").innerHTML = o.note + lnk(o);
-  if(!dji && o.g==null && o.p!=null) $("vtxNote").innerHTML += ' <span class="flag">안테나 이득 직접 입력 필요</span>';
-  calc();
-}
-function applyVrx(){
-  const o = VRX[$("vrx").value];
-  $("sens").value = o.s ?? ""; $("grx").value = o.g ?? "";
-  $("vrxNote").innerHTML = o.note + lnk(o);
-  calc();
-}
-
-function polLoss(a,b){
-  const circ = x => x==="RHCP"||x==="LHCP";
-  if(circ(a)&&circ(b)) return a===b ? 0 : 20;
-  if(circ(a)!==circ(b)) return 3;
-  return 0; // 선형↔선형: 정렬이 맞는 경우. 실제로는 자세에 따라 달라집니다.
-}
-
-function calc(){ calcCore(); updateSummary(); }
-function calcCore(){
-  lastVid=null;
-  if(!compat()){ $("dist").innerHTML="연동 불가"; $("eirp").textContent=$("pol").textContent=$("pl").textContent="–"; $("warns").innerHTML=""; return; }
-  const v = VTX[$("vtx").value], f = +$("freq").value, loss = +$("loss").value||0, mg = +$("margin").value||0;
-  const sens = parseFloat($("sens").value), grx = parseFloat($("grx").value);
-  const w = [];
-  let eirp;
-  if(v.eirp != null){ eirp = v.eirp; }
-  else{
-    const p = parseFloat($("ptx").value), g = parseFloat($("gtx").value);
-    if(isNaN(p)||p<=0||isNaN(g)){ eirp = NaN; }
-    else eirp = 10*Math.log10(p) + g - loss;
-  }
-  const pl = polLoss($("ptxType").value, $("prxType").value);
-  const dji = v.sys==="dji";
-  if(dji) w.push(["w","DJI는 O4 고유 편파·MIMO 방식이라 편파 입력은 참고용입니다."]);
-  $("rated").textContent = v.rated || "–";
-  $("eirp").textContent = isNaN(eirp) ? "–" : eirp.toFixed(1)+" dBm";
-  $("pol").textContent = dji ? "계산 제외" : pl+" dB";
-
-  if(isNaN(eirp)||isNaN(sens)||isNaN(grx)||!f){
-    $("dist").innerHTML = "–"; $("pl").textContent = "–";
-    const miss=[]; if(isNaN(eirp)) miss.push("송신 출력·이득"); if(isNaN(sens)) miss.push("수신 감도"); if(isNaN(grx)) miss.push("수신 안테나 이득");
-    $("warns").innerHTML = miss.length ? '<p class="w">입력이 필요합니다: '+miss.join(", ")+'</p>' : "";
-    return;
-  }
-  const rxLoss = dji ? 0 : pl;
-  const allowed = eirp + grx - rxLoss - mg - sens; // 허용 경로 손실(dB)
-  const dKm = Math.pow(10, (allowed - 32.44 - 20*Math.log10(f))/20);
-  $("pl").textContent = allowed.toFixed(1)+" dB";
-  lastVid={allowed:allowed,f:f};
-  $("dist").innerHTML = (dKm>=1 ? dKm.toFixed(1)+" <small>km</small>" : Math.round(dKm*1000)+" <small>m</small>");
-
-  if(!dji && pl>=10) w.push(["b","편파가 반대입니다(RHCP↔LHCP). 약 20dB 손실이 발생합니다."]);
-  else if(!dji && pl>0) w.push(["w","선형↔원편파 조합은 약 3dB 손실입니다."]);
-  if($("atx").value!=="omni"||$("arx").value!=="omni") w.push(["w","패치·헬리컬은 빔폭 안에서만 이득이 유효합니다. 기체 뒤쪽이나 빔 밖에서는 거리가 크게 줄어듭니다."]);
-  if(v.eirp==null && $("atx").value!=="omni") w.push(["w","기체 쪽 지향성 안테나는 자세 변화에 약합니다. 일반적으로 기체에는 옴니나 원편파 안테나를 씁니다."]);
-  if(dKm>20) w.push(["w","20km를 넘는 값은 지구 곡률과 가시거리에 막힙니다. 실제로는 도달하기 어렵습니다."]);
-  if(v.rated) w.push(["o","제조사 공개 거리와 비교해 보세요. 계산값과 크게 다르면 입력한 감도가 현실과 다를 수 있습니다."]);
-  if(mg<6) w.push(["w","페이딩 마진이 6dB 미만이면 실제 비행에서 쉽게 끊깁니다."]);
-  $("warns").innerHTML = w.map(x=>'<p class="'+x[0]+'">'+x[1]+'</p>').join("");
-}
-
-$("vtx").addEventListener("change", applyVtx);
-$("vrx").addEventListener("change", applyVrx);
-["ptx","gtx","sens","grx","freq","loss","margin","atx","arx","ptxType","prxType"].forEach(id=>$(id).addEventListener("input", calc));
-
-const SYS={ana:"아날로그",hdz:"HDZero",dji:"DJI",wsn:"Walksnail"};
-function applyAnt(side){
-  const o=ANT[$(side==="tx"?"aptx":"aprx").value];
-  if(o.g!=null) $(side==="tx"?"gtx":"grx").value=o.g;
-  if(o.pol) $(side==="tx"?"ptxType":"prxType").value=o.pol;
-  if(o.type) $(side==="tx"?"atx":"arx").value=o.type;
-  const sel=$(side==="tx"?"aptx":"aprx");
-  $(side==="tx"?"atxNote":"arxNote").innerHTML = sel.options.length===1 ? "이 형태로 등록된 제품이 아직 없습니다. 이득과 편파를 직접 입력하세요." : o.note+lnk(o);
-  calc();
-}
-function connNeed(dev,ant){
-  if(!dev||!ant) return null;
-  if(dev===ant) return false;
-  return true;
-}
-function compat(){
-  const v=VTX[$("vtx").value], r=VRX[$("vrx").value], at=ANT[$("aptx").value], ar=ANT[$("aprx").value];
-  let h="", ok=true;
-  if(v.sys&&r.sys){
-    if(v.sys!==r.sys && r.alt && r.alt.includes(v.sys)){
-      h+='<span class="badge chk">모듈 교체 시 가능 — 확인 필요</span><p class="w">'+r.n+'는 수신 모듈을 바꾸면 '+SYS[v.sys]+'도 받을 수 있다고 안내됩니다. 현재 모듈과 설정을 확인하세요.</p>';
-    } else if(v.sys!==r.sys){
-      ok=false;
-      h+='<span class="badge bad">연동 불가</span><p class="b">'+SYS[v.sys]+' VTX는 '+SYS[r.sys]+' 고글·수신기와 영상이 연결되지 않습니다. 같은 방식끼리 조합하세요.</p>';
-    } else h+='<span class="badge ok">영상 방식 일치 ('+SYS[v.sys]+')</span>';
-  } else h+='<span class="badge chk">영상 방식 확인 필요</span>';
-  const ct=connNeed(v.conn,at.conn), cr=connNeed(r.conn,ar.conn);
-  if(ct) h+='<span class="badge bad">송신 커넥터 결합 불가</span><p class="b">VTX '+v.conn+' ↔ 안테나 '+at.conn+' — 그대로는 연결되지 않습니다. 어댑터/피그테일이 필요하며 손실 약 0.2~1dB를 위 손실값에 반영하세요.</p>';
-  if(cr) h+='<span class="badge bad">수신 커넥터 결합 불가</span><p class="b">고글 '+r.conn+' ↔ 안테나 '+ar.conn+' — 그대로는 연결되지 않습니다. 어댑터가 필요합니다. SMA와 RP-SMA는 서로 결합되지 않습니다.</p>';
-  if(ct===null||cr===null) h+='<p class="w">커넥터 호환은 제품 선택 정보가 부족해 확인하지 못했습니다.</p>';
-  $("compat").innerHTML=h;
-  const sysBad=!ok;
-  $("secTx").classList.toggle("bad-card", sysBad||ct===true);
-  $("secRx").classList.toggle("bad-card", sysBad||cr===true);
-  $("secRes").classList.toggle("bad-card", sysBad||ct===true||cr===true);
-  return ok;
-}
-function typeChange(side){
-  const sel=$(side==="tx"?"aptx":"aprx"), g=$(side==="tx"?"gtx":"grx"), prev=sel.value;
-  fillAnt(side);
-  if(prev!=="0" && sel.value==="0") g.value="";
-  applyAnt(side);
-}
-$("atx").addEventListener("change",()=>typeChange("tx"));
-$("arx").addEventListener("change",()=>typeChange("rx"));
-$("aptx").addEventListener("change",()=>applyAnt("tx"));
-$("aprx").addEventListener("change",()=>applyAnt("rx"));
-applyVtx(); applyVrx();
-
-const MK=n=>{ if(n.startsWith("[HDZero]"))return "HDZero"; if(n.startsWith("[DJI]"))return "DJI"; if(n.startsWith("[Walksnail]"))return "Walksnail"; return n.replace(/^\[[^\]]+\]\s*/,"").split(/[\s/]/)[0]; };
-function fillMk(id,arr){ const sel=$(id); sel.innerHTML='<option value="">전체</option>'; [...new Set(arr)].forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);}); }
-fillMk("recMkTx",VTX.filter(o=>o.sys).map(o=>MK(o.n)));
-fillMk("recMkRx",VRX.filter(o=>o.sys).map(o=>MK(o.n)));
-fillMk("recMkAnt",ANT.filter(o=>o.g!=null).map(o=>MK(o.n)));
-
-function knife(h,d1,d2,lam){
-  const v=h*Math.sqrt(2*(d1+d2)/(lam*d1*d2));
-  return v>-0.78 ? 6.9+20*Math.log10(Math.sqrt((v-0.1)*(v-0.1)+1)+v-0.1) : 0;
-}
-function envLoss(Dkm,hObs,env){
-  if(env.kind==="open") return 0;
-  const urban=env.kind==="urban"?env.extra:0;
-  if(hObs==null||isNaN(hObs)) return urban;
-  const D=Dkm*1000, d1=env.obsD*1000;
-  if(D<=d1*1.02) return urban;
-  const los=env.hp+(env.alt-env.hp)*d1/D;
-  return urban+knife(hObs-los,d1,D-d1,env.lam);
-}
-function maxDist(allowed,hObs,env){
-  let best=0;
-  for(let D=0.05;D<=60;D*=1.01){
-    const fs=32.44+20*Math.log10(D)+20*Math.log10(env.f);
-    if(fs+envLoss(D,hObs,env)<=allowed) best=D;
-    else if(best>0 && D>best*1.5) break;
-    else if(best===0 && D>1) break;
-  }
-  return best;
-}
-const fmtD=d=>d<=0?"0 m":(d>=59.5?"60 km 이상":(d<1?Math.round(d*1000)+" m":d.toFixed(1)+" km"));
-
-function recEnvUI(){
-  const k=$("recEnv").value;
-  $("recUrban").classList.toggle("hide",k!=="urban");
-  $("recMount").classList.toggle("hide",k!=="mount");
-  $("recPosBox").classList.toggle("hide",k==="open");
-}
-function recommend(){
-  const g=id=>parseFloat($(id).value);
-  const target=g("recTarget"), f=g("freq"), margin=g("margin")||0, loss=g("loss")||0;
-  const out=$("recList");
-  if(isNaN(target)||target<=0||!f){ out.innerHTML='<p class="w">목표 거리와 주파수를 입력하세요.</p>'; return; }
-  const kind=$("recEnv").value;
-  const env={kind,alt:g("recAlt")||0,hp:g("recHp")||0,obsD:Math.max(0.05,g("recObsD")||1),extra:0,f:f,lam:299.792458/f};
-  let hAvg=null,hMax=null;
-  if(kind==="urban"){ hAvg=g("recAvgH"); hMax=g("recMaxH"); env.extra=g("recExtra")||0; }
-  if(kind==="mount"){ hAvg=hMax=g("recRidge"); }
-  const pmax=g("recPmax")||1e9, mkT=$("recMkTx").value, mkR=$("recMkRx").value, mkA=$("recMkAnt").value;
-  const vt=VTX.filter(o=>o.sys&&o.p!=null&&o.eirp==null&&o.p<=pmax&&(!mkT||MK(o.n)===mkT));
-  const vr=VRX.filter(o=>o.sys&&o.s!=null&&(!mkR||MK(o.n)===mkR));
-  const at=ANT.filter(o=>o.g!=null&&(!mkA||MK(o.n)===mkA));
-  const txA=at.filter(o=>o.type==="omni"), rxA=at;
-  const adp=(a,b)=>(a&&b&&a!==b)?0.5:0;
-  const list=[];
-  vt.forEach(v=>vr.forEach(r=>{
-    if(v.sys!==r.sys) return;
-    let best=null;
-    txA.forEach(ta=>rxA.forEach(ra=>{
-      const allowed=10*Math.log10(v.p)+ta.g-loss-adp(v.conn,ta.conn)+ra.g-adp(r.conn,ra.conn)-polLoss(ta.pol,ra.pol)-margin-r.s;
-      const dA=maxDist(allowed,hAvg,env);
-      if(!best||dA>best.dA) best={v,r,ta,ra,dA,dW:maxDist(allowed,hMax,env)};
-    }));
-    if(best) list.push(best);
-  }));
-  const sc=x=>(x.dA>=target?2:0)+(x.dW>=target?1:0);
-  list.sort((a,b)=>sc(b)-sc(a)||b.dA-a.dA);
-  let h="";
-  if(!list.length){
-    h='<p class="w">조건에 맞는 등록 제품이 없습니다. 제조사·최대 출력 조건을 풀어보세요.</p>';
-  } else {
-    const okN=list.filter(x=>x.dA>=target).length;
-    h='<p>'+(okN?'목표 '+fmtD(target)+'를 넘는 조합 '+okN+'개를 찾았습니다.':'<span class="w">목표 '+fmtD(target)+'에 못 미칩니다. 가장 가까운 조합을 보여드립니다.</span>')+'</p>';
-    list.slice(0,6).forEach(x=>{
-      const cls=x.dA>=target?(x.dW>=target?"ok":"chk"):"bad";
-      const tag=x.dA>=target?(x.dW>=target?'<span class="badge ok">최악 조건도 충족</span>':'<span class="badge chk">평균 조건만 충족</span>'):'<span class="badge bad">목표 미달</span>';
-      const notes=[];
-      if(adp(x.v.conn,x.ta.conn)) notes.push("송신 어댑터 필요("+x.v.conn+"↔"+x.ta.conn+")");
-      if(adp(x.r.conn,x.ra.conn)) notes.push("수신 어댑터 필요("+x.r.conn+"↔"+x.ra.conn+")");
-      if(x.ra.type!=="omni") notes.push("수신 안테나가 지향성이라 빔 방향을 기체 쪽으로 유지해야 합니다");
-      if(x.ta.n.includes("Double")) notes.push("송신용으로는 기체가 기울면 이득이 빠질 수 있습니다");
-      if(polLoss(x.ta.pol,x.ra.pol)>0) notes.push("송수신 편파가 달라 손실이 큽니다");
-      const wn=kind==="open"?"":' / 최악 '+fmtD(x.dW);
-      h+='<div class="rec '+cls+'">'+tag+'<p><b>예상 '+fmtD(x.dA)+'</b>'+wn+'</p>'
-        +'<p>송신: '+x.v.n+' → '+x.ta.n+'</p><p>수신: '+x.r.n+' + '+x.ra.n+'</p>'
-        +(notes.length?'<p class="nt">'+notes.join(' · ')+'</p>':'')
-        +'<button class="btn" data-v="'+VTX.indexOf(x.v)+'" data-r="'+VRX.indexOf(x.r)+'" data-t="'+ANT.indexOf(x.ta)+'" data-a="'+ANT.indexOf(x.ra)+'">위 계산기에 적용</button></div>';
-    });
-  }
-  const dj=VTX.find(o=>o.sys==="dji"&&o.rated);
-  h+='<p class="note">DJI·Walksnail은 수신 감도가 공개되지 않아 거리 계산에서 제외했습니다.'+(dj?' 참고로 DJI O4 Pro의 제조사 공개 거리는 개활지 기준 FCC 15km, CE 8km입니다.':'')+' 수신 안테나 이득이 불확실한 번들 안테나 조합도 제외했습니다.</p>';
-  out.innerHTML=h;
-}
-$("recList").addEventListener("click",e=>{
-  const b=e.target.closest("button[data-v]"); if(!b) return;
-  $("vtx").value=b.dataset.v; applyVtx();
-  $("vrx").value=b.dataset.r; applyVrx();
-  $("atx").value=ANT[b.dataset.t].type; fillAnt("tx"); $("aptx").value=b.dataset.t; applyAnt("tx");
-  $("arx").value=ANT[b.dataset.a].type; fillAnt("rx"); $("aprx").value=b.dataset.a; applyAnt("rx");
-  window.scrollTo({top:0,behavior:"smooth"});
-});
-$("recDens").addEventListener("change",()=>{ $("recExtra").value=$("recDens").value; recommend(); });
-$("recEnv").addEventListener("change",()=>{ recEnvUI(); recommend(); });
-["recTarget","recAlt","recHp","recAvgH","recMaxH","recExtra","recRidge","recObsD","recPmax","recMkTx","recMkRx","recMkAnt","freq","loss","margin"].forEach(id=>{ $(id).addEventListener("input",recommend); $(id).addEventListener("change",recommend); });
-recEnvUI(); recommend();
-
-// ===== 공식 링크 (확인된 페이지만) =====
-const URLS={
-  "[DJI] O4 Air Unit Pro (FCC, 33dBm EIRP)":"https://www.dji.com/au/o4-air-unit/specs",
-  "[DJI] O4 Air Unit Pro (CE, 14dBm EIRP)":"https://www.dji.com/au/o4-air-unit/specs",
-  "[Walksnail] Avatar V2 VTX (FCC, 30dBm EIRP)":"https://caddxfpv.com/products/walksnail-avatar-hd-pro-kit-dual-antenna",
-  "[Walksnail] Avatar V2 VTX (CE, 14dBm EIRP)":"https://caddxfpv.com/products/walksnail-avatar-hd-pro-kit-dual-antenna",
-  "[Walksnail] Avatar HD Goggles X":"https://caddxfpv.com/products/walksnail-avatar-hd-goggles-x",
-  "Lumenier AXII 2 (RHCP)":"https://lumenier.com/products/lumenier-axii-mmcx-5-8ghz-antenna-lhcp",
-  "Lumenier Double AXII 2 (RHCP, 직각 SMA)":"https://shop.lumenier.com/products/lumenier-double-axii-2-long-range-5-8ghz-antenna-rhcp"
-};
-[VTX,VRX,ANT].forEach(a=>a.forEach(o=>{ if(URLS[o.n]) o.url=URLS[o.n]; }));
-function lnk(o){ return o&&o.url?' <a href="'+o.url+'" target="_blank" rel="noopener" class="flag">공식 페이지 ↗</a>':''; }
-
-// ===== 제어 링크 데이터 (null/없음 = 제조사 미공개) =====
-const PN={elrs:"ExpressLRS",crsf:"TBS Crossfire"};
-const FREQ={"2.4":2440,"900":915};
-const RADIO=[
-  {n:"직접 입력", note:"프로토콜·대역·출력을 직접 고르세요."},
-  {n:"RadioMaster Boxer (ELRS 2.4GHz 내장)", proto:"elrs", band:"2.4", max:1000, bay:"JR", url:"https://radiomasterrc.com/products/boxer-radio-controller-m2", note:"내장 ELRS 2.4GHz 모듈, 출력 25~1000mW(FCC). EU LBT 펌웨어는 100mW 상한입니다. 탈착식 T 안테나의 이득은 미공개입니다. 외부 모듈용 JR 베이도 있습니다."},
-  {n:"JR 베이 조종기 (외부 모듈만 사용)", bay:"JR", note:"내장 모듈이 없거나 쓰지 않는 조종기입니다. 외부 모듈을 고르세요."}
-];
-const MOD=[
-  {n:"직접 입력", note:"프로토콜·대역·출력을 직접 고르세요."},
-  {n:"RadioMaster Ranger Micro (ELRS 2.4GHz)", proto:"elrs", band:"2.4", max:1000, bay:"JR", url:"https://www.radiomasterrc.com", note:"최대 FCC 30dBm(1W), CE 20dBm(100mW), LUA에서 조절. 번들 T 안테나는 RP-SMA이며 이득은 미공개입니다. JR 마이크로 베이용이라 Zorro에는 맞지 않습니다."},
-  {n:"RadioMaster Nomad (ELRS 듀얼밴드 1W)", proto:"elrs", band:"dual", max:1000, bay:null, url:"https://www.radiomasterrc.com", note:"2.4GHz와 900MHz를 모두 지원하는 1W 모듈(제조사 표기). 베이 규격은 제품 페이지에서 확인하세요."},
-  {n:"TBS Crossfire Micro TX V2", proto:"crsf", band:"900", max:1000, bay:"JR", url:"https://team-blacksheep.com/products/prod:crossfire_micro_tx", note:"868/915MHz, 출력 25mW~1W 선택(지역 규정 적용). 송신 안테나 커넥터는 SMA입니다."}
-];
-const CRX=[
-  {n:"직접 입력", note:"프로토콜을 직접 정해야 하므로 레이트 목록이 전부 보입니다."},
-  {n:"ELRS 2.4GHz 수신기 (일반)", proto:"elrs", band:"2.4", note:"RP·XR 계열 등 2.4GHz ELRS 수신기 공통. 안테나 이득은 제품마다 달라 직접 입력하세요."},
-  {n:"ELRS 900MHz 수신기 (일반)", proto:"elrs", band:"900", note:"900MHz ELRS 수신기 공통. 안테나 이득은 직접 입력하세요."},
-  {n:"RadioMaster DBR4 (ELRS 듀얼밴드)", proto:"elrs", band:"dual", url:"https://www.radiomasterrc.com/products/dbr4-dual-band-xross-gemini-expresslrs-receiver", note:"2.4GHz 와이어 안테나 2개와 900MHz 와이어 안테나 2개를 씁니다. 안테나 이득은 미공개입니다."},
-  {n:"TBS Crossfire Nano RX", proto:"crsf", band:"900", conn:"U.FL", url:"https://team-blacksheep.com/products/prod:crossfire_micro_tx", note:"감도 -130dBm은 제조사가 '최대'로 표기한 값이며 패킷 레이트 기준은 명시돼 있지 않아 실제는 더 나쁠 수 있습니다. 수신 안테나 커넥터는 U.FL입니다."}
-];
-// 감도: ExpressLRS 공식 문서(Signal Health) 값. 900MHz 250Hz는 RadioMaster 표기. Crossfire는 제조사 매뉴얼의 '최대' 표기.
-const RATE=[
-  {l:"ELRS 2.4GHz · 50Hz (-115dBm)",p:"elrs",b:"2.4",s:-115},
-  {l:"ELRS 2.4GHz · 150Hz (-112dBm)",p:"elrs",b:"2.4",s:-112},
-  {l:"ELRS 2.4GHz · 250Hz (-108dBm)",p:"elrs",b:"2.4",s:-108},
-  {l:"ELRS 2.4GHz · 500Hz (-105dBm)",p:"elrs",b:"2.4",s:-105},
-  {l:"ELRS 2.4GHz · F1000 (-104dBm)",p:"elrs",b:"2.4",s:-104},
-  {l:"ELRS 900MHz · 25Hz (-123dBm)",p:"elrs",b:"900",s:-123},
-  {l:"ELRS 900MHz · 50Hz (-120dBm)",p:"elrs",b:"900",s:-120},
-  {l:"ELRS 900MHz · 100Hz (-117dBm)",p:"elrs",b:"900",s:-117},
-  {l:"ELRS 900MHz · 250Hz (-111dBm)",p:"elrs",b:"900",s:-111},
-  {l:"Crossfire 900MHz (-130dBm, 제조사 최대 표기)",p:"crsf",b:"900",s:-130}
-];
-fill($("ctlRadio"),RADIO); fill($("ctlMod"),MOD); fill($("ctlRx"),CRX);
-
-function buildEnv(f){
-  const g=id=>parseFloat($(id).value), kind=$("recEnv").value;
-  const env={kind:kind,alt:g("recAlt")||0,hp:g("recHp")||0,obsD:Math.max(0.05,g("recObsD")||1),extra:0,f:f,lam:299.792458/f};
-  let hAvg=null,hMax=null;
-  if(kind==="urban"){ hAvg=g("recAvgH"); hMax=g("recMaxH"); env.extra=g("recExtra")||0; }
-  if(kind==="mount"){ hAvg=hMax=g("recRidge"); }
-  return {env:env,hAvg:hAvg,hMax:hMax};
-}
-const bandsOf=o=>o.band==="dual"?["2.4","900"]:(o.band?[o.band]:[]);
-function ctlSrc(){ return $("ctlMode").value==="int"?RADIO[$("ctlRadio").value]:MOD[$("ctlMod").value]; }
-function ctlFillRates(){
-  const rx=CRX[$("ctlRx").value], src=ctlSrc(), sel=$("ctlRate"), cur=sel.value;
-  sel.innerHTML="";
-  RATE.forEach((r,i)=>{
-    if(rx.proto && rx.proto!==r.p) return;
-    if(src.proto && src.proto!==r.p) return;
-    if(rx.band && !bandsOf(rx).includes(r.b)) return;
-    if(src.band && !bandsOf(src).includes(r.b)) return;
-    const e=document.createElement("option"); e.value=i; e.textContent=r.l; sel.appendChild(e);
-  });
-  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
-  else if(sel.options.length) sel.value=sel.options[0].value;
-}
-function ctlApplySrc(){
-  const src=ctlSrc(), ext=$("ctlMode").value==="ext";
-  $("ctlModBox").classList.toggle("hide",!ext);
-  $("ctlSrcNote").innerHTML=(ext?RADIO[$("ctlRadio").value].note+" ":"")+(src.note||"")+lnk(src);
-  $("ctlP").value=src.max||"";
-  ctlFillRates(); ctlCalc();
-}
-function ctlApplyRx(){
-  const rx=CRX[$("ctlRx").value];
-  $("ctlRxNote").innerHTML=(rx.note||"")+lnk(rx);
-  ctlFillRates(); ctlCalc();
-}
-function ctlCompat(src,rx,rate,ext){
-  let h="",ok=true;
-  const sb=bandsOf(src), rb=bandsOf(rx);
-  if(src.proto&&rx.proto){
-    if(src.proto!==rx.proto){ ok=false; h+='<span class="badge bad">연동 불가</span><p class="b">'+PN[src.proto]+' 송신과 '+PN[rx.proto]+' 수신기는 서로 통신하지 않습니다.</p>'; }
-    else if(sb.length&&rb.length&&!sb.some(x=>rb.includes(x))){ ok=false; h+='<span class="badge bad">연동 불가</span><p class="b">송신 대역과 수신기 대역이 겹치지 않습니다. (2.4GHz ↔ 900MHz)</p>'; }
-    else h+='<span class="badge ok">프로토콜·대역 일치 ('+PN[src.proto]+')</span>';
-  } else h+='<span class="badge chk">프로토콜 확인 필요</span>';
-  if(ext){
-    const rd=RADIO[$("ctlRadio").value];
-    if(rd.bay&&src.bay){
-      if(rd.bay!==src.bay){ ok=false; h+='<span class="badge bad">모듈 베이 결합 불가</span><p class="b">조종기 '+rd.bay+' 베이와 모듈 '+src.bay+' 규격이 다릅니다.</p>'; }
-      else h+='<span class="badge ok">모듈 베이 일치 ('+rd.bay+')</span>';
-    } else h+='<p class="w">모듈 베이 호환은 확인하지 못했습니다. 제품 페이지에서 확인하세요.</p>';
-  }
-  $("ctlCompat").innerHTML=h;
-  $("secCtl").classList.toggle("bad-card",!ok);
-  return ok;
-}
-function ctlCalc(){
-  lastCtl=null;
-  const src=ctlSrc(), rx=CRX[$("ctlRx").value], ext=$("ctlMode").value==="ext", rate=RATE[$("ctlRate").value];
-  const ok=ctlCompat(src,rx,rate,ext);
-  const P=parseFloat($("ctlP").value), tg=parseFloat($("ctlTG").value), rg=parseFloat($("ctlRG").value);
-  const pol=parseFloat($("ctlPol").value)||0, margin=parseFloat($("margin").value)||0, loss=parseFloat($("loss").value)||0;
-  const w=[];
-  if(!ok){ $("ctlDist").textContent="연동 불가"; $("ctlEirp").textContent=$("ctlPL").textContent=$("ctlEnv").textContent="–"; $("ctlWarns").innerHTML=""; updateSummary(); return; }
-  if(!rate||isNaN(P)||P<=0||isNaN(tg)||isNaN(rg)){
-    const miss=[]; if(!rate) miss.push("패킷 레이트"); if(isNaN(P)||P<=0) miss.push("송신 출력"); if(isNaN(tg)) miss.push("송신 안테나 이득"); if(isNaN(rg)) miss.push("수신 안테나 이득");
-    $("ctlDist").textContent="–"; $("ctlEirp").textContent=$("ctlPL").textContent=$("ctlEnv").textContent="–";
-    $("ctlWarns").innerHTML='<p class="w">입력이 필요합니다: '+miss.join(", ")+'</p>'; updateSummary(); return;
-  }
-  const f=FREQ[rate.b];
-  const eirp=10*Math.log10(P)+tg-loss;
-  const allowed=eirp+rg-pol-margin-rate.s;
-  lastCtl={allowed:allowed,f:f};
-  const b=buildEnv(f);
-  const dFree=maxDist(allowed,null,{kind:"open",f:f}), dEnv=maxDist(allowed,b.hAvg,b.env);
-  $("ctlDist").innerHTML=fmtD(dFree);
-  $("ctlEirp").textContent=eirp.toFixed(1)+" dBm";
-  $("ctlPL").textContent=allowed.toFixed(1)+" dB";
-  $("ctlEnv").textContent=b.env.kind==="open"?"개활지와 같음":fmtD(dEnv);
-  if(src.max && P>src.max) w.push(["w","입력 출력이 이 모듈의 표기 최대("+src.max+"mW)보다 큽니다."]);
-  if(rate.p==="crsf") w.push(["w","Crossfire 감도는 제조사 '최대' 표기라 낙관적일 수 있습니다. 마진을 넉넉히 두세요."]);
-  if(rate.b==="2.4" && rate.s>=-105) w.push(["w","고속 레이트는 지연이 짧은 대신 감도가 낮아 거리가 줄어듭니다. 장거리는 150Hz 이하를 고려하세요."]);
-  if(dFree>=59.5) w.push(["w","60km 이상은 계산하지 않습니다. 실제로는 가시거리와 지구 곡률에 막힙니다."]);
-  $("ctlWarns").innerHTML=w.map(x=>'<p class="'+x[0]+'">'+x[1]+'</p>').join("");
-  updateSummary();
-}
-function updateSummary(){
-  const calc=x=>{ if(!x) return null; const b=buildEnv(x.f); return {free:maxDist(x.allowed,null,{kind:"open",f:x.f}), env:maxDist(x.allowed,b.hAvg,b.env), open:b.env.kind==="open"}; };
-  const v=calc(lastVid), c=calc(lastCtl), out=$("sumBody");
-  const row=(n,d)=>'<tr><td>'+n+'</td><td>'+(d?fmtD(d.free):"–")+'</td><td>'+(d?(d.open?"–":fmtD(d.env)):"–")+'</td></tr>';
-  let h='<table><tr><td></td><td>자유공간</td><td>현재 환경</td></tr>'+row("영상 링크",v)+row("제어 링크",c)+'</table>';
-  if(v&&c){
-    const a=v.open?v.free:v.env, bb=c.open?c.free:c.env;
-    const lim=a<=bb?"영상":"제어";
-    h+='<p class="big">'+fmtD(Math.min(a,bb))+' <small>실제 한계: '+lim+' 링크</small></p>';
-    h+='<p class="note">둘 중 짧은 쪽이 먼저 끊깁니다. 환경은 맨 아래 부품 추천 카드의 설정을 따릅니다.</p>';
-  } else {
-    h+='<p class="note">영상 링크와 제어 링크 값이 모두 계산되면 비교해 드립니다.'+(v?"":" (영상 링크 미완성)")+(c?"":" (제어 링크 미완성)")+'</p>';
-  }
-  out.innerHTML=h;
-}
-$("ctlMode").addEventListener("change",ctlApplySrc);
-$("ctlRadio").addEventListener("change",ctlApplySrc);
-$("ctlMod").addEventListener("change",ctlApplySrc);
-$("ctlRx").addEventListener("change",ctlApplyRx);
-["ctlRate","ctlP","ctlTG","ctlRG","ctlPol","margin","loss","recEnv","recAlt","recHp","recAvgH","recMaxH","recExtra","recRidge","recObsD"].forEach(id=>{ $(id).addEventListener("input",ctlCalc); $(id).addEventListener("change",ctlCalc); });
-ctlApplySrc(); ctlApplyRx(); updateSummary();
-
-(function tsdDevicePatch() {
-  "use strict";
-
-  const DJI_DOC = "https://www.dji.com/support/product/o4-air-unit";
-  const WS_DOC = "https://wiki.caddxfpv.com/en/Avatar-HD-Series/compatible";
-  const HDZ_DOC = "https://hd-zero.github.io/hdzero-vtx-docs/latest/vtx_targets";
-
-  // 동일 제품명 중복 등록 방지
-  function addUnique(array, item) {
-    if (!array.some(x => x.n === item.n)) {
-      array.push(item);
-    }
-  }
-
-  // 1. DJI O4 Air Unit
-  [
-    {
-      n: "[DJI] O4 Air Unit 일반형 (FCC)",
-      sys: "dji",
-      family: "o4",
-      conn: null,
-      p: null,
-      g: null,
-      eirp: null,
-      note: "공식 최대 출력은 5.8GHz 기준 30dBm 미만 EIRP입니다. 정확한 출력은 직접 확인하세요.",
-      url: DJI_DOC
-    },
-    {
-      n: "[DJI] O4 Air Unit 일반형 (CE)",
-      sys: "dji",
-      family: "o4",
-      conn: null,
-      p: null,
-      g: null,
-      eirp: null,
-      note: "공식 최대 출력은 5.8GHz 기준 14dBm 미만 EIRP입니다.",
-      url: DJI_DOC
-    },
-    {
-      n: "[DJI] O3 Air Unit",
-      sys: "dji",
-      family: "o3",
-      conn: null,
-      p: null,
-      g: null,
-      note: "O3 전용 공식 호환성을 별도로 확인해야 합니다. 출력과 안테나 이득은 직접 입력하세요."
-    },
-    {
-      n: "[DJI] Caddx Vista / DJI Digital Air Unit",
-      sys: "dji",
-      family: "legacy",
-      conn: null,
-      p: null,
-      g: null,
-      note: "구형 DJI 디지털 영상 시스템입니다. 최신 고글과 자동 호환 처리하지 않습니다."
-    }
-  ].forEach(x => addUnique(VTX, x));
-
-  // 기존 O4 Pro에도 제품 세대 지정
-  VTX.forEach(x => {
-    if (x.sys === "dji" &&
-        x.n.includes("O4 Air Unit Pro")) {
-      x.family = "o4";
-    }
-  });
-
-  // 2. HDZero 추가 모델
-  const hdzModels = [
-    "Race V3",
-    "Whoop V2",
-    "ECO",
-    "AIO5"
-  ];
-
-  hdzModels.forEach(name => {
-    addUnique(VTX, {
-      n: "[HDZero] " + name,
-      sys: "hdz",
-      conn: null,
-      p: null,
-      g: null,
-      note: "HDZero 제품 목록에 등록된 모델입니다. 정확한 출력, 커넥터 및 안테나 이득은 해당 모델 사양에서 확인해야 합니다.",
-      url: HDZ_DOC
-    });
-  });
-
-  // 3. Walksnail 공식 호환 목록
-  const walksnailModels = [
-    "Avatar 1S Kit",
-    "Avatar 1S Lite Kit",
-    "Avatar Nano V3 Kit",
-    "Avatar HD V2 Kit",
-    "Avatar HD Pro Kit",
-    "Avatar HD VTX Kit",
-    "Avatar V2 Dual Kit",
-    "Avatar Pro Dual Kit",
-    "Avatar Moonlight Kit",
-    "Avatar GT Kit",
-    "Avatar GT V2 Kit"
-  ];
-
-  walksnailModels.forEach(name => {
-    addUnique(VTX, {
-      n: "[Walksnail] " + name,
-      sys: "wsn",
-      conn: null,
-      p: null,
-      g: null,
-      note: "Caddx 공식 Avatar HD 호환 목록에 포함됩니다. 수신기와 펌웨어 버전을 일치시켜야 합니다. 송신 출력은 모델별로 확인하세요.",
-      url: WS_DOC
-    });
-  });
-
-  // 4. 고글 및 외부 수신기
-  [
-    {
-      n: "[DJI] Goggles 3",
-      sys: "dji",
-      family: "g3",
-      conn: null,
-      s: null,
-      g: null,
-      note: "O4 Air Unit 시리즈와 공식 호환. 수신 감도 미공개.",
-      url: DJI_DOC
-    },
-    {
-      n: "[DJI] Goggles N3",
-      sys: "dji",
-      family: "n3",
-      conn: null,
-      s: null,
-      g: null,
-      note: "O4 Air Unit 시리즈와 공식 호환. 수신 감도 미공개.",
-      url: DJI_DOC
-    },
-    {
-      n: "[DJI] Goggles 2",
-      sys: "dji",
-      family: "g2",
-      conn: null,
-      s: null,
-      g: null,
-      note: "O4 Air Unit 시리즈와 공식 호환. 수신 감도 미공개.",
-      url: DJI_DOC
-    },
-    {
-      n: "[DJI] Goggles Integra",
-      sys: "dji",
-      family: "integra",
-      conn: null,
-      s: null,
-      g: null,
-      note: "O4 Air Unit 시리즈와 공식 호환. 수신 감도 미공개.",
-      url: DJI_DOC
-    },
-    {
-      n: "[DJI] FPV Goggles V2",
-      sys: "dji",
-      family: "fpvv2",
-      conn: null,
-      s: null,
-      g: null,
-      note: "구형 DJI 시스템용. O4와 호환된다고 판정하지 않습니다."
-    },
-    {
-      n: "[HDZero] Goggles (내장 수신기)",
-      sys: "hdz",
-      conn: null,
-      s: null,
-      g: null,
-      note: "HDZero 디지털 영상 수신. 수신 감도와 안테나 이득은 직접 확인."
-    },
-    {
-      n: "[Walksnail] Avatar HD VRX",
-      sys: "wsn",
-      conn: null,
-      s: null,
-      g: null,
-      note: "Caddx Avatar HD 공식 호환 수신기.",
-      url: WS_DOC
-    },
-    {
-      n: "[Walksnail] Avatar HD Goggles L",
-      sys: "wsn",
-      conn: null,
-      s: null,
-      g: null,
-      note: "Caddx Avatar HD 공식 호환 고글.",
-      url: WS_DOC
-    },
-    {
-      n: "[Walksnail] Avatar HD Goggles (Original)",
-      sys: "wsn",
-      conn: null,
-      s: null,
-      g: null,
-      note: "Caddx Avatar HD 공식 호환 고글. 단종 모델.",
-      url: WS_DOC
-    }
-  ].forEach(x => addUnique(VRX, x));
-
-  // 5. DJI 기종별 호환성 판정
-  function djiCompatibility(v, r) {
-    if (v.sys !== "dji" || r.sys !== "dji") {
-      return null;
-    }
-
-    // 기존 통합 Goggles 3 / N3 항목 처리
-    const rf = r.family ||
-      (r.n.includes("Goggles 3 / N3") ? "g3" : null);
-
-    const vf = v.family ||
-      (v.n.includes("O4 Air Unit Pro") ? "o4" : null);
-
-    if (vf === "o4") {
-      return ["g3", "n3", "g2", "integra"].includes(rf);
-    }
-
-    // O3 / 구형 시스템은 별도 공식 검증 전 보류
-    return false;
-  }
-
-  // 6. 기존 호환성 함수 보강
-  const originalCompat = compat;
-
-  compat = function() {
-    const v = VTX[Number($("vtx").value)];
-    const r = VRX[Number($("vrx").value)];
-
-    if (!v || !r) return false;
-
-    // 서로 다른 영상 방식은 무조건 차단
-    if (v.sys && r.sys && v.sys !== r.sys) {
-      originalCompat();
-
-      $("compat").innerHTML =
-        '<span class="badge bad">연동 불가</span>' +
-        '<p class="b">서로 다른 영상 전송 방식입니다. ' +
-        '별도 수신 모듈의 설치 및 공식 호환성 확인 없이는 사용할 수 없습니다.</p>';
-
-      $("secRes").classList.add("bad-card");
-      return false;
-    }
-
-    // DJI 동일 계열이라도 세대별 검증
-    if (v.sys === "dji" && r.sys === "dji") {
-      if (djiCompatibility(v, r) !== true) {
-        $("compat").innerHTML =
-          '<span class="badge bad">공식 호환 미확인</span>' +
-          '<p class="b">이 DJI VTX와 고글 조합은 ' +
-          '현재 등록된 공식 호환 목록에서 확인되지 않았습니다. ' +
-          '거리 계산을 차단합니다.</p>';
-
-        $("secRes").classList.add("bad-card");
-        return false;
-      }
-    }
-
-    return originalCompat();
-  };
-
-  // 7. 목록 다시 구성
-  function rebuild(id, array) {
-    const select = $(id);
-    const previousName = select.selectedOptions[0]?.textContent;
-
-    select.innerHTML = "";
-    fill(select, array);
-
-    const index = array.findIndex(x => x.n === previousName);
-    select.value = String(index >= 0 ? index : 0);
-  }
-
-  rebuild("vtx", VTX);
-  rebuild("vrx", VRX);
-
-  applyVtx();
-  applyVrx();
-  calc();
-
-  console.info(
-    "TSD 장비 목록 패치 적용",
-    "VTX:", VTX.length,
-    "VRX:", VRX.length
-  );
-})();
-
-/* TSD Link Budget Patch 2
-   기존 link-budget.html의 마지막 </script> 바로 위에 삽입
-   기존 거리 계산기 코드는 유지
-*/
-(function(){
 'use strict';
+const $=id=>document.getElementById(id);
 
-if(document.getElementById('tsd-equipment-compat-v2')) return;
+const VTX=[
+ {n:'직접 입력',sys:null},
+ {n:'TBS Unify Pro32 HV · 25mW',sys:'analog',p:25,conn:'MMCX'},
+ {n:'TBS Unify Pro32 HV · 400mW',sys:'analog',p:400,conn:'MMCX'},
+ {n:'TBS Unify Pro32 HV · 1000mW',sys:'analog',p:1000,conn:'MMCX',note:'1000mW+ 표기의 보수적 입력'},
+ ...[
+ 'Rush Tank 계열',
+ 'Foxeer Reaper 계열',
+ 'ImmersionRC Tramp HV',
+ 'AKK 아날로그 VTX',
+ 'Eachine 아날로그 VTX'
+ ].map(n=>({n,sys:'analog',note:'세부 모델·출력·커넥터를 확인 후 직접 입력'})),
+ ...[
+ 'Freestyle V2','Race V2','Race V3',
+ 'Whoop Lite','Whoop V2','ECO','AIO5'
+ ].map(n=>({n:'HDZero '+n,sys:'hdz',note:'출력·커넥터는 정확한 제품 버전별 확인 필요'})),
+ ...[
+ 'Avatar 1S','Avatar Nano V3','Avatar V2',
+ 'Avatar Pro','Avatar Pro Dual','Avatar Moonlight',
+ 'Avatar GT','Avatar GT V2'
+ ].map(n=>({n:'Walksnail '+n,sys:'ws',note:'Caddx 공식 호환표 확인; 정확한 RF 수치는 모델별 입력'})),
+ {n:'DJI O4 Air Unit 일반형 · FCC',sys:'dji',family:'o4',note:'5.8GHz 송신 EIRP는 30dBm 미만(상한); 임의 확정 출력 사용 금지'},
+ {n:'DJI O4 Air Unit 일반형 · CE',sys:'dji',family:'o4',note:'5.8GHz 송신 EIRP는 14dBm 미만(상한); 임의 확정 출력 사용 금지'},
+ {n:'DJI O4 Air Unit Pro · FCC',sys:'dji',family:'o4',note:'제조사 EIRP 상한은 특정 조건의 수치이며 수신 감도 미공개'},
+ {n:'DJI O4 Air Unit Pro · CE',sys:'dji',family:'o4',note:'제조사 EIRP 상한은 특정 조건의 수치이며 수신 감도 미공개'},
+ {n:'DJI O3 Air Unit',sys:'dji',family:'o3'},
+ {n:'DJI/Caddx Vista · Digital Air Unit',sys:'dji',family:'legacy'}
+];
 
-const root=document.createElement('section');
-root.id='tsd-equipment-compat-v2';
-root.innerHTML=`
-<h2>완성형 기체 · 영상 출력 호환성 진단</h2>
-<p class="note">공식적으로 확인된 조합만 가능으로 판정합니다. 미확인과 불가는 구분됩니다. 이 진단은 무선 링크 거리 계산과 별도입니다.</p>
-<label for="tsdAircraft">완성형 기체 / 영상 송신기</label>
-<select id="tsdAircraft"></select>
-<label for="tsdReceiver">고글 / 영상 수신기 / 조종기</label>
-<select id="tsdReceiver"></select>
-<label for="tsdExtra">추가 수신 모듈</label>
-<select id="tsdExtra"></select>
-<label for="tsdDisplay">외부 모니터 연결 방식</label>
-<select id="tsdDisplay"></select>
-<div id="tsdResult" aria-live="polite" style="margin-top:18px"></div>
-<p class="note">출력 포트가 존재해도 실제 비행 영상의 출력 여부와 기체-조종기 호환성은 별도 확인이 필요합니다.</p>`;
+const VRX=[
+ {n:'직접 입력',sys:null},
+ {n:'Skyzone SteadyView X 아날로그',sys:'analog',s:-98,conn:'SMA',note:'수신 감도는 제품·모듈 버전 확인 필요'},
+ {n:'Skyzone SKY04X 계열 아날로그',sys:'analog',conn:'SMA'},
+ {n:'일반 5.8GHz 아날로그 VRX',sys:'analog'},
+ {n:'HDZero Goggles',sys:'hdz'},
+ {n:'HDZero Goggles 2',sys:'hdz'},
+ {n:'HDZero VRX',sys:'hdz'},
+ {n:'Walksnail Goggles X',sys:'ws',external:['analog','hdz']},
+ {n:'Walksnail Goggles L',sys:'ws'},
+ {n:'Walksnail Goggles (Original)',sys:'ws'},
+ {n:'Walksnail Avatar VRX',sys:'ws'},
+ {n:'DJI Goggles 3',sys:'dji',family:'g3'},
+ {n:'DJI Goggles N3',sys:'dji',family:'n3'},
+ {n:'DJI Goggles 2',sys:'dji',family:'g2'},
+ {n:'DJI Goggles Integra',sys:'dji',family:'integra'},
+ {n:'DJI FPV Goggles V2',sys:'dji',family:'fpvv2'}
+];
 
-const target=document.getElementById('secCtl')||
-  document.querySelector('main');
-target.parentNode.insertBefore(root,target);
+const ANT=[
+ {n:'직접 입력',g:null,pol:'unknown'},
+ {n:'Lumenier AXII 2 RHCP (2.2dBic)',g:2.2,pol:'RHCP',note:'실제 커넥터 버전 확인'},
+ {n:'Lumenier Double AXII 2 RHCP (4.7dBic)',g:4.7,pol:'RHCP',note:'방사 패턴·자세 변화 주의'},
+ {n:'Walksnail Avatar LHCP 안테나 (이득 직접 확인)',g:null,pol:'LHCP'},
+ {n:'패치 안테나 (이득 직접 입력)',g:null,pol:'unknown',note:'방향·빔폭 고려'},
+ {n:'헬리컬 안테나 (이득 직접 입력)',g:null,pol:'unknown',note:'방향·빔폭 고려'}
+];
 
-const by=id=>document.getElementById(id);
-
-const docs={
- dji:'https://repair.dji.com/help/content?customId=01700010143&lang=ko&paperDocType=ARTICLE&re=KR&spaceId=17',
- avata:'https://www.dji.com/avata-2/faq',
- o4:'https://www.dji.com/support/product/o4-air-unit',
- autel:'https://shop.autelrobotics.com/pages/smart-controller-specification',
- max:'https://www.autelrobotics.com/wp-content/uploads/2025/08/EVO-Max-Series-V2-Multi-rotor-Drone-User-Manual_V1.1.0.pdf',
- rcpro:'https://www.dji.com/rc-pro/faq',
- fpvlive:'https://support.dji.com/help/content?customId=en-us03400006886&documentType=artical&lang=en&paperDocType=paper&re=CA&spaceId=34',
- ws:'https://wiki.caddxfpv.com/en/Avatar-HD-Series/compatible',
- hdz:'https://hd-zero.github.io/hdzero-vtx-docs/latest/vtx_targets'
-};
-
-const aircraft=[
- ['none','선택하세요','none'],
+const AIR=[
+ ['none','기체 선택','none'],
  ['avata2','DJI Avata 2','dji'],
- ['avata1','DJI Avata (1세대)','dji'],
+ ['avata','DJI Avata 1','dji'],
  ['djifpv','DJI FPV Combo','dji'],
  ['air3','DJI Air 3','dji'],
  ['mini5','DJI Mini 5 Pro','dji'],
  ['mini4','DJI Mini 4 Pro','dji'],
  ['neo','DJI Neo','dji'],
- ['o4','DJI O4 Air Unit / Pro','dji'],
- ['o3','DJI O3 Air Unit','dji'],
- ['vista','DJI Vista / Digital Air Unit','dji'],
- ['evo2','Autel EVO II / EVO II Pro','autel'],
+ ['evo2','Autel EVO II / Pro','autel'],
  ['evo2v3','Autel EVO II V3','autel'],
- ['evomax','Autel EVO Max 계열','autel'],
- ['evoliteent','Autel EVO Lite Enterprise','autel'],
- ['evolite','Autel EVO Lite / Lite+ 소비자용','autel'],
- ['evonano','Autel EVO Nano / Nano+','autel'],
- ['analog','아날로그 5.8GHz VTX','analog'],
- ['hdz','HDZero VTX','hdz'],
- ['ws','Walksnail Avatar VTX','ws']
+ ['evomax','Autel EVO Max 시리즈','autel'],
+ ['liteent','Autel EVO Lite Enterprise','autel'],
+ ['lite','Autel EVO Lite / Lite+','autel'],
+ ['nano','Autel EVO Nano / Nano+','autel']
 ];
 
-const receivers=[
- ['none','선택하세요','none'],
+const DEV=[
+ ['none','장치 선택','none'],
  ['g3','DJI Goggles 3','dji'],
  ['n3','DJI Goggles N3','dji'],
  ['g2','DJI Goggles 2','dji'],
  ['integra','DJI Goggles Integra','dji'],
  ['fpvv2','DJI FPV Goggles V2','dji'],
  ['rc2','DJI RC 2','dji'],
- ['rcpro','DJI RC Pro (1세대)','dji'],
+ ['rcpro','DJI RC Pro 1세대','dji'],
+ ['rcn2','DJI RC-N2','dji'],
  ['autelsmart','Autel Smart Controller (EVO II용)','autel'],
  ['autelv3','Autel Smart Controller V3','autel'],
  ['autelmax','Autel EVO Max 전용 조종기','autel'],
  ['autellite','Autel EVO Lite Enterprise 조종기','autel'],
- ['autelconsumer','Autel 소비자용 기본 조종기','autel'],
- ['analogvrx','아날로그 5.8GHz 수신기','analog'],
- ['hdzg','HDZero Goggles (내장 수신)','hdz'],
- ['hdzvrx','HDZero VRX','hdz'],
- ['wsx','Walksnail Goggles X','ws'],
- ['wsl','Walksnail Goggles L','ws'],
- ['wsvrx','Walksnail Avatar VRX','ws']
+ ['autelconsumer','Autel 소비자용 기본 조종기','autel']
 ];
 
-const modules=[
- ['none','없음 / 내장 수신기만 사용'],
- ['analog','아날로그 외부 수신 모듈 장착'],
- ['hdz','HDZero 외부 VRX 장착'],
- ['ws','Walksnail 외부 VRX 장착']
+const RAD=[
+ ['none','조종기 선택 안 함'],
+ ['fpv3','DJI FPV Remote Controller 3'],
+ ['fpv2','DJI FPV Remote Controller 2'],
+ ['motion3','DJI RC Motion 3'],
+ ['motion2','DJI RC Motion 2'],
+ ['rc2','DJI RC 2'],
+ ['rcpro','DJI RC Pro 1세대']
 ];
 
-const displays=[
- ['none','외부 모니터 미사용'],
- ['hdmi','조종기 HDMI → HDMI 모니터'],
- ['usb','고글 USB-C → 모바일 기기 화면 공유'],
- ['capture','HDMI 출력 → 캡처 장치 → 태블릿'],
- ['wireless','HDMI 출력 → 무선 HDMI → 모니터']
+const RATE=[
+ {sys:'elrs24',n:'50Hz · -115dBm',s:-115,f:2440},
+ {sys:'elrs24',n:'150Hz · -112dBm',s:-112,f:2440},
+ {sys:'elrs24',n:'250Hz · -108dBm',s:-108,f:2440},
+ {sys:'elrs24',n:'500Hz · -105dBm',s:-105,f:2440},
+ {sys:'elrs900',n:'25Hz · -123dBm',s:-123,f:915},
+ {sys:'elrs900',n:'50Hz · -120dBm',s:-120,f:915},
+ {sys:'elrs900',n:'100Hz · -117dBm',s:-117,f:915},
+ {sys:'crossfire',n:'감도 직접 검증 필요',s:null,f:915}
 ];
 
-function fill(id,data){
- const el=by(id);
- for(const row of data){
+function fill(id,arr,kind='objects'){
+ const e=$(id);
+ e.replaceChildren();
+ arr.forEach((x,i)=>{
   const o=document.createElement('option');
-  o.value=row[0];
-  o.textContent=row[1];
-  el.appendChild(o);
- }
+  o.value=kind==='pairs'?x[0]:i;
+  o.textContent=kind==='pairs'?x[1]:x.n;
+  e.append(o);
+ });
+}
+fill('vtx',VTX);
+fill('vrx',VRX);
+fill('txAnt',ANT);
+fill('rxAnt',ANT);
+fill('aircraft',AIR,'pairs');
+fill('device',DEV,'pairs');
+fill('radio',RAD,'pairs');
+
+function num(id){
+ const v=$(id).value.trim();
+ return v===''?NaN:Number(v);
+}
+function fmt(n){
+ return !Number.isFinite(n)?'—':
+ n<1?Math.round(n*1000)+' m':n.toFixed(2)+' km';
+}
+function box(state,msg){
+ const cls=state==='ok'?'ok':state==='bad'?'bad':'warn';
+ const label=state==='ok'?'가능':state==='bad'?'불가':'확인 필요';
+ return '<div class="box '+cls+'"><strong>'+label+'</strong><p>'+msg+'</p></div>';
+}
+function polLoss(a,b){
+ if(a==='unknown'||b==='unknown')return NaN;
+ if(a===b)return 0;
+ if((a==='RHCP'&&b==='LHCP')||(a==='LHCP'&&b==='RHCP'))return 20;
+ return 3;
+}
+function fsplKm(allowed,f){
+ return Math.pow(10,(allowed-32.44-20*Math.log10(f))/20);
 }
 
-fill('tsdAircraft',aircraft);
-fill('tsdReceiver',receivers);
-fill('tsdExtra',modules);
-fill('tsdDisplay',displays);
+let videoKm=null,controlKm=null;
 
-const name=(list,id)=>
- list.find(x=>x[0]===id)?.[1]||id;
-
-const type=(list,id)=>
- list.find(x=>x[0]===id)?.[2]||'none';
-
-const OK='ok';
-const NO='no';
-const CHECK='check';
-const UNKNOWN='unknown';
-
-function status(s,msg,url){
- return {s,msg,url};
+function applyTx(){
+ const x=VTX[Number($('vtx').value)];
+ $('txP').value=x.p??'';
+ $('txG').value=x.g??'';
+ $('txPol').value=x.pol||'unknown';
+ $('txNote').textContent=x.note||'정확한 제품 사양에 맞춰 RF 출력·이득·편파를 입력하세요.';
+ calculate();
+}
+function applyRx(){
+ const x=VRX[Number($('vrx').value)];
+ $('rxS').value=x.s??'';
+ $('rxG').value=x.g??'';
+ $('rxPol').value=x.pol||'unknown';
+ $('rxNote').textContent=x.note||'제조사 미공개 수신 감도는 직접 확인해야 합니다.';
+ calculate();
+}
+function applyAnt(side){
+ const x=ANT[Number($(side+'Ant').value)];
+ if(x.g!==null)$(side+'G').value=x.g;
+ if(x.pol!=='unknown')$(side+'Pol').value=x.pol;
+ $(side+'AntNote').textContent=x.note||'안테나 이득·편파·커넥터를 실제 제품에 맞게 확인하세요.';
+ calculate();
 }
 
-function link(a,r,m){
- if(a==='none'||r==='none'){
-  return status(UNKNOWN,'기체와 수신 장치를 모두 선택하세요.');
+function videoCompatibility(v,r){
+ if(!v.sys||!r.sys)
+  return ['warn','송수신 장치의 정확한 영상 방식을 선택해야 합니다.'];
+
+ if(v.sys===r.sys){
+  if(v.sys==='dji'){
+   const map={
+    o4:['g3','n3','g2','integra'],
+    o3:['g3','g2','integra'],
+    legacy:[]
+   };
+   return map[v.family]?.includes(r.family)
+    ?['ok','DJI VTX/고글 지원 조합입니다. 펌웨어·조종기 조합도 확인하세요.']
+    :['warn','DJI 세대별 공식 호환을 확정하지 못했습니다. 계산을 중지합니다.'];
+  }
+  return ['ok','영상 전송 방식이 일치합니다. 정확한 펌웨어·채널·하드웨어 구성을 확인하세요.'];
  }
 
- const at=type(aircraft,a);
- const rt=type(receivers,r);
+ if(r.external?.includes(v.sys)&&$('module').value===v.sys)
+  return ['warn','외부 수신 모듈을 선택했습니다. 실제 장착·전원·입력 연결이 확인되지 않아 계산을 보류합니다.'];
 
- if(at==='dji'&&rt!=='dji'){
-  return status(NO,
-   'DJI 디지털 영상은 다른 제조사의 수신기에서 직접 수신할 수 없습니다.',
-   docs.o4);
- }
-
- if(at==='autel'&&rt!=='autel'){
-  return status(NO,
-   'Autel 영상 링크는 DJI/아날로그/HDZero/Walksnail 수신기와 직접 연동되지 않습니다.',
-   docs.autel);
- }
-
- if(['analog','hdz','ws'].includes(at)){
-  if(at===rt){
-   return status(CHECK,
-    '영상 전송 방식은 일치합니다. 정확한 모델, 주파수, 펌웨어 및 수신 모듈 구성을 확인해야 합니다.',
-    at==='ws'?docs.ws:at==='hdz'?docs.hdz:undefined);
-  }
-
-  if(r==='wsx'&&m===at){
-   return status(CHECK,
-    '외부 수신 모듈이 실제로 설치되어 있고 영상 입력 경로가 작동하는지 확인해야 합니다. 단순 모듈 선택만으로 호환이 확정되지는 않습니다.');
-  }
-
-  return status(NO,
-   '수신 방식이 다릅니다. 필요한 외부 VRX 장착과 입력 연결을 검증하기 전에는 수신할 수 없습니다.');
- }
-
- const dji={
-  avata2:['g3','n3','g2','integra'],
-  avata1:['g2','integra','fpvv2'],
-  djifpv:['g2','integra','fpvv2'],
-  air3:['g3','g2','integra'],
-  mini5:[],
-  mini4:['g3','g2','integra'],
-  neo:['g3','n3'],
-  o4:['g3','n3','g2','integra'],
-  o3:['g3','g2','integra'],
-  vista:[]
- };
-
- if(at==='dji'){
-  if(r==='rc2'||r==='rcpro'){
-   return status(UNKNOWN,
-    '조종기 화면 수신은 고글 영상 수신과 별개의 경로입니다. 해당 기체의 조종기 지원표를 먼저 확인하세요.',
-    r==='rcpro'?docs.rcpro:docs.dji);
-  }
-
-  if(dji[a]?.includes(r)){
-   return status(CHECK,
-    'DJI 고글 지원 목록에 포함되는 조합입니다. 기체·고글·조종기 펌웨어와 실제 지원 조건을 확인하세요.',
-    a==='avata2'?docs.avata:docs.dji);
-  }
-
-  if(a==='vista'||a==='o3'){
-   return status(UNKNOWN,
-    '이 조합의 정확한 펌웨어별 지원 여부를 현재 판정표에서 확정하지 않았습니다.',
-    docs.dji);
-  }
-
-  return status(UNKNOWN,
-   '현재 판정표에 지원 관계가 등록되어 있지 않습니다. 이를 곧바로 공식 호환 불가로 해석하지 마세요.',
-   docs.dji);
- }
-
- if(at==='autel'){
-  if(a==='evo2'&&r==='autelsmart'){
-   return status(CHECK,
-    'Autel Smart Controller의 EVO II 지원 구성을 확인할 수 있습니다. 세대와 펌웨어를 추가 확인하세요.',
-    docs.autel);
-  }
-
-  if(a==='evomax'&&r==='autelmax'){
-   return status(CHECK,
-    'EVO Max 계열 조종기 구성입니다. 세부 모델과 HDMI 출력 설정을 확인하세요.',
-    docs.max);
-  }
-
-  if(a==='evoliteent'&&r==='autellite'){
-   return status(CHECK,
-    'EVO Lite Enterprise 조종기 구성입니다. 세부 모델과 영상 출력 지원을 확인하세요.',
-    'https://www.autelrobotics.com/wp-content/uploads/2024/10/EN_EVO-Lite-Enterprise-Series-Aircraft-User-Manual_V1.0-Premium-Kit.pdf');
-  }
-
-  if(a==='evo2v3'&&r==='autelv3'){
-   return status(CHECK,
-    'EVO II V3와 Smart Controller V3 조합의 세부 펌웨어 및 모델 지원을 확인해야 합니다.');
-  }
-
-  return status(UNKNOWN,
-   'Autel 기체와 해당 조종기의 공식 지원 조합을 확인하지 못했습니다. HDMI 포트 유무만으로 연결 가능하다고 판단할 수 없습니다.');
- }
-
- return status(UNKNOWN,
-  '모델별 공식 지원 관계를 확인하지 못했습니다.');
+ return ['bad','영상 송수신 방식이 서로 달라 직접 연결할 수 없습니다.'];
 }
 
-function monitor(a,r,mode,ls){
- if(mode==='none'){
-  return status(OK,'외부 모니터를 사용하지 않습니다.');
+function calculate(){
+ const v=VTX[Number($('vtx').value)];
+ const r=VRX[Number($('vrx').value)];
+ const [status,msg]=videoCompatibility(v,r);
+ videoKm=null;
+
+ $('videoStatus').innerHTML=box(status,msg);
+ $('videoRated').textContent='공식 공시 거리는 기체·고글·지역별 별도 확인';
+ $('videoDistance').textContent='—';
+ $('videoEirp').textContent='—';
+ $('videoLoss').textContent='—';
+ $('videoPol').textContent='—';
+
+ if(status!=='ok'){
+  environment();
+  return;
  }
 
- if(ls.s===NO){
-  return status(NO,
-   '앞 단계의 기체·수신기 연결이 불가능하여 모니터 출력도 진행할 수 없습니다.');
+ const p=num('txP'),tg=num('txG'),rg=num('rxG');
+ const sens=num('rxS'),f=num('freq');
+ const loss=num('loss'),margin=num('margin');
+ const pol=polLoss($('txPol').value,$('rxPol').value);
+
+ if(!(p>0)||![tg,rg,sens,f,loss,margin,pol].every(Number.isFinite)
+    ||f<=0||loss<0||margin<0){
+  $('videoStatus').innerHTML+=box('warn','출력·송수신 이득·감도·주파수·손실·편파의 필수 수치를 입력해야 합니다. 미공개 값을 0으로 간주하지 않습니다.');
+  environment();
+  return;
  }
 
- if(ls.s===UNKNOWN){
-  return status(UNKNOWN,
-   '앞 단계의 기체·수신기 연결이 확인되지 않아 영상 출력을 확정할 수 없습니다.');
- }
+ const eirp=10*Math.log10(p)+tg-loss;
+ const allowed=eirp+rg-pol-margin-sens;
+ videoKm=fsplKm(allowed,f);
 
- if(mode==='usb'){
-  if(['g3','n3','g2','integra','fpvv2'].includes(r)){
-   return status(CHECK,
-    'USB-C 화면 공유는 고글 모델, 펌웨어, 모바일 기기와 앱의 지원 여부를 별도 확인해야 합니다. USB-C를 HDMI 출력으로 간주하지 마세요.');
-  }
+ $('videoEirp').textContent=eirp.toFixed(1)+' dBm';
+ $('videoLoss').textContent=allowed.toFixed(1)+' dB';
+ $('videoPol').textContent=pol+' dB';
+ $('videoDistance').textContent=fmt(videoKm);
 
-  return status(UNKNOWN,
-   '선택한 수신 장치의 USB 영상 공유 기능이 확인되지 않았습니다.');
- }
+ if(videoKm>20)
+  $('videoStatus').innerHTML+=box('warn','20km 이상의 FSPL 계산값은 지구 곡률·프레넬 영역·법규·장애물을 반영하지 않습니다.');
 
- if(['hdmi','capture','wireless'].includes(mode)){
-  if(['rcpro','autelsmart','autelmax','autellite'].includes(r)){
-   const url=r==='rcpro'?docs.rcpro:
-    r==='autelsmart'?docs.autel:docs.max;
-
-   return status(CHECK,
-    '해당 조종기의 HDMI 출력 사양과 선택한 기체의 지원 관계를 각각 확인해야 합니다. 캡처 장치와 무선 HDMI는 입력 신호 규격도 확인하세요.',
-    url);
-  }
-
-  if(r==='autelv3'){
-   return status(CHECK,
-    'Smart Controller V3의 HDMI 출력 기능과 선택한 기체의 호환성을 별도로 검증해야 합니다.',
-    'https://www.autelrobotics.com/wp-content/uploads/2025/05/EVO-Max-Series-Brochure.pdf');
-  }
-
-  return status(UNKNOWN,
-   '선택한 고글/수신기의 직접 HDMI 출력은 현재 공식 자료로 확정하지 않았습니다. 별도 출력 장치 또는 검증된 변환 경로가 필요합니다.');
- }
-
- return status(UNKNOWN,'출력 경로 미확인');
+ environment();
 }
 
-function render(){
- const a=by('tsdAircraft').value;
- const r=by('tsdReceiver').value;
- const m=by('tsdExtra').value;
- const d=by('tsdDisplay').value;
+function fillRates(){
+ const sys=$('ctlSystem').value;
+ const arr=RATE.filter(x=>x.sys===sys);
+ $('ctlRate').replaceChildren();
 
- const l=link(a,r,m);
- const v=monitor(a,r,d,l);
+ if(!arr.length){
+  $('ctlRate').add(new Option('공식 감도 미확인 / 별도 계산 불가','none'));
+ }else{
+  arr.forEach((x,i)=>$('ctlRate').add(new Option(x.n,String(i))));
+ }
+ calculateControl();
+}
 
- const labels={
-  ok:'확인된 구성',
-  no:'연동 불가',
-  check:'조건부 · 추가 확인',
-  unknown:'공식 확인 필요'
- };
+function calculateControl(){
+ controlKm=null;
+ const sys=$('ctlSystem').value;
+ const rate=RATE.filter(x=>x.sys===sys)[Number($('ctlRate').value)];
+ $('ctlDistance').textContent='—';
 
- const colors={
-  ok:'var(--ok)',
-  no:'var(--bad)',
-  check:'var(--warn)',
-  unknown:'var(--muted)'
- };
-
- function block(title,x){
-  const div=document.createElement('div');
-  div.style.cssText=
-   'border:1px solid '+colors[x.s]+
-   ';border-radius:10px;padding:12px;margin:10px 0';
-
-  const h=document.createElement('strong');
-  h.style.color=colors[x.s];
-  h.textContent=title+' — '+labels[x.s];
-
-  const p=document.createElement('p');
-  p.textContent=x.msg;
-  div.append(h,p);
-
-  if(x.url){
-   const anchor=document.createElement('a');
-   anchor.href=x.url;
-   anchor.target='_blank';
-   anchor.rel='noopener noreferrer';
-   anchor.style.textDecoration='underline';
-   anchor.textContent='공식 근거 확인';
-   div.append(anchor);
-  }
-  return div;
+ if(sys==='none'){
+  $('ctlStatus').textContent='제어 링크를 선택하지 않았습니다.';
+  environment();
+  return;
+ }
+ if(!rate||rate.s===null){
+  $('ctlStatus').textContent='선택한 제어 링크의 공식 수신 감도가 확인되지 않아 계산을 보류합니다.';
+  environment();
+  return;
  }
 
- const out=by('tsdResult');
- out.replaceChildren();
+ const p=num('ctlP'),tg=num('ctlTxG'),rg=num('ctlRxG');
+ const loss=num('loss'),margin=num('margin');
 
- const desc=document.createElement('p');
- desc.textContent=
-  '선택: '+name(aircraft,a)+' / '+name(receivers,r);
+ if(!(p>0)||![tg,rg,loss,margin].every(Number.isFinite)){
+  $('ctlStatus').textContent='송신 출력·송수신 안테나 이득·손실을 입력해야 합니다.';
+  environment();
+  return;
+ }
 
- out.append(
-  desc,
-  block('1단계 영상 연결',l),
-  block('2단계 모니터 출력',v)
- );
-
- const p=document.createElement('p');
- p.className='note';
- p.textContent=
-  '본 판정은 지원 관계 및 영상 출력 경로만 다룹니다. 실제 비행 가능 거리, 제어 링크, 법적 운용 가능 여부는 별도로 확인해야 합니다.';
- out.append(p);
+ const allowed=10*Math.log10(p)+tg+rg-loss-margin-3-rate.s;
+ controlKm=fsplKm(allowed,rate.f);
+ $('ctlDistance').textContent=fmt(controlKm);
+ $('ctlStatus').textContent='선형 안테나의 자세 손실 3dB 가정. ELRS 수신 감도는 패킷 레이트·설정에 따라 달라집니다.';
+ environment();
 }
+
+function environment(){
+ const ex=num('extraLoss'),target=num('target');
+ const extra=Number.isFinite(ex)&&ex>=0?ex:NaN;
+ const factor=Number.isFinite(extra)?Math.pow(10,-extra/20):NaN;
+ const v=videoKm===null?null:videoKm*factor;
+ const c=controlKm===null?null:controlKm*factor;
+
+ let h='<table><tr><td>영상 링크 (환경 반영)</td><td>'+
+ (v===null?'미계산':fmt(v))+'</td></tr>'+
+ '<tr><td>제어 링크 (환경 반영)</td><td>'+
+ (c===null?'미계산':fmt(c))+'</td></tr></table>';
+
+ if(v!==null&&c!==null){
+  const min=Math.min(v,c);
+  h+=box(min>=target?'ok':'warn',
+   '이론상 짧은 링크: '+fmt(min)+
+   ' / 목표 '+fmt(target)+
+   ' · 실제 비행 안전거리를 보증하지 않습니다.');
+ }else{
+  h+=box('warn','영상과 제어 링크 모두 계산되어야 전체 링크 한계를 비교할 수 있습니다.');
+ }
+
+ $('environmentResult').innerHTML=h;
+ $('recommendation').textContent=
+  '목표 '+(Number.isFinite(target)?fmt(target):'미입력')+
+  ' / 영상 '+(v===null?'미계산':fmt(v))+
+  ' / 제어 '+(c===null?'미계산':fmt(c))+
+  '. 확인되지 않은 장비의 부품 추천은 보류합니다.';
+}
+
+function chain(){
+ const a=$('aircraft').value;
+ const d=$('device').value;
+ const r=$('radio').value;
+ const disp=$('display').value;
+ const at=AIR.find(x=>x[0]===a)?.[2];
+ const dt=DEV.find(x=>x[0]===d)?.[2];
+
+ let first=['warn','기체와 고글/조종기를 모두 선택하세요.'];
+
+ if(a!=='none'&&d!=='none'){
+  if(at!==dt){
+   first=['bad','기체와 수신/조종 장치의 제조사·영상 시스템이 다릅니다.'];
+  }else if(at==='dji'){
+   const known={
+    avata2:['g3','n3','g2','integra'],
+    air3:['g3','g2','integra','rc2'],
+    mini4:['g3','g2','integra','rc2'],
+    neo:['g3','n3'],
+    avata:['g2','integra','fpvv2'],
+    djifpv:['g2','integra','fpvv2']
+   };
+   first=known[a]?.includes(d)
+    ?['ok','공식 지원 조합에 해당합니다. 최신 펌웨어 및 지역 조건 확인 필요.']
+    :['warn','기체·장치의 정확한 공식 호환 관계를 확인하지 못했습니다.'];
+  }else if(at==='autel'){
+   const known={
+    evo2:['autelsmart'],
+    evo2v3:['autelv3'],
+    evomax:['autelmax'],
+    liteent:['autellite']
+   };
+   first=known[a]?.includes(d)
+    ?['ok','해당 Autel 계열의 대응 조종기 구성입니다. 세부 세대·펌웨어 확인 필요.']
+    :['warn','해당 Autel 기체와 조종기의 공식 호환을 확인하지 못했습니다.'];
+  }
+ }
+
+ let second=['warn','조종기 조합이 확인되지 않았습니다.'];
+
+ if(first[0]==='bad'){
+  second=['bad','앞 단계에서 기체와 수신 장치가 호환되지 않습니다.'];
+ }else if(first[0]==='ok'){
+  if(['g3','n3','g2','integra','fpvv2'].includes(d)){
+   const newG=['g3','n3'].includes(d);
+   const oldG=['g2','integra'].includes(d);
+
+   if(r==='none'){
+    second=['warn','고글과 별도 조종기의 조합을 선택해야 합니다.'];
+   }else if(
+    (newG&&['fpv3','motion3'].includes(r))||
+    (oldG&&['fpv2','motion2'].includes(r))
+   ){
+    second=['ok','고글 세대와 조종기 계열이 일치합니다. 단, 해당 기체가 이 조종기까지 지원하는지 별도 확인해야 합니다.'];
+   }else{
+    second=['warn','고글과 조종기의 세대·기체별 호환이 확인되지 않았습니다.'];
+   }
+  }else{
+   second=['ok','일체형 조종기 구성입니다.'];
+  }
+ }else{
+  second=['warn','기체와 수신 장치의 호환이 확인되지 않아 조종기 단계를 확정할 수 없습니다.'];
+ }
+
+ let third=['warn','출력 경로 확인 필요'];
+
+ if(first[0]==='bad'||second[0]==='bad'){
+  third=['bad','앞 단계가 호환되지 않아 모니터 출력을 사용할 수 없습니다.'];
+ }else if(first[0]!=='ok'||second[0]!=='ok'){
+  third=['warn','기체·고글·조종기 단계가 확인되지 않아 모니터 출력 가능 여부를 판정하지 않습니다.'];
+ }else if(disp==='none'){
+  third=['ok','외부 모니터를 사용하지 않습니다.'];
+ }else if(['hdmi','wireless','capture'].includes(disp)){
+  if(['rcpro','autelsmart','autelv3','autelmax'].includes(d)){
+   third=['warn','HDMI 포트 지원 여부와 실제 기체 영상 출력 여부, 모니터/캡처/무선 HDMI 입력 호환을 각각 확인해야 합니다.'];
+  }else{
+   third=['warn','선택한 장치에서 직접 HDMI 영상 출력이 공식 확인되지 않았습니다. USB-C를 HDMI로 간주하지 않습니다.'];
+  }
+ }else if(disp==='usb'){
+  third=['g3','n3','g2','integra','fpvv2'].includes(d)
+   ?['warn','고글 USB-C 화면 공유는 공식 지원 앱·케이블·기기 조합을 확인해야 합니다. HDMI 출력이 아닙니다.']
+   :['warn','해당 조종기의 USB-C 화면 공유 지원을 확인하지 못했습니다.'];
+ }
+
+ $('chainResult').innerHTML=
+  '<h3>1단계: 기체 ↔ 영상 수신</h3>'+box(...first)+
+  '<h3>2단계: 조종기</h3>'+box(...second)+
+  '<h3>3단계: 모니터 출력</h3>'+box(...third);
+}
+
+$('vtx').addEventListener('change',applyTx);
+$('vrx').addEventListener('change',applyRx);
+$('txAnt').addEventListener('change',()=>applyAnt('tx'));
+$('rxAnt').addEventListener('change',()=>applyAnt('rx'));
 
 [
- 'tsdAircraft',
- 'tsdReceiver',
- 'tsdExtra',
- 'tsdDisplay'
-].forEach(id=>by(id).addEventListener('change',render));
+ 'txP','txG','txPol','rxS','rxG','rxPol',
+ 'freq','loss','margin','module'
+].forEach(id=>$(id).addEventListener('input',calculate));
 
-render();
-})();
+$('ctlSystem').addEventListener('change',fillRates);
+['ctlRate','ctlP','ctlTxG','ctlRxG'].forEach(
+ id=>$(id).addEventListener('input',calculateControl)
+);
+['env','extraLoss','target'].forEach(
+ id=>$(id).addEventListener('input',environment)
+);
+['aircraft','device','radio','display'].forEach(
+ id=>$(id).addEventListener('change',chain)
+);
 
+applyTx();
+applyRx();
+fillRates();
+chain();
 </script>
 </body>
 </html>
