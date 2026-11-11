@@ -1,731 +1,290 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>장거리 비행 계산기 | TSD 기술 연구소</title>
-<style>
-:root{
- color-scheme:dark;
- --bg:#08111f;--panel:#142338;
- --accent:#38bdf8;--text:#eaf2fc;
- --muted:#a9bbcf;--line:#29405c;
- --field:#0d1a2c;--warn:#e5c45a;
- --ok:#4cc38a;--bad:#ef6b6b;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
- margin:0;background:var(--bg);color:var(--text);
- font-family:Arial,"Malgun Gothic",sans-serif;
- line-height:1.7
-}
-a{color:inherit;text-decoration:none}
-header{
- position:sticky;top:0;z-index:10;
- background:#08111ff0;border-bottom:1px solid #28405a;
- padding:15px 6%;display:flex;
- justify-content:space-between;align-items:center;
- flex-wrap:wrap;gap:15px
-}
-.logo{font-weight:800;font-size:20px;color:var(--accent)}
-nav{display:flex;flex-wrap:wrap;gap:15px}
-nav a:hover,nav a[aria-current="page"]{color:var(--accent)}
-.page-shell{
- max-width:760px;margin:auto;padding:45px 5%;
- min-height:calc(100vh - 170px)
-}
-.page-heading{text-align:center;margin-bottom:30px}
-.page-heading h1{
- color:var(--accent);
- font-size:clamp(28px,4vw,40px);
- line-height:1.2;margin:0 0 14px
-}
-.page-heading p{margin:0;color:var(--muted)}
-h2{font-size:20px;color:var(--accent);margin:0 0 12px}
-section{
- background:var(--panel);border:1px solid var(--line);
- border-radius:16px;padding:22px;margin-bottom:18px
-}
-label{
- display:block;font-size:13px;color:var(--muted);
- margin:12px 0 5px
-}
-select,input{
- width:100%;padding:11px 12px;border-radius:9px;
- border:1px solid #365a78;background:var(--field);
- color:var(--text);font:inherit
-}
-select:focus,input:focus{
- outline:3px solid var(--accent);outline-offset:1px
-}
-input.invalid{border:2px solid var(--bad)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.note{font-size:13px;color:var(--muted);margin:8px 0 0}
-.result{border-left:4px solid var(--accent)}
-.big{
- font-size:36px;font-weight:700;
- margin:4px 0 12px;line-height:1.2
-}
-.big small{font-size:15px;font-weight:400;color:var(--muted)}
-.badge{
- display:inline-block;padding:6px 12px;border-radius:20px;
- background:#223b55;border:1px solid #365a78;
- font-size:13px;margin:0 6px 8px 0
-}
-.badge.ok{border-color:var(--ok);color:var(--ok)}
-.badge.bad{border-color:var(--bad);color:var(--bad)}
-.badge.chk{border-color:var(--warn);color:var(--warn)}
-.hide{display:none}
-table{width:100%;border-collapse:collapse;font-size:14px}
-td{padding:7px 0;border-bottom:1px solid var(--line)}
-td:last-child{text-align:right}
-.warns p,#windVerdict p{margin:8px 0;font-size:14px}
-.w{color:var(--warn)}
-.b{color:var(--bad)}
-.o{color:var(--ok)}
-.error{color:var(--bad);font-size:13px;white-space:pre-line}
-footer{
- border-top:1px solid #28405a;padding:30px 6%;
- color:#9cb1c8;font-size:13px;text-align:center
-}
-@media(max-width:600px){
- header{padding:12px 5%}
- nav{font-size:13px;gap:10px}
- .page-shell{padding:30px 5%}
- .row{grid-template-columns:1fr}
-}
-</style>
-</head>
-<body>
-<header>
-<a class="logo" href="./index.html">TSD Aero Systems</a>
-<nav aria-label="주 메뉴">
-<a href="./education.html">체험교육</a>
-<a href="./index.html" aria-current="page">기술연구소</a>
-<a href="./contact.html">문의</a>
-</nav>
-</header>
-
-<main class="page-shell">
-
-<div class="page-heading">
-<h1>장거리 비행 계산기</h1>
-<p>
-배터리 에너지, 순항 전력, 풍속을 이용하여
-이론적인 비행 시간과 왕복 가능 거리를 계산합니다.
-실제 비행 전 시험비행으로 검증하세요.
-</p>
-</div>
-
-<section id="secBat">
-<h2>배터리</h2>
-<div class="row">
-<div>
-<label for="cells">직렬 셀 수 (S)</label>
-<input id="cells" type="number" value="6" min="1" max="24" step="1">
-</div>
-<div>
-<label for="mah">총 용량 (mAh)</label>
-<input id="mah" type="number" value="6000" min="1" max="200000" step="any">
-</div>
-</div>
-<div class="row">
-<div>
-<label for="chem">배터리 종류</label>
-<select id="chem">
-<option value="3.7|80">LiPo (3.7V)</option>
-<option value="3.8|80">LiPo HV (3.8V)</option>
-<option value="3.6|90">Li-ion (3.6V)</option>
-</select>
-</div>
-<div>
-<label for="usable">사용 가능 비율 (%)</label>
-<input id="usable" type="number" value="80" min="1" max="100" step="1">
-</div>
-</div>
-<p class="note">
-공칭 전압을 사용합니다. 실제 사용 가능한 에너지는
-방전율, 온도, 전압 강하 및 배터리 상태에 따라 달라집니다.
-</p>
-</section>
-
-<section id="secAir">
-<h2>기체</h2>
-<div class="row">
-<div>
-<label for="mass">총 중량 (g, 배터리 포함)</label>
-<input id="mass" type="number" value="1200" min="1" max="100000" step="any">
-</div>
-<div>
-<label for="spd">순항 대기속도 (km/h)</label>
-<input id="spd" type="number" value="60" min="1" max="500" step="any">
-</div>
-</div>
-<label for="pmode">순항 전력 계산 방식</label>
-<select id="pmode">
-<option value="direct">직접 입력 (W)</option>
-<option value="est">중량·효율로 추정 (g/W)</option>
-</select>
-<div id="pDirect">
-<label for="pw">순항 전력 (W)</label>
-<input id="pw" type="number" value="160" min="1" max="100000" step="any">
-</div>
-<div id="pEst" class="hide">
-<div class="row">
-<div>
-<label for="eff">추진 효율 (g/W)</label>
-<input id="eff" type="number" value="8" min="0.1" max="100" step="any">
-</div>
-<div>
-<label for="fac">호버 대비 순항 전력 배율</label>
-<input id="fac" type="number" value="1" min="0.1" max="10" step="any">
-</div>
-</div>
-<p class="note">
-정지 추력 효율을 이용한 근사 모델입니다.
-실제 순항 전력은 비행 로그로 측정하는 것이 좋습니다.
-</p>
-</div>
-</section>
-
-<section id="secClimb">
-<h2>상승 조건</h2>
-<div class="row">
-<div>
-<label for="alt">상승 고도 (m)</label>
-<input id="alt" type="number" value="100" min="0" max="10000" step="any">
-</div>
-<div>
-<label for="climbSpeed">상승 속도 (m/s)</label>
-<input id="climbSpeed" type="number" value="3" min="0.1" max="50" step="any">
-</div>
-</div>
-<label for="climbPower">상승 중 평균 총소비전력 (W)</label>
-<input id="climbPower" type="number" value="250" min="1" max="100000" step="any">
-<p class="note">
-상승 중 평균 총소비전력은 기체 유지에 필요한
-전력을 포함한 값입니다.
-실제 측정값을 권장합니다.
-상승 고도는 비행 시작 지점 대비 고도 차이입니다.
-</p>
-</section>
-
-<section id="secCond">
-<h2>비행 조건</h2>
-<div class="row">
-<div>
-<label for="wind">왕복 경로 방향 바람 (m/s)</label>
-<input id="wind" type="number" value="3" min="0" max="100" step="any">
-</div>
-<div>
-<label for="res">예비 에너지 (%)</label>
-<input id="res" type="number" value="25" min="0" max="99" step="any">
-</div>
-</div>
-<div class="row">
-<div>
-<label for="link">링크 편도 한계 (km, 선택)</label>
-<input id="link" type="number" min="0.001" max="10000" step="any" placeholder="링크 계산기 결과">
-</div>
-<div>
-<label for="target">목표 왕복 총거리 (km)</label>
-<input id="target" type="number" value="20" min="0.01" max="10000" step="any">
-</div>
-</div>
-<p class="note">
-목표 왕복 총거리는 출발점에서 목적지까지 이동한 뒤
-동일한 경로로 복귀하는 전체 거리입니다.
-</p>
-<p class="note">
-<a href="./link-budget.html" style="text-decoration:underline">영상 링크 버짓 계산기</a>에서
-영상 및 제어 링크 중 더 짧은 편도 한계를
-입력할 수 있습니다.
-실제 통신 품질을 보장하지 않습니다.
-</p>
-</section>
-
-<section class="result" id="secOut" aria-live="polite">
-<h2>계산 결과</h2>
-<div id="errors" class="error" role="alert"></div>
-<p class="big" id="rt">–</p>
-<table>
-<tr><td>공칭 배터리 에너지</td><td id="eNom">–</td></tr>
-<tr><td>사용 가능 배터리 에너지</td><td id="eTot">–</td></tr>
-<tr><td>상승에 사용되는 에너지</td><td id="eClimb">–</td></tr>
-<tr><td>예비 에너지</td><td id="eReserve">–</td></tr>
-<tr><td>순항에 사용할 에너지</td><td id="eCru">–</td></tr>
-<tr><td>순항 전력</td><td id="pOut">–</td></tr>
-<tr><td>순항 가능 시간</td><td id="tOut">–</td></tr>
-<tr><td>무풍 왕복 총거리</td><td id="calmTot">–</td></tr>
-<tr><td>맞바람 단방향 최대거리</td><td id="owHead">–</td></tr>
-<tr><td>뒷바람 단방향 최대거리</td><td id="owTail">–</td></tr>
-<tr><td>왕복 가능 편도 반경</td><td id="radius">–</td></tr>
-<tr><td>무풍 에너지 소모율</td><td id="whkm">–</td></tr>
-</table>
-<div class="warns" id="warns"></div>
-</section>
-
-<section id="secWind">
-<h2>바람 한계 (목표 왕복 거리 기준)</h2>
-<div id="windVerdict"></div>
-<div id="chartBox"></div>
-<p class="note">
-풍속 그래프는 일정한 대기속도, 순항 전력,
-정면풍 및 동일한 왕복 경로를 가정합니다.
-모델상 여유는 실제 비행 안전을 보증하지 않습니다.
-</p>
-</section>
-</main>
-
-<footer>
-<p>TSD Aero Systems · 장거리 비행 계산기</p>
-<p>
-계산 결과는 교육 및 비행 계획 참고용입니다.
-실제 운용 전 기체 성능과 배터리 상태를 확인하세요.
-</p>
-<p>
-비행 시 적용되는 공역, 고도, 가시거리 및
-전파 관련 규정을 준수하세요.
-</p>
-</footer>
-
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TSD 장거리 비행 계산기</title><style>
+:root{color-scheme:dark;--bg:#08111f;--panel:#142338;--line:#29405c;--text:#eaf2fc;--muted:#b2c2d4;--accent:#38bdf8;--bad:#ff8181;--ok:#62dca1}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,'Malgun Gothic',sans-serif}header{padding:16px 5%;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}a{color:var(--accent)}main{max-width:920px;margin:auto;padding:28px 4%}h1{font-size:clamp(24px,5vw,36px);color:var(--accent)}h2{font-size:20px;margin:0 0 14px;color:var(--accent)}section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{min-width:0}label{display:block;color:var(--muted);font-size:13px;margin:6px 0}input,select{width:100%;background:#0d1a2c;border:1px solid #42607c;border-radius:8px;color:var(--text);padding:10px;font:inherit}input:disabled,select:disabled{opacity:.55}button{border:1px solid #42607c;background:#1e405d;color:white;border-radius:8px;padding:10px 14px;cursor:pointer}.note{color:var(--muted);font-size:13px}.error{color:var(--bad)}.ok{color:var(--ok)}.warn{color:#f5d77e}.summary{font-size:28px;font-weight:800;color:var(--accent)}table{width:100%;border-collapse:collapse}th{text-align:right;color:var(--muted);font-size:12px}th:first-child{text-align:left}#realBatteryCompare{overflow-x:auto}#realBatteryCompare table{min-width:650px}td{padding:8px 3px;border-bottom:1px solid var(--line)}td:last-child{text-align:right;font-variant-numeric:tabular-nums}.sub{font-size:12px;color:var(--muted)}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{padding:4px 9px;border:1px solid #45647f;border-radius:100px;font-size:12px}.hide{display:none}@media(max-width:600px){.grid{grid-template-columns:1fr}section{padding:16px}} 
+.manual-panel{margin-top:10px;padding:14px;border:1px dashed #6d8da9;border-radius:10px;background:#0b1b2d}.manual-panel[hidden]{display:none}.manual-status{display:block;margin-top:6px;font-size:12px;color:#f5d77e}.manual-panel .grid{margin-top:8px}.manual-panel input{min-width:0}.manual-trigger{margin-top:7px;width:100%;text-align:left}.manual-help{font-size:12px;color:#b2c2d4;margin-top:8px}
+.tsd-disclaimer{max-width:920px;margin:10px auto 28px;padding:16px 4%;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.6}.tsd-disclaimer strong{color:var(--text);font-size:13px}.tsd-disclaimer p{margin:6px 0}
+</style></head><body><header><b>TSD Aero Systems</b><a href="./index.html">기술연구소 홈</a></header><main><h1>장거리 FPV 비행 계산기 <span class="sub">v14.2 정밀 검증 수정</span></h1><p class="note">부품 무게 합산, 배터리 방전율, 상승·바람·귀환 에너지, 송수신 호환성 검증을 분리합니다. 제조사 미확인 사양은 자동으로 추정하지 않습니다.</p>
+<section><h2>① 목표 및 영상 시스템</h2><div class="grid"><div class="field"><label for="target">목표 왕복 총거리 (km)</label><input id="target" type="number" value="20" min=".1" step=".1"></div><div class="field"><label for="brand">영상 제조사</label><select id="brand"></select></div><div class="field"><label for="vtx">송신 기체 / VTX</label><select id="vtx"></select></div><div class="field"><label for="vrx">호환 수신 장치 / 고글</label><select id="vrx"></select></div><div class="field"><label for="ant">공식 확인 안테나</label><select id="ant"></select></div><div class="field"><label for="region">DJI 제조사 시험 기준</label><select id="region"><option value="none">자동 거리 적용 안 함 (국내 운용 기본)</option><option value="FCC">FCC 시험값 참고</option><option value="CE">CE 시험값 참고</option></select></div><div class="field"><label for="link">검증된 영상·제어 링크 편도 한계 (km, 선택)</label><input id="link" type="number" min=".01" step=".1" placeholder="검증값 없으면 공란"></div></div><p id="linkNote" class="note"></p><p class="note">송신기 선택 시 무게 자동 반영. 호환 제품이라도 조합별 공식 거리 자료가 없으면 거리 검증은 보류합니다. 국내 운용 가능 거리와 제조사 시험거리는 다릅니다.</p></section>
+<section><h2>② 배터리</h2><div class="grid"><div><label for="batBrand">배터리 제조사</label><select id="batBrand"></select></div><div><label for="batModel">배터리 모델</label><select id="batModel"></select></div><div><label for="chem">화학계 / 고전압 여부</label><select id="chem"><option value="3.7">LiPo 일반 (3.7V/셀)</option><option value="3.8">LiPo HV (3.8V/셀)</option><option value="3.6">Li-ion 일반 (3.6V/셀)</option><option value="3.7li">Li-ion HV (공칭 3.7V/셀, 모델 확인)</option></select></div><div><label for="cells">셀 수 (S)</label><input id="cells" type="number" min="1" max="24" value="6"></div><div><label for="mah">팩당 용량 (mAh)</label><input id="mah" type="number" min="1" value="6000"></div><div><label for="cRate">연속 방전율 (C)</label><input id="cRate" type="number" min=".1" step=".1" value="20"></div><div><label for="batCount">동일 팩 병렬 개수</label><input id="batCount" type="number" min="1" max="12" value="1"></div><div><label for="batMass">팩당 무게 (g)</label><input id="batMass" type="number" min="1" value="900"></div><div><label for="usable">공칭 에너지 중 사용 가능 비율 (%)</label><input id="usable" type="number" min="1" max="100" value="80"></div><div><label for="reserve">가용 에너지에서 추가 예비율 (%)</label><input id="reserve" type="number" min="0" max="99" value="25"></div></div><p class="note">제조사·모델 선택은 추후 공식 자료가 확인된 모델만 추가합니다. 현재 등록된 제조사에서 미등록 모델은 직접 입력을 사용하세요. 병렬은 같은 S·화학계·상태의 팩을 가정합니다.</p></section>
+<section><h2>③ 프레임 · 모터 · 프로펠러</h2><div class="grid"><div><label for="frameBrand">프레임 제조사</label><select id="frameBrand"></select></div><div><label for="frameModel">프레임 모델</label><select id="frameModel"></select></div><div><label for="frameMass">프레임 조립 무게 (g)</label><input id="frameMass" type="number" min="0" value="650"></div><div><label for="motorBrand">모터 제조사</label><select id="motorBrand"></select></div><div><label for="motorModel">모터 모델</label><select id="motorModel"></select></div><div><label for="kv">모터 KV</label><input id="kv" type="number" min="1" value="900"></div><div><label for="motorMass">모터 1개 무게 (g)</label><input id="motorMass" type="number" min="0" value="125"></div><div><label for="motorCount">모터 수량</label><input id="motorCount" type="number" min="1" max="16" value="4"></div><div><label for="propBrand">프로펠러 제조사</label><select id="propBrand"></select></div><div><label for="propModel">프로펠러 모델</label><select id="propModel"></select></div><div><label for="propDiameter">프롭 직경 (인치)</label><input id="propDiameter" type="number" min="1" value="10" step=".1"></div><div><label for="propPitch">프롭 피치 (인치)</label><input id="propPitch" type="number" min=".1" value="5" step=".1"></div><div><label for="propBlades">프롭 블레이드 수</label><input id="propBlades" type="number" min="2" value="2"></div><div><label for="propMass">프롭 1개 무게 (g)</label><input id="propMass" type="number" min="0" value="24"></div></div><p class="note"><span id="motorSource" class="note">모터 모델을 선택하면 제조사 사양 링크가 표시됩니다.</span><br><span id="frameSource" class="note"></span><br><span id="propSource" class="note"></span><br>KV는 무부하 회전속도 지표입니다. KV와 프롭 규격만으로 추력·순항 소비전력을 확정할 수 없습니다. 프롭 수량은 기본적으로 모터 수와 동일하게 계산합니다.</p></section>
+<section><h2>④ 촬영 · 부수 장비</h2><div class="grid"><div><label for="camera">촬영 카메라</label><select id="camera"></select></div><div><label for="cameraMass">촬영 장비 전체 무게 (g)</label><input id="cameraMass" type="number" min="0" value="0"></div><div><label for="cameraMount">촬영 카메라 마운트·ND 필터·추가 액세서리 (g)</label><input id="cameraMount" type="number" min="0" value="0"></div><div><label for="otherMass">FC · ESC · GPS · 수신기 · 배선 등 (g)</label><input id="otherMass" type="number" min="0" value="200"></div><div><label for="vtxMass">선택 VTX 무게 (g, 자동 / 미확인 시 직접)</label><input id="vtxMass" type="number" min="0" placeholder="VTX 무게 미확인"></div></div><p id="vtxMassNote" class="note"></p></section>
+<section><h2>⑤ 비행 및 환경</h2><div class="grid"><div><label for="speed">순항 대기속도 (km/h)</label><input id="speed" type="number" min="1" value="60"></div><div><label for="power">실측 또는 가정 순항 총소비전력 (W)</label><input id="power" type="number" min="1" value="160"></div><div><label for="climbAlt">상승 고도 (m)</label><input id="climbAlt" type="number" min="0" value="100"></div><div><label for="climbSpeed">상승 속도 (m/s)</label><input id="climbSpeed" type="number" min=".1" value="3"></div><div><label for="climbPower">상승 평균 총소비전력 (W)</label><input id="climbPower" type="number" min="1" value="250"></div><div><label for="wind">왕복 경로 방향 바람 크기 (m/s)</label><input id="wind" type="number" min="0" value="3"></div></div><p class="note">정면풍·뒷바람이 왕복 경로를 따라 서로 반대 방향으로 작용하는 단순 모델입니다. 측풍, 가감속, 하강·착륙, 모터 효율 변화는 별도 검증이 필요합니다.</p></section>
+<section><h2>⑥ 추진계 실측 데이터 기반 전력 추정 (선택)</h2>
+<p class="note">동일한 모터·프로펠러·전압에서 측정한 <strong>모터 1개당</strong> 두 추력/전류 시험점을 입력합니다. 추력-전류를 선형 보간해 호버 전력을 추정하고, 순항 보정배율을 적용합니다. 공식 제조사 시험표 또는 직접 측정한 데이터만 입력하세요. <strong>시험점 사이에서만 계산</strong>하며 외삽하지 않습니다. 실제 비행의 전력·거리 보증이 아닙니다.</p>
+<div class="grid"><div><label for="powerMode">순항 전력 산정 방식</label><select id="powerMode"><option value="direct">실측·직접 입력 (기존 방식)</option><option value="test">추력 시험점 2개로 추정</option></select></div><div><label for="auxPower">기타 전장 소비전력 (W, 추정 모드)</label><input id="auxPower" type="number" min="0" step=".1" value="15"></div></div>
+<div id="testFields" class="hide"><div class="grid"><div><label for="testPreset">제조사 추력 시험표</label><select id="testPreset"><option value="">직접 입력 (기존 방식)</option><option value="hobbywing3115hq9">Hobbywing RTF-3115 900KV / HQ 9×4×3 / 24V</option></select></div><div><label for="testSource">시험표 원문</label><div id="testSource" class="note">직접 입력 · 출처 별도 확인</div></div>
+<div><label for="testVoltage">시험 시 공급전압 (V)</label><input id="testVoltage" type="number" min="0.1" step=".1" value="22.2"></div>
+<div><label for="testThrust1">시험점 1: 모터당 추력 (g)</label><input id="testThrust1" type="number" min="0.1" step="1" placeholder="예: 500"></div>
+<div><label for="testCurrent1">시험점 1: 모터당 전류 (A)</label><input id="testCurrent1" type="number" min="0.01" step=".01" placeholder="실측값"></div>
+<div><label for="testThrust2">시험점 2: 모터당 추력 (g)</label><input id="testThrust2" type="number" min="0.1" step="1" placeholder="예: 1000"></div>
+<div><label for="testCurrent2">시험점 2: 모터당 전류 (A)</label><input id="testCurrent2" type="number" min="0.01" step=".01" placeholder="실측값"></div>
+<div><label for="cruiseFactor">호버 대비 순항 전력 배율</label><input id="cruiseFactor" type="number" min="0.1" max="5" step=".05" value="1"></div>
+</div><p class="note">시험점은 실제 선택한 모터·프롭·배터리 전압과 일치해야 합니다. 순항 배율은 비행 로그로 보정해야 하며 기본 1.0은 순항 전력의 실측값이 아닙니다. 측정 조건이 다르거나 총중량에 필요한 모터당 추력이 시험 범위를 벗어나면 계산을 중단합니다.</p></div>
+<p id="powerNote" class="note">현재는 직접 입력한 순항 전력을 사용합니다.</p></section>
+<section><h2>⑦ 계산 결과</h2><div id="error" class="error"></div><div class="summary" id="headline">–</div><p id="status"></p><table><tbody id="results"></tbody></table><p id="warnings" class="note"></p><div id="returnPlan" style="margin-top:22px"></div><div id="chemBatteryCompare" style="margin-top:22px"></div><div id="realBatteryCompare" style="margin-top:22px"></div><div id="batteryCompare" style="margin-top:22px"></div><div id="thrustChart" aria-live="polite"></div><button id="copy">계산 결과 복사</button></section><p class="note">이 계산기는 비행계획 검토용입니다. 공식 전송거리·모터 추력시험·실측 소비전력이 없으면 운용 적합성을 확정하지 않습니다. 국내 공역·비가시권·전파 규정을 별도로 확인하세요.</p></main><footer class="tsd-disclaimer" role="contentinfo"><strong>안내 · 본 프로그램은 참고용입니다.</strong><p>예상 비행시간·거리·소비전력은 입력값과 가정에 따른 계산 결과이며 실제 비행 성능이나 안전한 귀환을 보장하지 않습니다.</p><p>미검증 제품·직접 입력 사양 및 영상·조종 링크 호환성은 별도 확인이 필요합니다. 비행 전 기체 상태, 배터리·추진계 한계, 현장 기상 및 관련 법규를 확인하세요.</p></footer>
 <script>
-"use strict";
-
-const $ = id => document.getElementById(id);
-
-const outputIds = [
-  "eNom","eTot","eClimb","eReserve","eCru",
-  "pOut","tOut","calmTot","owHead",
-  "owTail","radius","whkm"
+'use strict';const $=id=>document.getElementById(id);
+// 등록 정책: 확인되지 않은 사양은 null. 모델명만으로 제품 스펙을 추정하지 않음.
+const brands={battery:['직접 입력','Tattu','Gens Ace','CNHL','GNB / Gaoneng','DOGCOM','Ovonic','BetaFPV','iFlight','Lumenier','Bonka'],frame:['직접 입력','iFlight','GEPRC','AOS','ImpulseRC','Armattan','Lumenier','FlyFishRC','TBS','Source One','RekonFPV'],motor:['직접 입력','T-Motor','Hobbywing','iFlight XING','Feiyu UAV','Techno Motor','EMAX','BrotherHobby','RCINPOWER','AxisFlying','GEPRC','Flywoo','SunnySky'],prop:['직접 입력','HQProp','Gemfan','DALPROP','APC','Master Airscrew','T-Motor']};
+// 특정 모델의 무게·KV·C-rate는 공식 출처를 확인한 후에만 등록한다.
+const catalog={battery:[
+{brand:'Tattu',name:'Tattu 2S 300mAh 75C (JST)',cells:2,mah:300,cRate:75,mass:16,chem:'3.7'},
+{brand:'Tattu',name:'Tattu 2S 450mAh 95C (XT30)',cells:2,mah:450,cRate:95,mass:29,chem:'3.7'},
+{brand:'Tattu',name:'Tattu 3S 650mAh 75C (XT30)',cells:3,mah:650,cRate:75,mass:59,chem:'3.7'},
+{brand:'Tattu',name:'Tattu 3S 850mAh 75C (XT30)',cells:3,mah:850,cRate:75,mass:80,chem:'3.7'},
+{brand:'Tattu',name:'Tattu 6S 1300mAh 75C (XT60)',cells:6,mah:1300,cRate:75,mass:218,chem:'3.7'},
+{brand:'Tattu',name:'Tattu R-Line 6S 2200mAh 95C',cells:6,mah:2200,cRate:95,mass:321,chem:'3.7'},
+{brand:'Tattu',name:'Tattu R-Line 6S 1050mAh 130C',cells:6,mah:1050,cRate:130,mass:180,chem:'3.7'},
+{brand:'Tattu',name:'Tattu R-Line 6S 1200mAh 150C',cells:6,mah:1200,cRate:150,mass:197,chem:'3.7'}
+],frame:[
+{brand:'iFlight',name:'Chimera7 Pro 프레임 키트 (7.5인치, 271.3g)',mass:271.3,maxProp:7.5,source:'https://www.myfpvstore.com/quadcopter-frames/iflight-chimera7-pro-fpv-lr-frame-kit/',note:'판매처 기재 프레임 키트 무게, 배터리·GoPro 마운트 제외. V2/O4 버전과 혼동 금지.'}
+],motor:[
+{brand:'Hobbywing',name:'RTF-3115 900KV (6S, 125g)',kv:900,mass:125,maxS:6,source:'https://www.hobbywing.com/en/uploads/file/20251117/2a4a3f326d2bdede135f3e.pdf'},
+{brand:'Feiyu UAV',name:'3115P 900KV (6S, 115g)',kv:900,mass:115,maxS:6,source:'https://www.feiyu-uav.com/en/motor-3115'},
+{brand:'Techno Motor',name:'TM3115 900KV (3~6S, 109g, 배선 제외)',kv:900,mass:109,maxS:6,source:'https://technomotor.cn/En_Pr_d_gci_114_id_220.html'},
+{brand:'iFlight XING',name:'XING2 2809 800KV (61.4g)',kv:800,mass:61.4,maxS:6,source:'https://shop.iflight.com/XING2-2809-FPV-Motor-Unibell-Pro1673',peakA:25.63,peakW:610.3,testCatalog:'https://www.iflight.com/index.php?route=resources%2Ftechnical_support_search'},
+{brand:'iFlight XING',name:'XING2 2809 1250KV (60.7g)',kv:1250,mass:60.7,maxS:6,source:'https://shop.iflight.com/XING2-2809-FPV-Motor-Unibell-Pro1673',peakA:50,peakW:1145,testCatalog:'https://www.iflight.com/index.php?route=resources%2Ftechnical_support_search'},
+{brand:'iFlight XING',name:'XING2 2809 1600KV (59.9g)',kv:1600,mass:59.9,maxS:6,source:'https://shop.iflight.com/XING2-2809-FPV-Motor-Unibell-Pro1673',peakA:62.24,peakW:1456.4,testCatalog:'https://www.iflight.com/index.php?route=resources%2Ftechnical_support_search'}
+],prop:[
+{brand:'HQProp',name:'HQ 9×4×3 (시험표 규격, 무게 직접 입력)',diameter:9,pitch:4,blades:3,source:'https://www.hobbywing.com/en/uploads/file/20251117/2a4a3f326d2bdede135f3e582b73eef3.pdf'},
+{brand:'Gemfan',name:'1050 Cinelifter 10×5 3엽 (16.8g)',mass:16.8,diameter:10,pitch:5,blades:3,source:'https://www.gemfanhobby.com/1050-cinelifter-glass-fiber-nylon-3-blade.html'},
+{brand:'Gemfan',name:'1050W-3 10×5 3엽 (25g)',mass:25,diameter:10,pitch:5,blades:3,source:'https://img03.71360.com/w3/5p3560/20251117/50ffa18f7578335345b42f12d991fd78.pdf?dl=1'},
+{brand:'Gemfan',name:'1070-3 10×7 3엽 (23.3g)',mass:23.3,diameter:10,pitch:7,blades:3,source:'https://img03.71360.com/w3/5p3560/20251117/50ffa18f7578335345b42f12d991fd78.pdf?dl=1'},
+{brand:'Gemfan',name:'1080-3 10×8 3엽 (17g)',mass:17,diameter:10,pitch:8,blades:3,source:'https://img03.71360.com/w3/5p3560/20251117/50ffa18f7578335345b42f12d991fd78.pdf?dl=1'},
+{brand:'Gemfan',name:'1170-3 11×7 3엽 (27.7g)',mass:27.7,diameter:11,pitch:7,blades:3,source:'https://img03.71360.com/w3/5p3560/20251117/50ffa18f7578335345b42f12d991fd78.pdf?dl=1'}
+],camera:[{name:'촬영 장비 없음',mass:0},{name:'직접 입력 / 미등록 모델',mass:null},{name:'DJI Osmo Action 6 (149g)',mass:149,source:'https://www.dji.com/osmo-action-6/specs',note:'제조사 표기 본체 중량. 별도 마운트와 추가 장비는 따로 입력.'},{name:'DJI Osmo Action 5 Pro (146g)',mass:146,source:'https://www.dji.com/support/product/osmo-action-5-pro',note:'제조사 표기 중량. 별도 마운트와 추가 장비는 따로 입력.'},{name:'DJI Osmo Action 4 (145g)',mass:145,source:'https://www.dji.com/products/comparison-action',note:'제조사 표기 중량. 별도 마운트와 추가 장비는 따로 입력.'},{name:'GoPro HERO13 Black (159g)',mass:159,source:'https://gopro.com/ko/kr/shop/cameras',note:'제조사 표기 카메라·마운팅·배터리 포함 구성 중량. 별도 추가 마운트 중복 계산 주의.'},{name:'GoPro HERO12 Black (154g)',mass:154,source:'https://gopro.com/en/us/shop/cameras/hero12-black/CHDHX-121-master.html',note:'제조사 표기 카메라·접이식 마운팅 핑거·배터리 포함 중량.'}]};
+const systems={
+'DJI':[{name:'DJI O4 Air Unit Pro',mass:36.2,detail:'카메라 포함 약 32g + 기본 안테나 2개(각 2.1g) = 36.2g. 추가 배선·브래킷 별도',range:{FCC:15,CE:8},rx:['DJI Goggles 3','DJI Goggles N3','DJI Goggles 2','DJI Goggles Integra']},{name:'DJI O4 Air Unit',mass:8.95,detail:'카메라 포함 8.2g + 기본 안테나 0.75g = 8.95g. 렌즈 마운트 포함 시 추가 1g',range:{FCC:10,CE:6},rx:['DJI Goggles 3','DJI Goggles N3','DJI Goggles 2','DJI Goggles Integra']},{name:'DJI O3 Air Unit',mass:null,detail:'정확한 장착 구성 확인 필요',rx:['DJI Goggles 2','DJI Goggles Integra','DJI FPV Goggles V2']}],
+'HDZero':[{name:'HDZero VTX (정확한 모델 직접 확인)',mass:null,rx:['HDZero Goggles','HDZero Goggles 2','HDZero VRX']}],
+'Walksnail':[{name:'Walksnail Avatar VTX (정확한 모델 직접 확인)',mass:null,rx:['Walksnail Goggles X','Walksnail Goggles L','Walksnail Avatar VRX']}],
+'아날로그':[{name:'5.8GHz 아날로그 VTX (모델 직접 확인)',mass:null,rx:['아날로그 5.8GHz VRX']}],
+'Autel':[{name:'Autel 완성형 기체 (모델별 검증 필요)',mass:null,rx:[]}]
+};
+function options(id,arr){$(id).innerHTML='';arr.forEach((item,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=typeof item==='string'?item:item.name;$(id).append(o)})}
+function setupCatalog(type,brandId,modelId){options(brandId,brands[type]);function refresh(){const b=$(brandId).selectedOptions[0]?.textContent;const models=[{name:'직접 입력 / 미등록 모델'},...catalog[type].filter(x=>x.brand===b)];options(modelId,models);$(modelId).onchange=()=>{const x=models[Number($(modelId).value)];if(!x)return;const fields={battery:{mass:'batMass',cells:'cells',mah:'mah',cRate:'cRate'},frame:{mass:'frameMass'},motor:{mass:'motorMass',kv:'kv'},prop:{mass:'propMass',diameter:'propDiameter',pitch:'propPitch',blades:'propBlades'}}[type];Object.entries(fields).forEach(([k,id])=>{if(x[k]!=null)$(id).value=x[k]});if(type==='battery'&&x.chem){$('chem').value=x.chem}if(type==='frame'||type==='prop'){const note=$(type==='frame'?'frameSource':'propSource');note.textContent='';if(x.source){const a=document.createElement('a');a.href=x.source;a.target='_blank';a.rel='noopener noreferrer';a.textContent='선택 제품의 사양 출처 보기';note.append(a);if(x.note)note.append(document.createTextNode(' · '+x.note))}else note.textContent='직접 입력 / 공식 모델 미선택'}if(type==='motor'){const note=$('motorSource');if(note){note.textContent='';if(x.source){const a=document.createElement('a');a.href=x.source;a.target='_blank';a.rel='noopener noreferrer';a.textContent='선택한 모터의 제조사 공식 사양 보기';note.append(a)}else{note.textContent='직접 입력: 모델별 공식 사양 미등록'}}}calc()};calc()}$(brandId).addEventListener('change',refresh);refresh()}
+function setupSystem(){options('brand',Object.keys(systems));function refreshVtx(){const name=$('brand').selectedOptions[0].textContent;const list=systems[name];options('vtx',list);function refreshRx(){const x=list[Number($('vtx').value)];options('vrx',x.rx.length?x.rx:['공식 호환 수신기 검증 필요']);$('vrx').disabled=!x.rx.length;options('ant',['기본/제조사 승인 구성 (추가 모델 검증 필요)']);$('ant').disabled=true;$('vtxMass').value=x.mass??'';$('vtxMassNote').textContent=x.detail||'공식 무게 미확인: 직접 입력하세요.';$('linkNote').textContent=x.rx.length?'호환 수신기 선택은 거리 인증을 뜻하지 않습니다. 공식 시험조건과 국내 운용조건은 다릅니다.':'수신기 호환성이 확인되지 않아 거리 적합성을 판정하지 않습니다.';applyOfficialRange()}$('vtx').onchange=refreshRx;refreshRx()}$('brand').onchange=refreshVtx;refreshVtx()}
+function applyOfficialRange(){
+ const maker=$('brand').selectedOptions[0]?.textContent;
+ const item=systems[maker]?.[Number($('vtx').value)];
+ const rx=$('vrx').selectedOptions[0]?.textContent||'';
+ const region=$('region').value;
+ const eligible=maker==='DJI'&&item?.range&&['DJI Goggles 3','DJI Goggles N3'].includes(rx);
+ const distance=eligible&&region!=='none'?item.range[region]:null;
+ $('link').value=distance??'';
+ $('link').dataset.official=distance!=null?'true':'false';$('link').dataset.manual='false';
+ $('linkNote').textContent=distance!=null
+ ?'제조사 '+region+' 시험조건 편도 '+distance+'km 참고값 자동 적용. 국내 사용 가능 거리·현장 성능 보증 아님. 제어 링크 별도 검증 필요.'
+ :eligible?'공식 FCC/CE 시험거리 자료는 있으나 국내 운용 기본값은 미검증입니다. 필요하면 시험 기준을 선택하세요.'
+ :'선택 조합의 공식 거리 자료 미확인. 호환된다는 사실만으로 거리 인증 불가.';
+ calc();
+}
+function num(id,required=true){const raw=$(id).value.trim();if(!raw){if(required)throw Error($(id).previousElementSibling?.textContent+' 입력 필요');return null}const n=Number(raw);if(!Number.isFinite(n)||n<0)throw Error(id+' 입력값 오류');return n}
+const fmt=(x,d=2)=>Number.isFinite(x)?x.toLocaleString('ko-KR',{maximumFractionDigits:d}):'–';
+// 제조사 공식 시험표의 추력(g)·전류(A) 쌍. 임의 데이터 생성 금지.
+const thrustPresets={
+ hobbywing3115hq9:{motorBrand:'Hobbywing',motorNeedle:'RTF-3115 900KV',propBrand:'HQProp',propNeedle:'HQ 9×4×3',voltage:24,points:[[560,3.3],[937,7.4],[1274,11.9],[1690,17.2],[2327,24.7],[3099,35.5],[3432,41.8]],source:'https://www.hobbywing.com/en/uploads/file/20251117/2a4a3f326d2bdede135f3e582b73eef3.pdf'}
+};
+function presetCheck(){
+ const id=$('testPreset').value;if(!id)return null;
+ const d=thrustPresets[id];
+ const motorBrand=$('motorBrand').selectedOptions[0]?.textContent||'';
+ const motorName=$('motorModel').selectedOptions[0]?.textContent||'';
+ const propBrand=$('propBrand').selectedOptions[0]?.textContent||'';
+ const propName=$('propModel').selectedOptions[0]?.textContent||'';
+ if(motorBrand!==d.motorBrand||!motorName.includes(d.motorNeedle)||propBrand!==d.propBrand||!propName.includes(d.propNeedle))throw Error('제조사 시험표의 모터·프로펠러 조합과 현재 선택된 부품이 다릅니다. 해당 제품을 선택하거나 직접 입력 모드로 전환하세요.');
+ if(Number($('kv').value)!==900||Number($('propDiameter').value)!==9||Number($('propPitch').value)!==4||Number($('propBlades').value)!==3)throw Error('선택된 모터 KV 또는 프로펠러 규격이 제조사 시험표와 다릅니다.');
+ if(Number($('cells').value)!==6)throw Error('해당 시험표는 6S 조건입니다.');
+ const nominal=Number.parseFloat($('chem').value)*Number($('cells').value);
+ if(Math.abs(nominal-d.voltage)/d.voltage>0.15)throw Error('배터리 공칭전압과 시험 전압의 차이가 큽니다.');
+ return d;
+}
+function applyThrustPreset(){
+ const id=$('testPreset').value,box=$('testSource');box.replaceChildren();
+ if(!id){box.textContent='직접 입력 · 모터·프롭·전압 일치 여부를 사용자가 확인';calc();return;}
+ const d=thrustPresets[id],a=document.createElement('a');a.href=d.source;a.target='_blank';a.rel='noopener noreferrer';a.textContent='제조사 공식 추력 시험표 보기';box.append(a);
+ $('testVoltage').value=d.voltage;
+ // 요구 추력 주변 두 시험점 자동 선택. 실제 유효성은 계산 시 재검사.
+ updatePresetPoints();calc();
+}
+function updatePresetPoints(){
+ const d=thrustPresets[$('testPreset').value];if(!d)return;
+ const n=Number($('motorCount').value);
+ const mass=Number($('frameMass').value)+Number($('motorMass').value)*n+Number($('propMass').value)*n+Number($('batMass').value)*Number($('batCount').value)+Number($('cameraMass').value)+Number($('cameraMount').value)+Number($('otherMass').value)+(Number($('vtxMass').value)||0);
+ const t=mass/n;let pair=null;
+ for(let i=0;i<d.points.length-1;i++){if(t>=d.points[i][0]&&t<=d.points[i+1][0]){pair=[d.points[i],d.points[i+1]];break;}}
+ if(!pair){['testThrust1','testCurrent1','testThrust2','testCurrent2'].forEach(k=>$(k).value='');return;}
+ $('testThrust1').value=pair[0][0];$('testCurrent1').value=pair[0][1];$('testThrust2').value=pair[1][0];$('testCurrent2').value=pair[1][1];
+}
+function estimatedPower(totalMass,motorCount){
+ const preset=presetCheck();if(preset){if(Number($('testVoltage').value)!==preset.voltage)throw Error('제조사 시험표의 전압이 변경되었습니다.');updatePresetPoints();}
+ const a=num('testThrust1'),b=num('testThrust2'),ia=num('testCurrent1'),ib=num('testCurrent2'),voltage=num('testVoltage'),factor=num('cruiseFactor'),aux=num('auxPower');
+ if(!(a>0&&b>a&&ia>0&&ib>ia&&voltage>0&&factor>=0.1&&factor<=5))throw Error('추력 시험점은 추력·전류가 증가하는 두 개의 양수 측정값이어야 합니다.');
+ const thrust=totalMass/motorCount;
+ if(thrust<a||thrust>b)throw Error('호버 요구 추력 '+fmt(thrust,1)+'g/모터가 시험점 '+fmt(a,1)+'~'+fmt(b,1)+'g 범위를 벗어납니다. 시험자료를 추가하거나 직접 전력 모드로 전환하세요.');
+ const current=ia+(ib-ia)*(thrust-a)/(b-a);
+ const hover=voltage*current*motorCount+aux;
+ return {power:hover*factor,hover,thrust,current};
+}
+function drawThrustChart(estimation, motorCount){
+ const box=$('thrustChart');box.replaceChildren();
+ if(!estimation)return;
+ const preset=thrustPresets[$('testPreset').value];
+ const pts=preset?preset.points:[[num('testThrust1'),num('testCurrent1')],[num('testThrust2'),num('testCurrent2')]];
+ const voltage=num('testVoltage');
+ const maxT=Math.max(...pts.map(p=>p[0]))*1.12;
+ const maxP=Math.max(...pts.map(p=>p[1]*voltage))*1.12;
+ const W=620,H=260,L=64,R=20,TOP=20,B=44;
+ const x=t=>L+t/maxT*(W-L-R),y=p=>TOP+(1-p/maxP)*(H-TOP-B);
+ const svgNS='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(svgNS,'svg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('role','img');svg.setAttribute('aria-label','모터당 추력 대비 전력 그래프. 점은 시험자료, 강조점은 현재 호버 요구 추력');svg.style.cssText='width:100%;height:auto;display:block';
+ const add=(tag,attrs,txt)=>{const el=document.createElementNS(svgNS,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,String(v)));if(txt!=null)el.textContent=txt;svg.append(el);return el};
+ for(let i=0;i<=4;i++){let yy=TOP+(H-TOP-B)*i/4;add('line',{x1:L,y1:yy,x2:W-R,y2:yy,stroke:'#29405c'});add('text',{x:L-8,y:yy+4,'text-anchor':'end',fill:'#b2c2d4','font-size':11},Math.round(maxP*(1-i/4)))}
+ add('polyline',{points:pts.map(p=>`${x(p[0])},${y(p[1]*voltage)}`).join(' '),fill:'none',stroke:'#38bdf8','stroke-width':2.5});
+ pts.forEach(p=>add('circle',{cx:x(p[0]),cy:y(p[1]*voltage),r:3,fill:'#eaf2fc'}));
+ const thrust=estimation.thrust, motorP=estimation.current*voltage;
+ add('line',{x1:x(thrust),y1:TOP,x2:x(thrust),y2:H-B,stroke:'#f5d77e','stroke-dasharray':'5 4'});
+ add('circle',{cx:x(thrust),cy:y(motorP),r:6,fill:'#62dca1',stroke:'#08111f','stroke-width':2});
+ add('text',{x:W/2,y:H-8,'text-anchor':'middle',fill:'#b2c2d4','font-size':12},'모터당 추력 (g)');
+ add('text',{x:12,y:14,fill:'#b2c2d4','font-size':12},'W/모터');
+ const title=document.createElement('h3');title.textContent='추력 · 전력 시험곡선';title.style.color='#38bdf8';box.append(title,svg);
+ const note=document.createElement('p');note.className='note';note.textContent=`현재 모터당 요구 추력 ${fmt(thrust,1)}g · 시험 전압 ${fmt(voltage,1)}V · 보간 전력 ${fmt(motorP,1)}W/모터 · 총 ${motorCount}개. 시험점 사이 선형 보간이며 순항 전력은 별도 배율 가정입니다.`;box.append(note);
+}
+function refreshPowerMode(){const test=$('powerMode').value==='test';$('testFields').classList.toggle('hide',!test);$('power').disabled=test;$('auxPower').disabled=!test;$('powerNote').textContent=test?'추력 시험자료로 추정한 값입니다. 전압·프롭·시험 환경이 일치하는지 확인하세요.':'실측 또는 가정 순항 총소비전력(W)을 직접 입력합니다.';calc()}
+// v11: 제조사 확인 제품의 실제 팩 중량으로 6S LiPo 비교. 다른 셀/화학계는 비교하지 않는다.
+const verifiedBatteryPacks=[
+ {name:'CNHL Racing 6S 10000mAh 100C V2.0',mah:10000,mass:1280,c:100,source:'https://chinahobbyline.com/ko/products/cnhl-racing-series-10000mah-22-2v-6s-100c-lipo-battery-with-ec5-plug',note:'EC5 · RC용 제품 · 항공기 장착 적합성 별도 확인'},
+ {name:'Tattu UAV Classic 6S 16000mAh 30C',mah:16000,mass:2000,c:30,source:'https://www.genstattu.com/ta-30c-16000-6s1p-as-as150.html',note:'AS150 · 제조사 표기 ±20g'},
+ {name:'Tattu UAV Classic 6S 22000mAh 30C',mah:22000,mass:2460,c:30,source:'https://www.genstattu.com/content/instock/Tattu-UAV-Product-Brochure.pdf',note:'제조사 브로슈어 기준 ±100g · 제품 버전 확인'}
 ];
-
-function fmt(value,unit=""){
-  if(!Number.isFinite(value)) return "–";
-  const n=Math.abs(value)>=100
-    ?Math.round(value).toString()
-    :value.toFixed(2);
-  return n+(unit?" "+unit:"");
+function drawVerifiedBatteryCompare(base){
+ const host=$('realBatteryCompare');host.replaceChildren();
+ const h=document.createElement('h3');h.textContent='제조사 실물 배터리 비교 (6S 일반 LiPo)';host.append(h);
+ const note=document.createElement('p');note.className='note';note.textContent='제조사 공개 용량·무게·C값을 사용하는 별도 비교입니다. 현재 입력한 배터리와 비교하며 셀 수/화학계가 다르면 계산하지 않습니다. 동일 팩 병렬 개수를 유지합니다. 전압 강하·항력·셀 노화·열·커넥터 허용전류는 모델링하지 않습니다.';host.append(note);
+ if(base.S!==6||base.chem!=='3.7'){
+  const msg=document.createElement('p');msg.className='warn';msg.textContent='현재 선택한 배터리가 6S 일반 LiPo가 아니므로 제품 비교를 중단했습니다. 6S 일반 LiPo 선택 시 표시됩니다.';host.append(msg);return;
+ }
+ const table=document.createElement('table');
+ const head=document.createElement('thead');head.innerHTML='<tr><th style="text-align:left">제품</th><th>용량</th><th>팩 무게</th><th>왕복거리</th><th>판정</th></tr>';table.append(head);
+ const tbody=document.createElement('tbody');
+ const items=[{name:'현재 입력값',mah:base.mah,mass:base.batMass,c:base.c,source:null,note:'사용자 입력 기준'},...verifiedBatteryPacks];
+ for(const item of items){
+  const newMass=base.mass+(item.mass-base.batMass)*base.count;
+  let power=base.power,dist=null,reason='';
+  if(base.testMode){try{power=estimatedPower(newMass,base.motorCount).power}catch(e){reason='시험 범위 밖';}}
+  if(!reason){const E=base.S*3.7*item.mah*base.count/1000*base.usable;
+   const cruise=Math.max(0,E*(1-base.res)-base.Eclimb);
+   const w=base.wind*3.6;
+   dist=w>=base.speed?0:cruise/power*(base.speed*base.speed-w*w)/base.speed;
+   const amp=power/(base.S*3.7),rated=item.mah/1000*item.c*base.count;
+   if(amp>rated||base.S*3.7>0&&num('climbPower')/(base.S*3.7)>rated)reason='순항/상승 방전율 초과';
+   else reason=dist>=base.target?'목표 충족*':'거리 부족';
+  }
+  const tr=document.createElement('tr');
+  const name=document.createElement('td');if(item.source){const a=document.createElement('a');a.href=item.source;a.target='_blank';a.rel='noopener noreferrer';a.textContent=item.name;name.append(a);}else name.textContent=item.name;
+  const sub=document.createElement('div');sub.className='sub';sub.textContent=item.note;name.append(sub);
+  const cells=[name,...[item.mah.toLocaleString('ko-KR')+'mAh',item.mass.toLocaleString('ko-KR')+'g',dist===null?'—':fmt(dist,1)+'km',reason].map(v=>{const td=document.createElement('td');td.textContent=v;return td})];tr.append(...cells);tbody.append(tr);
+ }
+ table.append(tbody);host.append(table);
+ const foot=document.createElement('p');foot.className='note';foot.textContent='* 목표 충족은 배터리 에너지·입력 전력·단순 풍속 모델에 한정된 결과입니다. 송수신 링크, 실제 추진 여유, 공역·법규, 안전한 귀환을 보증하지 않습니다. 직접 전력 모드에서는 무게에 따른 전력 증가를 반영하지 않습니다.';host.append(foot);
 }
-
-function readNumber(id,min,max,required=true,integer=false){
-  const el=$(id);
-  const raw=el.value.trim();
-  const label=document.querySelector('label[for="'+id+'"]');
-  const name=label?label.textContent:id;
-  el.classList.remove("invalid");
-
-  if(raw===""){
-    if(!required) return {value:null,error:null};
-    el.classList.add("invalid");
-    return {value:null,error:name+": 값을 입력하세요."};
-  }
-
-  const value=Number(raw);
-  if(!Number.isFinite(value) ||
-     value<min || value>max ||
-     (integer&&!Number.isInteger(value))){
-    el.classList.add("invalid");
-    return {
-      value:null,
-      error:name+": "+min+"~"+max+
-        (integer?" 사이의 정수":" 사이의 숫자")+"를 입력하세요."
-    };
-  }
-  return {value,error:null};
+// v12: 확인된 동일 공칭전압 6S 팩을 화학계/구조별로 비교한다. Li-ion이라고 오인 표기하지 않는다.
+const chemistryPacks=[
+ {name:'Tattu UAV Classic 6S 22000mAh 30C 일반 LiPo',mah:22000,mass:2460,c:30,kind:'일반 LiPo',source:'https://genstattu.com/tattu-22-2v-30c-6s-22000mah-lipo-battery-with-xt90-s-plug-for-uav.html'},
+ {name:'Tattu Semi-solid 6S 22000mAh 3C 연속',mah:22000,mass:2250,c:3,kind:'세미솔리드 LiPo',source:'https://genstattu.com/tattu-semi-solid-22000mah-5c-22-2v-6s1p-xt90s-f-g-tech-lipo-battery/'}
+];
+function drawChemBatteryCompare(base){
+ const host=$('chemBatteryCompare');host.replaceChildren();
+ const title=document.createElement('h3');title.textContent='배터리 기술별 실제 제품 비교 · 연속 방전 안전성';host.append(title);
+ const intro=document.createElement('p');intro.className='note';intro.textContent='제조사 사양을 확인한 일반 LiPo와 세미솔리드 LiPo 6S 제품 비교입니다. 세미솔리드를 Li-ion으로 분류하지 않습니다. 셀 수·공칭전압이 동일한 조건만 계산하며, Li-ion 제품은 정확한 팩 사양 확보 전까지 자동 등록하지 않습니다.';host.append(intro);
+ if(base.S!==6||base.chem!=='3.7'){const w=document.createElement('p');w.className='warn';w.textContent='6S 일반 공칭전압(셀당 3.7V)을 선택해야 이 비교를 실행합니다.';host.append(w);return;}
+ const table=document.createElement('table');const thead=document.createElement('thead');thead.innerHTML='<tr><th>제품</th><th>Wh/kg</th><th>연속 한계</th><th>추정 순항전류</th><th>예상 왕복</th><th>판정</th></tr>';table.append(thead);const tbody=document.createElement('tbody');
+ for(const item of chemistryPacks){const mass=base.mass+(item.mass-base.batMass)*base.count;const nominalWh=6*3.7*item.mah/1000;const density=nominalWh/(item.mass/1000);let power=base.power;let dist=null;let reason='';
+  if(base.testMode){try{power=estimatedPower(mass,base.motorCount).power}catch(e){reason='추력 시험 범위 밖';}}
+  const current=power/22.2;const continuous=item.mah/1000*item.c*base.count;
+  if(!reason){const E=nominalWh*base.count*base.usable;const cruise=Math.max(0,E*(1-base.res)-base.Eclimb);const wind=base.wind*3.6;dist=wind>=base.speed?0:cruise/power*(base.speed*base.speed-wind*wind)/base.speed;
+   if(current>continuous||num('climbPower')/22.2>continuous)reason='순항/상승 연속 방전 초과 · 부적합';else if(dist<base.target)reason='거리 부족';else reason='에너지 계산상 충족*';}
+  const tr=document.createElement('tr');const n=document.createElement('td');const a=document.createElement('a');a.href=item.source;a.target='_blank';a.rel='noopener noreferrer';a.textContent=item.name;n.append(a);tr.append(n);
+  for(const value of [fmt(density,1),fmt(continuous,1)+'A',fmt(current,1)+'A',dist===null?'—':fmt(dist,1)+'km',reason]){const td=document.createElement('td');td.textContent=value;tr.append(td);}tbody.append(tr);
+ }table.append(tbody);host.append(table);
+ const foot=document.createElement('p');foot.className='note';foot.textContent='* 순항 전류만으로 이륙·상승·급가속 피크 안전성을 검증할 수 없습니다. 세미솔리드 제품의 제조사 표기 5C는 3초 미만 피크이며 연속 3C로 판정합니다. 직접 전력 입력 모드는 중량 증가에 따른 전력 증가를 계산하지 않습니다. 제품별 전압 강하·실제 사용가능 에너지·전류 제한은 비행 로그와 방전 시험으로 확인하세요.';host.append(foot);
 }
-
-function clearOutput(){
-  outputIds.forEach(id=>$(id).textContent="–");
-  $("rt").textContent="–";
-  $("warns").innerHTML="";
-  $("windVerdict").innerHTML="";
-  $("chartBox").innerHTML="";
+// v10: 배터리 용량과 중량을 함께 바꾸는 시나리오 비교. 실제 제품 데이터가 없으면 비례 질량 가정임을 명시한다.
+function drawBatteryCompare(base){
+ const host=$('batteryCompare');host.replaceChildren();
+ const h=document.createElement('h3');h.textContent='배터리 용량·중량 변화에 따른 왕복거리 비교';host.append(h);
+ const note=document.createElement('p');note.className='note';note.textContent='동일한 셀 구성·화학계·팩 수를 유지하며 용량과 팩 무게가 비례한다고 가정한 시나리오입니다. 실제 제품별 중량·방전율·전압 강하는 다르므로 구매·비행 판단에 직접 사용하지 마세요.';host.append(note);
+ const multipliers=[0.5,0.75,1,1.25,1.5,2];const vals=[];
+ for(const k of multipliers){
+  const newMass=base.mass+base.batMass*base.count*(k-1);
+  let P=base.power;
+  if(base.testMode){try{P=estimatedPower(newMass,base.motorCount).power}catch(e){vals.push({k,dist:null,power:null,mass:newMass});continue}}
+  const energy=base.Euse*k;const reserve=energy*base.res;
+  const cruise=Math.max(0,energy-reserve-base.Eclimb);
+  const w=base.wind*3.6;
+  const dist=w>=base.speed?0:cruise/P*(base.speed*base.speed-w*w)/base.speed;
+  vals.push({k,dist,power:P,mass:newMass});
+ }
+ const max=Math.max(base.target,...vals.map(v=>v.dist??0),0.01);
+ const list=document.createElement('div');list.style.cssText='display:grid;gap:11px;margin-top:12px';
+ vals.forEach(v=>{
+  const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:90px 1fr 85px;align-items:center;gap:9px;font-size:12px';
+  const left=document.createElement('span');left.textContent=Math.round(base.mah*v.k).toLocaleString('ko-KR')+'mAh';
+  const bar=document.createElement('div');bar.style.cssText='height:17px;background:#0d1a2c;border:1px solid #29405c;border-radius:5px;overflow:hidden';
+  const fill=document.createElement('div');fill.style.cssText='height:100%;width:'+((v.dist??0)/max*100).toFixed(2)+'%;background:'+(v.dist===null?'#ff8181':v.dist>=base.target?'#62dca1':'#38bdf8');bar.append(fill);
+  const right=document.createElement('span');right.style.textAlign='right';right.textContent=v.dist===null?'자료 범위 밖':fmt(v.dist)+'km';
+  row.append(left,bar,right);list.append(row);
+ });host.append(list);
+ const small=document.createElement('p');small.className='note';small.textContent=base.testMode?'추력 시험자료 범위를 벗어나는 배터리 조합은 계산하지 않습니다.':'직접 전력 모드에서는 배터리 무게가 늘어도 순항 전력을 일정하게 가정합니다. 따라서 무거워진 배터리의 전력 증가 효과는 반영되지 않습니다.';host.append(small);
 }
-
-function nice(range){
-  if(!(range>0)) return 1;
-  const raw=range/5;
-  const p=Math.pow(10,Math.floor(Math.log10(raw)));
-  const f=raw/p;
-  return (f<1.5?1:f<3.5?2:f<7.5?5:10)*p;
+function drawReturnPlan(d){
+ const host=$('returnPlan');host.replaceChildren();const h=document.createElement('h3');h.textContent='목표 거리 귀환 에너지 검토';host.append(h);
+ const note=document.createElement('p');note.className='note';note.textContent='출발·귀환 각각 목표 거리의 절반을 이동하는 왕복 모델입니다. 가용 에너지에서 상승 소비와 추가 예비분을 먼저 제외합니다. 경로별 맞바람·뒷바람 속도와 순항 전력은 일정하다고 가정합니다.';host.append(note);
+ const w=d.wind*3.6;const out=d.speed-w,back=d.speed+w;
+ const items=[['출발 구간 지상속도',out>0?fmt(out,1)+' km/h':'진행 불가'],['귀환 구간 지상속도',fmt(back,1)+' km/h'],['목표 왕복 순항 에너지',Number.isFinite(d.routeEnergy)?fmt(d.routeEnergy,1)+' Wh':'산출 불가'],['목표 완료 후 추가 에너지',Number.isFinite(d.routeRemaining)?fmt(d.routeRemaining,1)+' Wh':'산출 불가'],['기설정 예비 에너지',fmt(d.Ereserve,1)+' Wh']];
+ const table=document.createElement('table');const body=document.createElement('tbody');for(const [a,b] of items){const tr=document.createElement('tr');for(const value of [a,b]){const td=document.createElement('td');td.textContent=value;tr.append(td)}body.append(tr)}table.append(body);host.append(table);
+ const verdict=document.createElement('p');const ok=d.routeRemaining>=0&&out>0;verdict.className=ok?'ok':'warn';verdict.textContent=ok?'에너지 가정상 목표 왕복 경로 충족 · 통신 및 실제 비행 안전성은 별도 검증':'목표 왕복 경로에 필요한 에너지 부족 또는 맞바람 진행 불가';host.append(verdict);
+ const caution=document.createElement('p');caution.className='note';caution.textContent='이 결과는 일정 전력 모델의 계획상 여유이며 배터리 잔량계의 실제 SOC가 아닙니다. 전압 강하, 기상 급변, 기체 자세, 비상 회항, 착륙 에너지 및 영상·조종 링크는 미검증입니다.';host.append(caution);
 }
+function calc(){try{const target=num('target'),S=num('cells'),mah=num('mah'),c=num('cRate'),count=num('batCount'),batMass=num('batMass'),usable=num('usable')/100,res=num('reserve')/100;const motorCount=num('motorCount'),vtxMass=num('vtxMass',false),speed=num('speed'),wind=num('wind'),h=num('climbAlt'),climbSpeed=num('climbSpeed'),climbPower=num('climbPower'),link=num('link',false);const mass=num('frameMass')+num('motorMass')*motorCount+num('propMass')*motorCount+batMass*count+num('cameraMass')+num('cameraMount')+num('otherMass')+(vtxMass??0);const testMode=$('powerMode').value==='test';const estimation=testMode?estimatedPower(mass,motorCount):null;const power=testMode?estimation.power:num('power');if([S,mah,c,count,batMass,speed,power,climbSpeed,climbPower,target].some(x=>x<=0)||usable<=0||usable>1||res>=1||res<0||motorCount<1||!Number.isInteger(count)||!Number.isInteger(S)||!Number.isInteger(motorCount))throw Error('셀 수·수량·에너지 비율·속도·전력 입력을 확인하세요.');const chem=$('chem').value;const Vnom=chem==='3.7li'?3.7:Number.parseFloat(chem);if(!Number.isFinite(Vnom))throw Error('배터리 공칭 전압을 확인하세요.');const E=S*Vnom*mah*count/1000;const Euse=E*usable;const Ereserve=Euse*res;const Eclimb=climbPower*h/climbSpeed/3600;const Ecru=Math.max(0,Euse-Ereserve-Eclimb);const T=Ecru/power;const w=wind*3.6;const round=w>=speed?0:T*(speed*speed-w*w)/speed;const rad=round/2;const outwardSpeed=speed-w,returnSpeed=speed+w;const routeHours=outwardSpeed>0&&returnSpeed>0?(target/2)/outwardSpeed+(target/2)/returnSpeed:Infinity;const routeEnergy=routeHours*power;const routeRemaining=Ecru-routeEnergy;const routeMargin=Euse>0?routeRemaining/Euse*100:0;const totalLimit=link==null?null:Math.min(round,link*2);const reqA=power/(S*Vnom);const maxA=mah/1000*c*count;const rxs=$('vrx');const compatible=!rxs.disabled&&!($('manualPanel_vtx')?.hidden===false&&$('manual_vtx_manualVtxName')?.value.trim());const rows=[['순항 전력 근거',testMode?'추력 시험점 선형 보간 + 순항 배율':'직접 입력(실측/가정)'],['계산 적용 순항 전력',fmt(power)+' W'],...(testMode?[['호버 요구 추력 (모터당)',fmt(estimation.thrust,1)+' g'],['시험자료 기반 호버 추정 전력',fmt(estimation.hover)+' W'],['시험자료 보간 전류 (모터당)',fmt(estimation.current)+' A']]:[]),['총 이륙중량',fmt(mass,1)+' g'],['촬영 장비 및 추가 마운트',fmt(num('cameraMass')+num('cameraMount'),1)+' g'],['배터리 공칭 에너지',fmt(E)+' Wh'],['사용 가능 에너지',fmt(Euse)+' Wh'],['상승 소모 에너지',fmt(Eclimb)+' Wh'],['추가 예비 에너지',fmt(Ereserve)+' Wh'],['순항 가용 에너지',fmt(Ecru)+' Wh'],['순항 가능 시간',fmt(T*60)+' 분'],['배터리 연속 방전 표기 한계',fmt(maxA)+' A'],['공칭 전압 기준 순항 전류',fmt(reqA)+' A'],['무풍 왕복 총거리',fmt(T*speed)+' km'],['바람 반영 왕복 총거리',fmt(round)+' km'],['바람 반영 편도 반경',fmt(rad)+' km'],['목표 편도거리',fmt(target/2)+' km'],['목표 경로 순항 필요 에너지',Number.isFinite(routeEnergy)?fmt(routeEnergy)+' Wh':'귀환 불가'],['목표 경로 완료 후 추가 잔여 에너지',Number.isFinite(routeRemaining)?fmt(routeRemaining)+' Wh':'귀환 불가'],['가용 에너지 대비 추가 잔여율',Number.isFinite(routeMargin)?fmt(routeMargin,1)+' %':'귀환 불가'],['사용자/제조사 표기 영상 링크 기준 참고 한계',totalLimit==null?'미검증':fmt(totalLimit)+' km (조종 링크·국내 운용 미검증)']];$('headline').textContent=fmt(round)+' km (배터리·바람 기준 왕복)';const warnings=[];if(vtxMass===null)warnings.push('VTX 무게 미입력: 총중량은 VTX를 제외한 부분합입니다.');if(link===null)warnings.push('링크 거리 미검증: 최종 운용 가능 거리 확정 불가.');else if($('link').dataset.official==='true')warnings.push('입력된 링크 수치는 제조사 FCC/CE 시험값이며 국내 운용 가능 거리 또는 제어 링크 한계가 아닙니다.');else warnings.push('링크 거리는 사용자 입력값으로 공식 검증되지 않았습니다. 영상 링크와 조종 링크 각각의 실제 확인이 필요합니다.');if(!compatible)warnings.push('수신기 호환성 미검증.');if(w>=speed)warnings.push('풍속이 대기속도 이상: 맞바람 귀환 불가.');const chosenMotorBrand=$('motorBrand').selectedOptions[0]?.textContent;const chosenMotorName=$('motorModel').selectedOptions[0]?.textContent;const motorSpec=catalog.motor.find(x=>x.brand===chosenMotorBrand&&x.name===chosenMotorName);if(motorSpec?.maxS&&S>motorSpec.maxS)warnings.push('선택 모터의 제조사 권장 최대 셀 수('+motorSpec.maxS+'S)를 초과합니다.');if(motorSpec?.peakA){
+  const motorPeakTotal=motorSpec.peakA*motorCount;
+  const motorPeakPower=motorSpec.peakW*motorCount;
+  rows.push(['모터 제조사 표기 피크 전류 (합계)',fmt(motorPeakTotal)+' A']);
+  rows.push(['모터 제조사 표기 피크 전력 (합계)',fmt(motorPeakPower)+' W']);
+  if(testMode&&estimation.current>motorSpec.peakA)warnings.push('시험자료 기반 모터당 추정 전류가 제조사 표기 피크 전류를 초과합니다.');
+  warnings.push('모터 피크 정격은 연속 사용 정격이나 실제 비행거리 근거가 아닙니다. iFlight 추력 시험표는 공식 기술지원 자료에서 확인하세요. 공식 원문을 수치로 검증하기 전에는 자동 추정값을 생성하지 않습니다.');
+} const chosenFrame=catalog.frame.find(x=>x.brand===$('frameBrand').selectedOptions[0]?.textContent&&x.name===$('frameModel').selectedOptions[0]?.textContent);if(chosenFrame?.maxProp&&num('propDiameter')>chosenFrame.maxProp)warnings.push('프레임 공식 허용 프롭 직경 '+chosenFrame.maxProp+'인치 초과: 물리적 간섭 위험.');if(reqA>maxA)warnings.push('공칭 전압 기준 순항 요구전류가 배터리 연속 방전 표기 한계를 초과합니다.');if(climbPower/(S*Vnom)>maxA)warnings.push('상승 전류 추정치가 배터리 연속 방전 표기 한계를 초과합니다.');if(routeRemaining<0)warnings.push('목표 왕복 경로에서 예비 에너지를 제외한 사용 가능 에너지가 부족합니다.');if(Ecru<=0)warnings.push('상승과 예비분 제외 후 순항 에너지 없음.');warnings.push(testMode?'촬영 장비 무게는 시험점 기반 호버 추정 전력에 반영되지만 순항 배율은 실측으로 검증해야 합니다.':'촬영 장비 중량은 이륙중량에 반영되지만 순항 소비전력은 자동 보정하지 않습니다. 카메라 탑재 후 실측 전력을 다시 입력하세요.');warnings.push(testMode?'총중량과 모터 수량을 추력 시험자료 보간에 반영했습니다. KV·프롭 모델은 시험자료와 일치하는지 사용자가 확인해야 합니다. 순항 배율은 실측 보정 전 가정값입니다.':'모터 KV·프롭·총중량은 자동 전력 산출에 사용하지 않았습니다. 소비전력은 입력한 실측/가정값입니다.');const energyOk=round>=target&&reqA<=maxA&&climbPower/(S*Vnom)<=maxA&&Ecru>0;const linkOk=link!==null&&link>=target/2;const manualLink=$('link').dataset.manual==='true'||!!($('manualPanel_vtx')?.hidden===false&&$('manual_vtx_manualVtxName')?.value.trim());const status='통신·국내 운용 검증 대기';$('status').textContent=status+' · '+(energyOk?'배터리 거리 충족':'배터리 거리 부족')+' · '+(link===null?'통신 거리 미검증':linkOk?'입력 링크 거리 충족':'입력 링크 거리 부족');$('status').className='warn';$('results').innerHTML=rows.map(([a,b])=>'<tr><td>'+a+'</td><td>'+b+'</td></tr>').join('');$('warnings').textContent=warnings.join(' / ');drawReturnPlan({target,speed,wind,power,Euse,Ereserve,Eclimb,Ecru,routeEnergy,routeRemaining,routeMargin,link,compatible});drawThrustChart(estimation,motorCount);drawChemBatteryCompare({mass,batMass,count,motorCount,power,testMode,res,Eclimb,wind,speed,target,S,chem,usable});drawVerifiedBatteryCompare({mass,batMass,count,mah,c,motorCount,power,testMode,Euse,res,Eclimb,wind,speed,target,S,chem,usable});drawBatteryCompare({mass,batMass,count,mah,motorCount,power,testMode,Euse,res,Eclimb,wind,speed,target});$('error').textContent='';}catch(e){$('error').textContent=e.message;$('headline').textContent='계산 대기';$('results').innerHTML='';$('status').textContent='';$('warnings').textContent='';$('thrustChart').replaceChildren();$('batteryCompare').replaceChildren();$('realBatteryCompare').replaceChildren();$('chemBatteryCompare').replaceChildren();$('returnPlan').replaceChildren()}}
+setupCatalog('battery','batBrand','batModel');setupCatalog('frame','frameBrand','frameModel');setupCatalog('motor','motorBrand','motorModel');setupCatalog('prop','propBrand','propModel');options('camera',catalog.camera);const cameraInfo=document.createElement('p');cameraInfo.className='note';cameraInfo.id='cameraInfo';$('camera').closest('section').append(cameraInfo);$('camera').onchange=()=>{const x=catalog.camera[Number($('camera').value)];if(x.mass!=null)$('cameraMass').value=x.mass;cameraInfo.textContent=x.note||'실측한 촬영 장비 무게를 입력하세요.';if(x.source){const a=document.createElement('a');a.href=x.source;a.target='_blank';a.rel='noopener noreferrer';a.textContent=' · 공식 제품 사양';cameraInfo.append(a)}calc()};$('camera').onchange();setupSystem();$('region').addEventListener('change',applyOfficialRange);$('vrx').addEventListener('change',applyOfficialRange);$('link').addEventListener('input',()=>{$('link').dataset.official='false';$('link').dataset.manual='true';calc()});document.querySelectorAll('input,select').forEach(x=>{x.addEventListener('input',calc);x.addEventListener('change',calc)});$('powerMode').addEventListener('change',refreshPowerMode);$('testPreset').addEventListener('change',applyThrustPreset);refreshPowerMode();$('copy').onclick=()=>{const t='TSD 장거리 비행 계산\n'+$('headline').textContent+'\n'+$('results').innerText+'\n'+$('status').textContent+'\n'+$('warnings').textContent;navigator.clipboard?.writeText(t).then(()=>{$('copy').textContent='복사 완료'},()=>{$('copy').textContent='복사 실패'})};calc();
 
-// T: 순항 가능 시간(h)
-// v: 대기속도(km/h)
-// wms: 왕복 경로와 평행한 풍속(m/s)
-function distanceAtWind(T,v,wms){
-  const w=wms*3.6;
-  if(!(T>0)||!(v>w)) return 0;
-  return T*(v*v-w*w)/v;
+// v14: 미등록·미검증 모델을 선택한 경우 사용자 직접 기입 패널을 명시적으로 표시한다.
+const manualDefs=[
+ {key:'battery',select:'batModel',section:'batBrand',fields:[['제조사 / 제품명','manualBatteryName','text'],['셀 수 (S)','cells','number'],['용량 (mAh)','mah','number'],['연속 방전율 (C)','cRate','number'],['팩당 무게 (g)','batMass','number']]},
+ {key:'frame',select:'frameModel',section:'frameBrand',fields:[['제조사 / 제품명','manualFrameName','text'],['프레임 무게 (g)','frameMass','number']]},
+ {key:'motor',select:'motorModel',section:'motorBrand',fields:[['제조사 / 제품명','manualMotorName','text'],['모터 KV','kv','number'],['모터당 무게 (g)','motorMass','number'],['모터 수량','motorCount','number']]},
+ {key:'prop',select:'propModel',section:'propBrand',fields:[['제조사 / 제품명','manualPropName','text'],['직경 (인치)','propDiameter','number'],['피치 (인치)','propPitch','number'],['블레이드 수','propBlades','number'],['개당 무게 (g)','propMass','number']]},
+ {key:'camera',select:'camera',fields:[['카메라 제품명','manualCameraName','text'],['카메라 전체 무게 (g)','cameraMass','number'],['마운트·액세서리 무게 (g)','cameraMount','number']]},
+ {key:'vtx',select:'vtx',fields:[['기체 / VTX 정확한 모델명','manualVtxName','text'],['VTX 무게 (g)','vtxMass','number'],['영상·제어 링크 검증 편도거리 (km, 미확인 시 공란)','link','number']]}
+];
+function setupManualEntry(){
+ manualDefs.forEach(def=>{
+  const selector=$(def.select);if(!selector)return;
+  const host=selector.parentElement;
+  const trigger=document.createElement('button');trigger.type='button';trigger.className='manual-trigger';trigger.textContent='✎ 직접 입력 열기 / 미등록 모델 작성';
+  const status=document.createElement('span');status.className='manual-status';status.id='manualStatus_'+def.key;
+  const panel=document.createElement('div');panel.className='manual-panel';panel.id='manualPanel_'+def.key;panel.hidden=true;
+  const heading=document.createElement('strong');heading.textContent='직접 입력 · 사용자 제공 사양 (공식 검증 아님)';panel.append(heading);
+  const grid=document.createElement('div');grid.className='grid';
+  def.fields.forEach(([title,id,type])=>{
+   const wrap=document.createElement('div');const label=document.createElement('label');label.textContent=title;label.htmlFor='manual_'+def.key+'_'+id;
+   const input=document.createElement('input');input.id=label.htmlFor;input.type=type;input.placeholder=type==='text'?'정확한 모델명 입력':'값을 입력하세요';if(type==='number'){input.min='0';input.step='any'}
+   if(!id.startsWith('manual')){input.value=$(id).value;input.addEventListener('input',()=>{$(id).value=input.value;if(def.key==='vtx'||id==='link'){$('link').dataset.official='false';$('link').dataset.manual='true'}$(id).dispatchEvent(new Event('input',{bubbles:true}))});$(id).addEventListener('input',()=>{if(document.activeElement!==input)input.value=$(id).value})}
+   wrap.append(label,input);grid.append(wrap);
+  });panel.append(grid);
+  const note=document.createElement('p');note.className='manual-help';note.textContent='직접 입력값은 사용자 제공 자료로 처리합니다. 출처가 없으면 검증 완료로 표시하지 않으며, 수치 미입력 시 해당 계산은 검증되지 않습니다.';panel.append(note);
+  trigger.addEventListener('click',()=>{panel.hidden=!panel.hidden;status.textContent=panel.hidden?'직접 입력창 닫힘':'사용자 직접 입력 모드 · 검증되지 않은 사양';if(!panel.hidden){if(def.key==='camera'){selector.value='1';selector.dispatchEvent(new Event('change',{bubbles:true}))}else if(def.key!=='vtx'){selector.value='0';selector.dispatchEvent(new Event('change',{bubbles:true}))}panel.querySelector('input')?.focus()}});
+  const sync=()=>{const direct=def.key==='camera'?selector.value==='1':def.key==='vtx'?false:selector.value==='0';if(direct){status.textContent=panel.hidden?'미등록 모델 · 직접 입력 버튼을 눌러 작성':'미등록 모델 · 사용자 직접 입력 중'}else if(!panel.hidden){status.textContent='직접 입력창 열림 · 수정한 값은 사용자 제공값(공식 검증 아님)'}else status.textContent='등록 모델 선택 · 개별 사양 출처 확인 필요'};
+  selector.addEventListener('change',sync);if(def.section)$(def.section).addEventListener('change',()=>queueMicrotask(sync));
+  host.append(trigger,status,panel);sync();
+ });
 }
+setupManualEntry();
 
-function makeChart(T,v,D,wmax,wcur){
-  const W=340,H=240,L=46,R=12,TP=12,B=40;
-  const pw=W-L-R,ph=H-TP-B;
-  const vmax=v/3.6;
-  const xMax=Math.max(
-    0.1,
-    Math.min(vmax,Math.max(
-      wmax===null?0:wmax*1.4,
-      wcur*1.15,2
-    ))
-  );
-  const yMax=Math.max(v*T,D,0.1)*1.12;
-  const X=x=>L+x/xMax*pw;
-  const Y=y=>TP+ph-y/yMax*ph;
-  const fx=n=>Number(n).toFixed(2);
-
-  let s='<svg viewBox="0 0 '+W+' '+H+
-    '" role="img" aria-label="풍속별 왕복 거리 그래프"'+
-    ' style="width:100%;height:auto">';
-
-  function zone(a,b,color,opacity){
-    a=Math.max(0,a);
-    b=Math.min(xMax,b);
-    if(b<=a) return "";
-    return '<rect x="'+fx(X(a))+
-      '" y="'+TP+
-      '" width="'+fx(X(b)-X(a))+
-      '" height="'+ph+
-      '" style="fill:'+color+
-      ';opacity:'+opacity+'"/>';
-  }
-
-  if(wmax!==null){
-    s+=zone(0,wmax*.6,'var(--ok)',.16);
-    s+=zone(wmax*.6,wmax*.8,'var(--warn)',.16);
-    s+=zone(wmax*.8,wmax,'var(--bad)',.12);
-    s+=zone(wmax,xMax,'var(--bad)',.28);
-  }else{
-    s+=zone(0,xMax,'var(--bad)',.2);
-  }
-
-  const sx=nice(xMax);
-  const sy=nice(yMax);
-
-  for(let x=0;x<=xMax+1e-9;x+=sx){
-    s+='<text x="'+fx(X(x))+
-      '" y="'+(TP+ph+14)+
-      '" text-anchor="middle"'+
-      ' style="fill:var(--muted);font-size:10px">'+
-      Number(x.toFixed(1))+'</text>';
-  }
-
-  for(let y=0;y<=yMax+1e-9;y+=sy){
-    s+='<line x1="'+L+
-      '" x2="'+(W-R)+
-      '" y1="'+fx(Y(y))+
-      '" y2="'+fx(Y(y))+
-      '" style="stroke:var(--line)"/>';
-    s+='<text x="'+(L-6)+
-      '" y="'+fx(Y(y)+3)+
-      '" text-anchor="end"'+
-      ' style="fill:var(--muted);font-size:10px">'+
-      Number(y.toFixed(1))+'</text>';
-  }
-
-  let path="";
-  for(let i=0;i<=80;i++){
-    const x=xMax*i/80;
-    const y=distanceAtWind(T,v,x);
-    path+=(i?"L":"M")+fx(X(x))+" "+fx(Y(y));
-  }
-
-  s+='<path d="'+path+
-    '" style="fill:none;stroke:var(--text);stroke-width:2"/>';
-
-  s+='<line x1="'+L+
-    '" x2="'+(W-R)+
-    '" y1="'+fx(Y(D))+
-    '" y2="'+fx(Y(D))+
-    '" style="stroke:var(--accent);stroke-dasharray:5 4"/>';
-
-  s+='<text x="'+(W-R-2)+
-    '" y="'+fx(Y(D)-4)+
-    '" text-anchor="end"'+
-    ' style="fill:var(--accent);font-size:10px">목표 '+
-    D.toFixed(1)+' km</text>';
-
-  if(wcur>=0&&wcur<=xMax){
-    s+='<line x1="'+fx(X(wcur))+
-      '" x2="'+fx(X(wcur))+
-      '" y1="'+TP+
-      '" y2="'+(TP+ph)+
-      '" style="stroke:var(--warn);stroke-dasharray:2 3"/>';
-  }
-
-  s+='<text x="'+fx(L+pw/2)+
-    '" y="'+(H-6)+
-    '" text-anchor="middle"'+
-    ' style="fill:var(--muted);font-size:10px">'+
-    '풍속 (m/s)</text>';
-
-  s+='<text transform="translate(10 '+
-    fx(TP+ph/2)+') rotate(-90)"'+
-    ' text-anchor="middle"'+
-    ' style="fill:var(--muted);font-size:10px">'+
-    '왕복 총거리 (km)</text></svg>';
-
-  return s;
-}
-
-function windPanel(T,v,D,wcur,link){
-  const box=$("windVerdict");
-  const cb=$("chartBox");
-  const calm=v*T;
-  const linkLimited=link!==null&&link<D/2;
-
-  if(!(T>0)){
-    box.innerHTML='<p class="b">순항 가능 에너지가 없습니다.</p>';
-    cb.innerHTML="";
-    return;
-  }
-
-  if(D>calm){
-    box.innerHTML=
-      '<span class="badge bad">목표 불가</span>'+
-      '<p class="b">무풍 조건에서도 목표 왕복거리에'+
-      ' 도달할 수 없습니다.</p>';
-    cb.innerHTML=makeChart(T,v,D,null,wcur);
-    return;
-  }
-
-  const root=Math.max(0,v*v-D*v/T);
-  const wmax=Math.sqrt(root)/3.6;
-  const safe=.6*wmax;
-  const caut=.8*wmax;
-
-  let cls,txt;
-  if(wcur<=safe){
-    cls="ok";txt="모델상 여유";
-  }else if(wcur<=caut){
-    cls="chk";txt="여유 감소";
-  }else if(wcur<=wmax){
-    cls="bad";txt="한계 근접";
-  }else{
-    cls="bad";txt="목표 불가";
-  }
-
-  box.innerHTML=
-    '<p class="big">'+wmax.toFixed(2)+
-    ' <small>m/s · 목표거리 한계 풍속</small></p>'+
-    '<span class="badge ok">여유 구간 ≤ '+
-    safe.toFixed(2)+'</span>'+
-    '<span class="badge chk">여유 감소 ≤ '+
-    caut.toFixed(2)+'</span>'+
-    '<span class="badge bad">한계 ≤ '+
-    wmax.toFixed(2)+'</span>'+
-    '<p>입력 풍속 '+wcur.toFixed(2)+
-    ' m/s: <span class="badge '+cls+'">'+txt+'</span></p>'+
-    '<p class="note">풍속 구간은 교육용 가정이며'+
-    ' 실제 안전 판정 기준이 아닙니다.'+
-    ' 한계에서는 순항용 에너지를 모두 사용하고'+
-    ' 사전에 제외한 예비 에너지만 남습니다.</p>';
-
-  if(linkLimited){
-    box.innerHTML+=
-      '<p class="b">통신 링크의 편도 한계가'+
-      ' 목표 편도거리보다 짧습니다.'+
-      ' 풍속과 무관하게 목표 운용이 제한됩니다.</p>';
-  }
-
-  cb.innerHTML=makeChart(T,v,D,wmax,wcur);
-}
-
-function calc(){
-  const specs=[
-    ["cells",1,24,true,true],
-    ["mah",1,200000,true,false],
-    ["usable",1,100,true,false],
-    ["mass",1,100000,true,false],
-    ["spd",1,500,true,false],
-    ["alt",0,10000,true,false],
-    ["climbSpeed",0.1,50,true,false],
-    ["climbPower",1,100000,true,false],
-    ["wind",0,100,true,false],
-    ["res",0,99,true,false],
-    ["link",0.001,10000,false,false],
-    ["target",0.01,10000,true,false]
-  ];
-
-  if($("pmode").value==="direct"){
-    specs.push(["pw",1,100000,true,false]);
-  }else{
-    specs.push(["eff",0.1,100,true,false]);
-    specs.push(["fac",0.1,10,true,false]);
-  }
-
-  const data={};
-  const errors=[];
-
-  ["pw","eff","fac"].forEach(id=>
-    $(id).classList.remove("invalid")
-  );
-
-  specs.forEach(spec=>{
-    const [id,min,max,required,integer]=spec;
-    const result=readNumber(id,min,max,required,integer);
-    data[id]=result.value;
-    if(result.error)errors.push(result.error);
-  });
-
-  $("errors").textContent=errors.join("\n");
-
-  if(errors.length){
-    clearOutput();
-    return;
-  }
-
-  const S=data.cells;
-  const mah=data.mah;
-  const vn=Number($("chem").value.split("|")[0]);
-  const usable=data.usable/100;
-  const m=data.mass;
-  const v=data.spd;
-  const wms=data.wind;
-  const res=data.res/100;
-  const h=data.alt;
-  const link=data.link;
-  const D=data.target;
-
-  const P=$("pmode").value==="direct"
-    ?data.pw
-    :(m/data.eff)*data.fac;
-
-  // 에너지 단위: Wh
-  const eNom=S*vn*mah/1000;
-  const eTot=eNom*usable;
-
-  // 상승 중 총전력 기준
-  const climbTime=h/data.climbSpeed;
-  const eClimb=data.climbPower*climbTime/3600;
-
-  // 예비분은 사용 가능 에너지에서 별도 제외
-  const eReserve=eTot*res;
-  const eCru=Math.max(0,eTot-eReserve-eClimb);
-  const T=eCru/P;
-
-  const w=wms*3.6;
-  const rad=distanceAtWind(T,v,wms)/2;
-
-  const owHead=T*Math.max(0,v-w);
-  const owTail=T*(v+w);
-
-  const operatingRadius=link===null
-    ?rad
-    :Math.min(rad,link);
-
-  $("eNom").textContent=fmt(eNom,"Wh");
-  $("eTot").textContent=fmt(eTot,"Wh");
-  $("eClimb").textContent=fmt(eClimb,"Wh");
-  $("eReserve").textContent=fmt(eReserve,"Wh");
-  $("eCru").textContent=fmt(eCru,"Wh");
-  $("pOut").textContent=fmt(P,"W");
-  $("tOut").textContent=fmt(T*60,"분");
-  $("calmTot").textContent=fmt(v*T,"km");
-  $("owHead").textContent=fmt(owHead,"km");
-  $("owTail").textContent=fmt(owTail,"km");
-  $("radius").textContent=fmt(rad,"km");
-  $("whkm").textContent=fmt(P/v,"Wh/km");
-
-  $("rt").innerHTML=
-    fmt(operatingRadius*2,"km")+
-    ' <small>운용 왕복 총거리'+
-    ' (편도 '+fmt(operatingRadius,"km")+')</small>';
-
-  const warns=[];
-
-  if(eCru<=0){
-    warns.push(["b",
-      "상승 에너지와 예비분을 제외하면 순항할 에너지가 없습니다."
-    ]);
-  }
-
-  if(w>=v){
-    warns.push(["b",
-      "바람이 순항 대기속도 이상입니다. 맞바람 방향으로 전진할 수 없습니다."
-    ]);
-  }else if(w>=v*.5){
-    warns.push(["w",
-      "풍속이 순항 대기속도의 절반 이상입니다."
-    ]);
-  }
-
-  if(link!==null){
-    if(link<rad){
-      warns.push(["w",
-        "배터리보다 통신 링크가 먼저 편도 운용 반경을 제한합니다."
-      ]);
-    }else{
-      warns.push(["o",
-        "입력한 링크 한계는 계산상 배터리 반경보다 깁니다."
-      ]);
-    }
-  }
-
-  if(data.res<20){
-    warns.push(["w",
-      "예비 에너지가 20% 미만입니다. 충분한 여유를 확보하세요."
-    ]);
-  }
-
-  if(data.usable>90){
-    warns.push(["w",
-      "배터리 사용 비율이 90%를 초과합니다. 실제 방전 특성을 확인하세요."
-    ]);
-  }
-
-  if(eClimb>eTot-eReserve){
-    warns.push(["b",
-      "상승에 필요한 에너지가 예비분 제외 가용 에너지를 초과합니다."
-    ]);
-  }
-
-  if(D>operatingRadius*2){
-    warns.push(["b",
-      "입력 조건에서 목표 왕복거리를 달성할 수 없습니다."
-    ]);
-  }
-
-  warns.push(["w",
-    "순항 전력은 바람과 속도 변화에도 일정하다고 가정했습니다."
-  ]);
-
-  warns.push(["w",
-    "하강·착륙·우회에 필요한 에너지는 별도로 모델링하지 않았습니다."
-  ]);
-
-  warns.push(["w",
-    "실제 비행 전 소비 전력과 배터리 잔량을 측정하세요."
-  ]);
-
-  $("warns").innerHTML=warns.map(item=>
-    '<p class="'+item[0]+'">'+item[1]+'</p>'
-  ).join("");
-
-  windPanel(T,v,D,wms,link);
-}
-
-$("chem").addEventListener("change",()=>{
-  $("usable").value=$("chem").value.split("|")[1];
-  calc();
-});
-
-$("pmode").addEventListener("change",()=>{
-  const direct=$("pmode").value==="direct";
-  $("pDirect").classList.toggle("hide",!direct);
-  $("pEst").classList.toggle("hide",direct);
-  calc();
-});
-
-document.querySelectorAll("input,select").forEach(el=>{
-  el.addEventListener("input",calc);
-  el.addEventListener("change",calc);
-});
-
-calc();
-</script>
-</body>
-</html>
+</script></body></html>
