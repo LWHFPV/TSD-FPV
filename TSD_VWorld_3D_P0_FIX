@@ -28,7 +28,7 @@ label{display:inline-block;margin:5px 0}
 <small>북한산 백운대 (37.6587, 126.9770) · 공식 WebGL 3.0 API · 가상 지형 없음</small>
 <div>
 <label>API 인증키
-<input id="key" type="password" placeholder="브이월드 인증키 (이 브라우저에서만 사용)" autocomplete="off">
+<input id="key" type="password" placeholder="브이월드 인증키" autocomplete="off">
 </label>
 <button id="load">3D 지도 연결</button>
 <button id="oblique" disabled>경사 -65°</button>
@@ -40,7 +40,10 @@ label{display:inline-block;margin:5px 0}
 <div id="map"></div>
 <div id="status" role="status">인증키를 입력하고 3D 지도 연결을 누르세요.</div>
 <pre id="log"></pre>
-<div class="note">키는 저장하거나 진단 기록에 포함하지 않습니다. 오류가 발생하면 ‘진단 기록 복사’를 이용하세요. 실제 지도 표시는 브이월드 서비스와 인증 상태에 따릅니다.</div>
+<div class="note">
+인증키는 저장하거나 진단 기록에 포함하지 않습니다.
+실제 지도 표시는 브이월드 서비스와 인증 상태에 따릅니다.
+</div>
 
 <script>
 'use strict';
@@ -67,14 +70,16 @@ function moveCamera(pitch){
   }
   try{
     viewer.camera.setView({
-      destination:Cesium.Cartesian3.fromDegrees(126.9770,37.6587,3500),
+      destination:Cesium.Cartesian3.fromDegrees(
+        126.9770,37.6587,3500
+      ),
       orientation:{
         heading:0,
         pitch:Cesium.Math.toRadians(pitch),
         roll:0
       }
     });
-    report('카메라 시점 '+pitch+'° 적용 (지형 로딩 성공 여부는 별도 확인 필요)');
+    report('카메라 시점 '+pitch+'° 적용');
   }catch(e){
     report('카메라 이동 실패: '+e.message);
   }
@@ -90,25 +95,32 @@ el('copy').onclick=()=>{
       .then(()=>report('진단 기록 복사 완료'))
       .catch(()=>report('복사 실패: 브라우저 권한 확인'));
   }else{
-    report('클립보드 미지원: 화면의 진단 기록을 선택해 복사하세요');
+    report('클립보드 미지원: 진단 기록을 직접 복사하세요');
   }
 };
 
 window.addEventListener('error',e=>{
-  if(started)report('스크립트 오류: '+String(e.message||'알 수 없는 오류'));
+  if(started){
+    report('스크립트 오류: '+String(e.message||'알 수 없는 오류'));
+  }
 });
 
 window.addEventListener('unhandledrejection',e=>{
-  if(started)report('비동기 오류: '+String(e.reason?.message||e.reason||'알 수 없는 오류'));
+  if(started){
+    report('비동기 오류: '+String(
+      e.reason?.message||e.reason||'알 수 없는 오류'
+    ));
+  }
 });
 
 el('load').onclick=()=>{
   if(started){
-    report('이미 시작했습니다. 재시도하려면 페이지를 새로고침하세요.');
+    report('이미 시작했습니다. 재시도하려면 새로고침하세요.');
     return;
   }
 
   const key=el('key').value.trim();
+
   if(!/^[A-Za-z0-9-]{12,128}$/.test(key)){
     report('인증키 형식을 확인하세요.');
     return;
@@ -119,7 +131,10 @@ el('load').onclick=()=>{
   report('1/4 공식 WebGL 3.0 스크립트 요청');
 
   const script=document.createElement('script');
-  script.src='https://map.vworld.kr/js/webglMapInit.js.do?version=3.0&apiKey='+encodeURIComponent(key);
+
+  script.src=
+    'https://map.vworld.kr/js/webglMapInit.js.do?version=3.0&apiKey='
+    +encodeURIComponent(key);
 
   script.onerror=()=>{
     report('스크립트 요청 실패: 서버 접근·도메인·인증 설정 확인');
@@ -131,7 +146,10 @@ el('load').onclick=()=>{
     report('2/4 스크립트 응답 완료 · vw='+Boolean(window.vw));
 
     if(!window.vw?.Map||!window.vw?.CameraPosition){
-      report('초기화 실패: 브이월드 지도 API 객체가 없습니다. 인증키·도메인·서버 응답을 확인하세요.');
+      report(
+        '초기화 실패: 브이월드 지도 API 객체가 없습니다. '+
+        '인증키·도메인·서버 응답을 확인하세요.'
+      );
       return;
     }
 
@@ -139,10 +157,12 @@ el('load').onclick=()=>{
       vw.ws3dInitCallBack=function(){
         completed=true;
         clearTimeout(timeoutId);
+
         viewer=window.ws3d?.viewer||null;
         enableCamera();
+
         report(viewer
-          ?'4/4 3D 엔진 초기화 콜백 확인 · 카메라 제어 가능 (실제 지형 화면 확인 필요)'
+          ?'4/4 3D 엔진 초기화 콜백 확인 · 카메라 제어 가능'
           :'4/4 초기화 콜백 확인 · ws3d.viewer 없음');
       };
 
@@ -158,14 +178,22 @@ el('load').onclick=()=>{
 
       map=new vw.Map();
       map.setOption(options);
+
       report('3/4 지도 생성 요청 중');
       map.start();
+
       report('3/4 map.start() 호출 완료 · 초기화 콜백 대기');
 
       timeoutId=setTimeout(()=>{
         if(!completed){
           const ready=Boolean(window.ws3d?.viewer);
-          report('초기화 지연(20초): 콜백 미수신 · ws3d.viewer='+ready+' · 인증 도메인, 개발자도구 Network/Console 확인');
+
+          report(
+            '초기화 지연(20초): 콜백 미수신 · '+
+            'ws3d.viewer='+ready+
+            ' · 인증 도메인 및 Network/Console 확인'
+          );
+
           if(ready){
             viewer=window.ws3d.viewer;
             enableCamera();
@@ -174,7 +202,10 @@ el('load').onclick=()=>{
       },20000);
 
     }catch(e){
-      report('지도 생성 실패: '+String(e.stack||e.message||e));
+      report(
+        '지도 생성 실패: '+
+        String(e.stack||e.message||e)
+      );
     }
   };
 
