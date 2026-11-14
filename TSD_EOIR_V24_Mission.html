@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TSD EO/IR V24.1 · 수색 훈련</title>
+<title>TSD EO/IR V24.2 · 수색 훈련</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css">
 <style>:root{color-scheme:dark;--ink:#f1f3f5;--muted:#aeb8c4;--panel:#1e242b;--line:#46515c;--blue:#77cce8;--overlay:#11171cdd;--pad:clamp(8px,1.5vw,18px)}
 *{box-sizing:border-box}
@@ -219,18 +219,32 @@ dialog::backdrop {background:#132440ab}
 #missionPanel label {font-size:12px}
 #missionPanel input {width:62px;min-height:30px;border:1px solid var(--field);border-radius:5px;padding:3px 4px;background:#fff}
 #missionPanel #missionName {width:120px}
+#missionPanel input[type=checkbox] {width:auto;min-height:0}
+.missionEditor {background:#f6f9ff;border:1px solid var(--line);padding:6px 8px}
+.missionEditor .row + .row {margin-top:6px}
+.missionEditor select {max-width:120px}
+.missionNode {width:23px;height:23px;display:grid;place-items:center;border:2px solid white;border-radius:50%;color:#fff;background:#144baf;font-size:11px;font-weight:700;box-shadow:0 1px 4px #132440a0;pointer-events:none}
+.missionNode.selected {background:#9b3d0b}
+.flightReadings {min-width:0}
+#flightNavigation {padding:3px 7px;border-radius:4px;background:#e5eeff;color:#1749aa;white-space:nowrap}
+#cameraSettings {color:#fff;background:#1c3874;border-color:#8ba6d9;min-height:29px}
+#cameraSettings:hover,#cameraSettings[aria-expanded=true] {background:#e5eeff;color:#1749aa}
 #missionRun:not(:disabled) {background:var(--blue);border-color:var(--blue);color:#fff}
 #missionRun:not(:disabled):hover {background:#1045ae}
 #missionPreflight {margin-top:5px;padding:5px 8px;border:1px solid #b8ccef;border-radius:6px;background:#eaf2ff}
 #missionConfirm {background:var(--blue);border-color:var(--blue);color:#fff}
 #missionConfirm:hover {background:#1045ae}
 #missionHud {position:absolute;top:38px;left:50%;transform:translateX(-50%);z-index:5;width:max-content;max-width:calc(100% - 84px);padding:5px 8px;color:#fff;background:var(--overlay);border:1px solid #90afd1;border-radius:5px;pointer-events:none;font-size:12px}
+#missionHud button {pointer-events:auto;min-height:26px;padding:2px 7px;color:var(--ink)}
 #missionProgressBar {display:block;width:100%;height:5px;margin-top:4px;accent-color:#7eb8ff}
 .pickingMission .maplibregl-canvas-container,.pickingMission canvas {cursor:crosshair}
 .missionAircraft {width:15px;height:15px;background:#fff;clip-path:polygon(50% 0,100% 100%,50% 74%,0 100%);pointer-events:none}
 @media(min-width:940px) {
  #pilot:has(#missionPanel:not([hidden])) {display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,340px)}
  #flightBar,#cameraStrip,.pilotBottom {grid-column:1/-1}
+ #flightBar {grid-row:1}
+ #cameraStrip {grid-row:2}
+ .pilotBottom {grid-row:4}
  #missionPanel {grid-column:2;grid-row:3;align-self:stretch;min-width:0;padding:9px;border-left:1px solid var(--line)}
  #pilot:has(#missionPanel:not([hidden])) #stage {grid-column:1;grid-row:3}
  .missionFields {display:grid;grid-template-columns:1fr 1fr;align-items:start}
@@ -242,6 +256,7 @@ dialog::backdrop {background:#132440ab}
  #missionPanel button {font-size:12px}
  .flightPanel {bottom:42px}
  .stick {width:76px;height:76px}
+ .leftRail {max-height:calc(100% - 48px);overflow:auto;overscroll-behavior:contain}
 }
 </style>
 </head>
@@ -252,7 +267,7 @@ dialog::backdrop {background:#132440ab}
  </feComponentTransfer></filter>
 </defs></svg>
 <section id="admin" aria-label="시뮬레이션 설정">
- <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.1</span></strong><span>훈련 통제</span><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
+ <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.2</span></strong><span>훈련 통제</span><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
  <div id="adminBody">
   <div class="row">
    <label>시·도 <select id="province"></select></label>
@@ -268,7 +283,6 @@ dialog::backdrop {background:#132440ab}
    <label>표적 <select id="targetKind"><option value="person">실종자</option><option value="vehicle">차량</option><option value="fire">산불 화점</option></select></label>
    <label>수량 <select id="targetCount"><option>1</option><option>3</option><option selected>5</option><option>10</option></select></label>
    <button id="targetDeploy">선택 수량 배치</button><button id="targetReveal" aria-pressed="false">감독자 위치 공개</button>
-   <button id="missionStart">임무 계획</button>
    <button id="rcOpen">조종기 설정</button><output id="supervisorAudit">배치된 표적 없음</output>
   </div>
   <div class="row inspector" aria-label="감독관 표적 점검"><div id="supervisorTargetList" class="row" hidden></div></div>
@@ -278,9 +292,9 @@ dialog::backdrop {background:#132440ab}
 <main id="pilot">
  <div id="flightBar" class="row">
   <b id="flightMode">시동 대기</b><span id="status" role="status">지도 연결 중</span>
-  <span class="spacer"></span><span id="cameraTelemetry">짐벌 —</span><span id="mediaIndicator" hidden></span>
+  <span class="spacer"></span><span id="cameraTelemetry">짐벌 —</span><span id="mediaIndicator" hidden></span><button id="cameraSettings" aria-expanded="false" aria-controls="cameraStrip">카메라 설정</button>
  </div>
- <div id="cameraStrip" class="row">
+ <div id="cameraStrip" class="row" hidden>
   <span id="activeLabel">WIDE</span>
   <button id="sbs" aria-pressed="true" title="EO·IR 분할 보기">SBS</button>
   <label><input type="checkbox" id="lock" checked> 줌·시점 연동</label>
@@ -289,14 +303,12 @@ dialog::backdrop {background:#132440ab}
   <label>IR 게인 <select id="gain"><option value="high">High</option><option value="low">Low</option></select></label>
   <button id="measure" aria-pressed="false">IR 측정</button>
   <button id="flightControls" aria-expanded="false">가상 스틱</button>
-  <button id="missionOpen" aria-controls="missionPanel" aria-expanded="false">비행 경로</button>
-  <button id="missionStop" disabled>일시정지</button>
  </div>
  <section id="missionPanel" aria-label="비행 경로 계획" hidden>
   <div class="row missionHead"><b>비행 경로</b><output id="missionPlanState" role="status">지도에서 수색 중심을 잡으세요</output><span class="spacer"></span><button id="missionClose">닫기</button></div>
   <div class="row missionLibrary"><select id="missionSaved" aria-label="저장 경로"><option value="">저장 경로</option></select><input id="missionName" type="text" maxlength="45" aria-label="경로 이름" placeholder="경로 이름"><button id="missionSave" disabled>저장</button></div>
   <div class="row missionFields">
-   <label>수색 경로 <select id="searchPattern"><option value="grid">격자 수색</option><option value="line">직선 수색</option><option value="orbit">원형 수색</option></select></label>
+   <label>수색 경로 <select id="searchPattern"><option value="grid">격자 수색</option><option value="polygon">다각형 수색</option><option value="waypoint">웨이포인트 비행</option><option value="line">직선 수색</option><option value="orbit">원형 수색</option></select></label>
    <button id="missionPick" aria-pressed="false">지도에서 중심 지정</button>
    <label>고도 AGL <input id="missionHeight" type="number" min="20" max="120" value="60"> m</label>
    <label>속도 <input id="missionSpeed" type="number" min="2" max="12" value="6"> m/s</label>
@@ -306,8 +318,21 @@ dialog::backdrop {background:#132440ab}
    <label id="missionHeadingLabel">방향 <input id="missionHeading" type="number" min="0" max="359" value="0"> °</label>
    <label>완료 동작 <select id="missionEnd"><option value="hover">제자리 대기</option><option value="home">출발점 복귀·착륙</option></select></label>
   </div>
+  <section class="missionEditor" id="missionEditor" aria-label="경로 지점 편집" hidden>
+   <div class="row"><label>지점 <select id="missionPoint"></select></label><button id="missionMovePoint">지도에서 이동</button><button id="missionDeletePoint">지점 삭제</button><button id="missionClearPoints">전체 지우기</button></div>
+   <div class="row" id="waypointActions" hidden>
+    <label>고도 <input id="waypointHeight" type="number" min="20" max="120" aria-label="웨이포인트 지면 위 고도" placeholder="공통"> m</label>
+    <label>속도 <input id="waypointSpeed" type="number" min="2" max="12" aria-label="웨이포인트 비행 속도" placeholder="공통"> m/s</label>
+    <label>기수 <input id="waypointYaw" type="number" min="0" max="359" aria-label="웨이포인트 기수 방향" placeholder="자동"> °</label>
+    <label>짐벌 <input id="waypointGimbal" type="number" min="-90" max="0" aria-label="웨이포인트 짐벌 각도" placeholder="유지"> °</label>
+    <label>줌 <input id="waypointZoom" type="number" min="1" max="16" step="0.1" aria-label="웨이포인트 카메라 줌" placeholder="유지"> ×</label>
+    <label>대기 <input id="waypointHold" type="number" min="0" max="30" value="0" aria-label="웨이포인트 대기 시간"> 초</label>
+    <label>카메라 <select id="waypointCamera"><option value="">유지</option><option value="wide">EO WIDE</option><option value="zoom">EO ZOOM</option><option value="ir">IR</option></select></label>
+    <label><input id="waypointPhoto" type="checkbox"> 도착 사진 촬영</label>
+   </div>
+  </section>
   <div class="row missionActions"><output id="missionStats">경로 미생성</output><span class="spacer"></span><button id="missionPreview">경로 미리보기</button><button id="missionRun" disabled>비행 전 점검</button><button id="missionCancel" disabled>임무 종료</button></div>
-  <div id="missionPreflight" class="row" hidden><b>비행 전 점검</b><output id="missionPreflightInfo"></output><span class="spacer"></span><button id="missionConfirm">자동 임무 시작</button></div>
+  <div id="missionPreflight" class="row" hidden><b>비행 전 점검</b><output id="missionPreflightInfo"></output><span class="spacer"></span><button id="missionUpload">가상 기체에 업로드</button><button id="missionConfirm" disabled>자동 임무 시작</button></div>
  </section>
  <section id="stage" aria-label="비행 카메라">
   <div id="views">
@@ -315,8 +340,11 @@ dialog::backdrop {background:#132440ab}
    <div class="view" id="irWrap"><div class="map" id="ir"></div><button class="feed" id="irBadge">IR · WHITE HOT</button><div class="reticle" aria-hidden="true"></div><div class="scanBox" hidden></div></div>
   </div>
   <nav class="rail leftRail" aria-label="카메라 및 관찰">
+   <button id="missionOpen" aria-controls="missionPanel" aria-expanded="false">비행 경로</button>
+   <button id="flightTakeoff" disabled>자동 이륙</button><button id="flightReturn" disabled hidden>홈 복귀</button><button id="flightLand" disabled hidden>착륙</button>
    <button id="wide" aria-pressed="true">WIDE</button><button id="zoomCamera" aria-pressed="false">ZOOM</button><button id="irCamera" aria-pressed="false">IR</button>
-   <button id="missionMark" title="관찰 지점에 표식 남기기">관찰점</button><button id="targetScan" title="선택 지점 또는 중앙을 판정">중앙 탐지</button>
+   <button id="gimbalModeToggle" title="짐벌 정면·직하 전환">직하 보기</button>
+   <button id="missionMark" title="선택 지점 또는 기체 위치에 표식 남기기">PinPoint</button><button id="lookAt" title="표식이 있는 방향으로 카메라 이동" disabled>표식 보기</button><button id="targetScan" title="선택 지점 또는 중앙을 판정">중앙 탐지</button>
   </nav>
   <div class="rail rightRail">
    <button id="mediaMode" title="사진/동영상 전환">사진</button>
@@ -333,13 +361,13 @@ dialog::backdrop {background:#132440ab}
    <div class="row csc"><button id="cscIn">↘ ↙ 안쪽 CSC</button><button id="cscOut">↙ ↘ 바깥쪽 CSC</button></div>
   </div>
   <div id="measureReadout" hidden aria-live="polite"></div>
-  <div id="missionHud" hidden><output id="missionProgress" aria-live="off"></output><progress id="missionProgressBar" max="1" value="0" aria-label="임무 진행률"></progress></div>
+  <div id="missionHud" hidden><div class="row"><output id="missionProgress" aria-live="off"></output><button id="missionStop" disabled hidden>일시정지</button></div><progress id="missionProgressBar" max="1" value="0" aria-label="임무 진행률"></progress></div>
   <output id="targetStatus" role="status" hidden></output>
   <div id="flash" aria-hidden="true"></div>
  </section>
  <div class="pilotBottom">
   <div class="row"><label>짐벌 피치 <input id="gimbalPitch" type="range" min="-90" max="0" value="-50"></label><output id="gimbalValue">-50°</output><button id="gimbalHorizon">0° 수평</button><button id="gimbalNadir">−90° 직하</button></div>
-  <output id="flightTelemetry">H 0.0 m　V.S. 0.0 m/s　H.S. 0.0 m/s</output>
+  <div class="row flightReadings"><output id="flightTelemetry">H 0.0 m　V.S. 0.0 m/s　H.S. 0.0 m/s</output><output id="flightNavigation" aria-label="기체 방위와 홈 거리">HDG — · HOME —</output></div>
   <button id="missionClear">표식 지우기</button>
  </div>
 </main>
@@ -368,8 +396,11 @@ dialog::backdrop {background:#132440ab}
 <dialog id="rcDialog">
  <div class="dialogHead"><h2>조종기 설정</h2><span class="spacer"></span><button id="rcClose">닫기</button></div>
  <div class="dialogBody">
-  <p>Windows에서 USB 게임 컨트롤러로 인식되는 조종기를 연결한 뒤 스틱이나 버튼을 움직이세요. EdgeTX는 USB Joystick 모드를 사용합니다.</p>
+  <p>USB로 연결한 뒤 조종기의 스틱이나 버튼을 움직이세요. RadioMaster EdgeTX는 USB Joystick 모드로 연결합니다.</p>
+  <div class="row"><label>점검 기종 <select id="rcProfile"><option value="">직접 선택</option><option>DJI RC Pro 1세대</option><option>DJI RC 2</option><option>DJI FPV 조종기 2</option><option>DJI FPV 조종기 3</option><option>RadioMaster · EdgeTX</option><option>기타 USB 게임 컨트롤러</option></select></label></div>
   <div class="row"><select id="rcDevice" aria-label="조종기 장치"></select><button id="rcRefresh">장치 확인</button><button id="rcReset">매핑 초기화</button></div>
+  <p id="rcProfileHint" role="status"></p>
+  <output id="rcSignals" aria-label="실시간 축과 버튼"></output>
   <output id="rcState"></output><div id="rcMappings"></div>
   <div id="rcCalibration" class="row">
    <label><input type="checkbox" id="rcSpring" checked> 스로틀 중앙 복귀형</label>
@@ -393,6 +424,7 @@ let syncing = false;
 let syncFrame = 0;
 let syncIndex = 0;
 let markPins = [];
+let observationPoint = null;
 let scanPins = [];
 let scanAim = null;
 let areaDrag = null;
@@ -512,6 +544,7 @@ function updateCameraUI(i=selectedIndex()) {
   const zoom = (2 ** (map.getZoom()-13)).toFixed(1);
   $('gimbalPitch').value = value;
   $('gimbalValue').value = value.toFixed(0)+'°';
+  $('gimbalModeToggle').textContent=value<=-89.9?'정면 보기':'직하 보기';
   $('cameraTelemetry').textContent = '짐벌 '+value.toFixed(0)+'° · 방위 '+map.getBearing().toFixed(0)+'°';
   $('zoomLabel').value = zoom+'×';
 }
@@ -607,6 +640,29 @@ function drawMarker(lngLat, kind, hit = false) {
 function markAt(lngLat) {
   clearMarkers(markPins);
   markPins = drawMarker(lngLat, 'observationPin');
+  observationPoint={lng:lngLat[0],lat:lngLat[1]};
+  $('lookAt').disabled=false;
+}
+function clearObservation() {
+  clearMarkers(markPins);
+  observationPoint=null;
+  $('lookAt').disabled=true;
+}
+function lookAtObservation() {
+  const map=maps[selectedIndex()];
+  if(!map||!observationPoint)return;
+  const origin=flight.phase==='air'&&flight.point?{...flight.point,alt:flight.alt}:cameraOrigin(map);
+  const ground=map.queryTerrainElevation(observationPoint);
+  if(!Number.isFinite(ground)){targetText('표식의 지형을 불러오는 중입니다');return;}
+  const distance=geoDistance(origin,observationPoint);
+  const tilt=clamp(-Math.atan2(origin.alt-ground,Math.max(.01,distance))/degrees,-90,0);
+  const yaw=distance>.1?bearingTo(origin,observationPoint):map.getBearing();
+  if(missionActive()&&mission.state!=='paused')pauseMission('표식 보기 · 임무 일시정지');
+  if(flight.phase==='air')flight.yaw=yaw;
+  const pose=cameraAt(map,origin,tilt,yaw,map.getZoom());
+  if(linked())jumpBoth(pose,false);
+  else {map.setCenterClampedToGround(false);map.jumpTo(pose);}
+  updateCameraUI();
 }
 
 function scanTarget() {
@@ -637,7 +693,7 @@ function moveToRegion(lng,lat,name,zoom=14) {
   resetFlight();
   scanAim = null;
   clearMarkers(scanPins);
-  clearMarkers(markPins);
+  clearObservation();
   jumpBoth({center:[lng,lat],zoom,pitch:40,bearing:-25});
   status(name+' · EO·IR 이동');
 }
@@ -988,12 +1044,109 @@ function redeployMissionTargets(){
  return true;
 }
 
-const mission = {state:'empty', plan:null, run:null, center:null, picking:false};
+function areaCross(a,b,c) {
+  return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+}
+function areaOnEdge(a,b,p) {
+  return Math.abs(areaCross(a,b,p))<1e-5 &&
+    p.x>=Math.min(a.x,b.x)-1e-6&&p.x<=Math.max(a.x,b.x)+1e-6 &&
+    p.y>=Math.min(a.y,b.y)-1e-6&&p.y<=Math.max(a.y,b.y)+1e-6;
+}
+function areaContains(vertices,p) {
+  let inside=false;
+  for(let i=0;i<vertices.length;i++){
+    const a=vertices[i], b=vertices[(i+1)%vertices.length];
+    if(areaOnEdge(a,b,p))return true;
+    if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)inside=!inside;
+  }
+  return inside;
+}
+function areaSegmentsIntersect(a,b,c,d) {
+  return areaOnEdge(a,b,c)||areaOnEdge(a,b,d)||areaOnEdge(c,d,a)||areaOnEdge(c,d,b)||
+    (areaCross(a,b,c)*areaCross(a,b,d)<0&&areaCross(c,d,a)*areaCross(c,d,b)<0);
+}
+// Split at every boundary intersection so concave cutouts cannot be crossed.
+function areaSegmentInside(a,b,vertices) {
+  const cuts=[0,1], dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;
+  if(d2<1e-9)return areaContains(vertices,a);
+  for(let i=0;i<vertices.length;i++){
+    const c=vertices[i],d=vertices[(i+1)%vertices.length];
+    const ex=d.x-c.x,ey=d.y-c.y,det=dx*ey-dy*ex;
+    if(Math.abs(det)<1e-8){
+      for(const p of [c,d])if(areaOnEdge(a,b,p))cuts.push(((p.x-a.x)*dx+(p.y-a.y)*dy)/d2);
+      continue;
+    }
+    const t=((c.x-a.x)*ey-(c.y-a.y)*ex)/det;
+    const u=((c.x-a.x)*dy-(c.y-a.y)*dx)/det;
+    if(t>0&&t<1&&u>=-1e-8&&u<=1+1e-8)cuts.push(t);
+  }
+  cuts.sort((x,y)=>x-y);
+  return cuts.slice(1).every((t,i)=>{
+    const m=(t+cuts[i])/2;
+    return areaContains(vertices,{x:a.x+dx*m,y:a.y+dy*m});
+  });
+}
+function areaConnector(start,end,vertices) {
+  if(areaSegmentInside(start,end,vertices))return [end];
+  const nodes=[start,...vertices,end], last=nodes.length-1;
+  const distances=nodes.map(()=>Infinity), previous=nodes.map(()=>-1);
+  const remaining=new Set(nodes.map((_,i)=>i));
+  distances[0]=0;
+  while(remaining.size){
+    const i=[...remaining].reduce((best,n)=>distances[n]<distances[best]?n:best);
+    if(!Number.isFinite(distances[i])||i===last)break;
+    remaining.delete(i);
+    const a=nodes[i];
+    for(const j of remaining){
+      const b=nodes[j], distance=distances[i]+Math.hypot(a.x-b.x,a.y-b.y);
+      if(distance<distances[j]&&areaSegmentInside(a,b,vertices)){distances[j]=distance;previous[j]=i;}
+    }
+  }
+  if(previous[last]<0)throw Error('구역 안에서 연결 경로를 생성할 수 없습니다');
+  const result=[];
+  for(let i=last;i>0;i=previous[i])result.unshift(nodes[i]);
+  return result;
+}
+function polygonSweep(vertices,spacing) {
+  if(vertices.length<3)throw Error('지도에서 꼭짓점을 3개 이상 지정하세요');
+  let area=0;
+  for(let i=0;i<vertices.length;i++){
+    const a=vertices[i],b=vertices[(i+1)%vertices.length];
+    area+=a.x*b.y-b.x*a.y;
+    for(let j=i+2;j<vertices.length;j++){
+      if(i===0&&j===vertices.length-1)continue;
+      if(areaSegmentsIntersect(a,b,vertices[j],vertices[(j+1)%vertices.length]))throw Error('교차한 변이 있습니다 · 꼭짓점을 구역 둘레 순서로 지정하세요');
+    }
+  }
+  if(Math.abs(area)<20)throw Error('구역 면적이 너무 작습니다');
+  const south=Math.min(...vertices.map(p=>p.y)),north=Math.max(...vertices.map(p=>p.y));
+  const rows=Math.max(1,Math.ceil((north-south)/spacing)), result=[];
+  for(let row=0;row<rows;row++){
+    const y=south+(row+.5)*(north-south)/rows, intersections=[];
+    for(let i=0;i<vertices.length;i++){
+      const a=vertices[i],b=vertices[(i+1)%vertices.length];
+      if((a.y>y)!==(b.y>y))intersections.push(a.x+(y-a.y)*(b.x-a.x)/(b.y-a.y));
+    }
+    intersections.sort((a,b)=>row%2?b-a:a-b);
+    for(let i=0;i<intersections.length;i+=2){
+      const start={x:intersections[i],y},end={x:intersections[i+1],y};
+      if(!Number.isFinite(end.x)||Math.abs(end.x-start.x)<.1)continue;
+      if(result.length) result.push(...areaConnector(result.at(-1),start,vertices));
+      else result.push(start);
+      result.push(end);
+    }
+  }
+  if(result.length<2)throw Error('구역에 유효한 수색 줄을 생성할 수 없습니다');
+  return result;
+}
+
+const mission = {state:'empty', plan:null, run:null, center:null, picking:false, points:[], selected:0};
 const missionSource = 'tsd-mission-route';
-const missionTypes = {grid:'격자 수색',line:'직선 수색',orbit:'원형 수색'};
+const missionTypes = {grid:'격자 수색',polygon:'다각형 수색',waypoint:'웨이포인트 비행',line:'직선 수색',orbit:'원형 수색'};
 const missionDemZoom=12;
 const missionDemCache=new Map();
 const missionAircraftMarkers=new WeakMap();
+const missionNodeMarkers=new WeakMap();
 const missionLibraryKey='tsd-eoir-route-library';
 const missionLibrary=new Map();
 
@@ -1056,7 +1209,17 @@ function buildMissionPlan(center, options) {
   const angle=heading*degrees;
   const at=(along,across)=>offsetPoint(center,along*Math.sin(angle)+across*Math.cos(angle),along*Math.cos(angle)-across*Math.sin(angle));
   const points=[];
-  if (pattern==='orbit') {
+  if(pattern==='waypoint'){
+    if(options.nodes.length<2)throw Error('지도를 클릭해 웨이포인트를 2개 이상 지정하세요');
+    points.push(...options.nodes);
+  } else if(pattern==='polygon'){
+    const eastScale=111320*Math.cos(center.lat*degrees);
+    const vertices=options.nodes.map(p=>{
+      const east=(p.lng-center.lng)*eastScale,north=(p.lat-center.lat)*111320;
+      return {x:east*Math.sin(angle)+north*Math.cos(angle),y:east*Math.cos(angle)-north*Math.sin(angle)};
+    });
+    points.push(...polygonSweep(vertices,spacing).map(p=>at(p.x,p.y)));
+  } else if (pattern==='orbit') {
     for(let i=0;i<=48;i++) {
       const a=i/48*2*Math.PI;
       points.push(at(width*Math.cos(a),width*Math.sin(a)));
@@ -1083,7 +1246,7 @@ function turnToward(target,dt) {
 function missionActive() {return mission.state==='running'||mission.state==='paused';}
 function missionFlightLabel() {
   if(!missionActive())return '';
-  return mission.state==='paused'?'임무 일시정지':{climb:'자동 이륙 · 임무 고도 상승',route:'자동 임무 비행',return:'출발점 복귀',land:'자동 착륙'}[mission.run.phase];
+  return mission.state==='paused'?'임무 일시정지':{climb:'자동 이륙 · 임무 고도 상승',route:'자동 임무 비행',action:'웨이포인트 카메라 동작',return:'출발점 복귀',land:'자동 착륙'}[mission.run.phase];
 }
 function missionFeature(type,geometry,properties={}) {
   return {type:'Feature',geometry:{type,coordinates:geometry},properties};
@@ -1096,15 +1259,33 @@ function renderMissionRoute(map) {
     missionFeature('Point',coords(points[0]),{kind:'start'}),
     missionFeature('Point',coords(points.at(-1)),{kind:'end'})
   ] : [];
+  if($('searchPattern').value==='polygon'&&mission.points.length>=3){
+    const outline=mission.points.map(coords);
+    outline.push(outline[0]);
+    features.push(missionFeature('Polygon',[outline],{kind:'area'}));
+  }
   const data={type:'FeatureCollection',features};
   const source=map.getSource(missionSource);
-  if(source){source.setData(data);return;}
+  if(source){source.setData(data);renderMissionNodes(map);return;}
   if(!map.getTerrain())return;
   map.addSource(missionSource,{type:'geojson',data});
+  map.addLayer({id:missionSource+'-area',type:'fill',source:missionSource,filter:['==',['get','kind'],'area'],paint:{'fill-color':'#4c95ff','fill-opacity':.17}});
+  map.addLayer({id:missionSource+'-border',type:'line',source:missionSource,filter:['==',['get','kind'],'area'],paint:{'line-color':'#8fbdff','line-width':2,'line-dasharray':[2,2]}});
   map.addLayer({id:missionSource+'-line',type:'line',source:missionSource,filter:['==',['get','kind'],'route'],
     layout:{'line-join':'round','line-cap':'round'},paint:{'line-color':'#5eaaff','line-width':3,'line-opacity':.85}});
-  map.addLayer({id:missionSource+'-points',type:'circle',source:missionSource,filter:['!=',['get','kind'],'route'],
+  map.addLayer({id:missionSource+'-points',type:'circle',source:missionSource,filter:['any',['==',['get','kind'],'start'],['==',['get','kind'],'end']],
     paint:{'circle-radius':4,'circle-color':['match',['get','kind'],'start','#59dcad','#ffc65e'], 'circle-stroke-width':2,'circle-stroke-color':'#193664'}});
+  renderMissionNodes(map);
+}
+function renderMissionNodes(map) {
+  (missionNodeMarkers.get(map)||[]).forEach(marker=>marker.remove());
+  missionNodeMarkers.set(map,mission.points.map((node,index)=>{
+    const element=document.createElement('div');
+    element.className='missionNode'+(index===mission.selected?' selected':'');
+    element.textContent=String(index+1);
+    element.setAttribute('aria-hidden','true');
+    return new maplibregl.Marker({element}).setLngLat(node).addTo(map);
+  }));
 }
 function updateMissionAircraft() {
   for(const map of maps){
@@ -1125,34 +1306,81 @@ function updateMissionAircraft() {
 function setMissionPanel(visible) {
   $('missionPanel').hidden=!visible;
   $('missionOpen').setAttribute('aria-expanded',String(visible));
-  if(!visible){cancelMissionPick();$('missionPreflight').hidden=true;}
+  if(!visible){cancelMissionPick();$('missionPreflight').hidden=true;$('missionConfirm').disabled=true;}
 }
 function cancelMissionPick() {
   mission.picking=false;
   $('missionPick').setAttribute('aria-pressed','false');
   $('stage').classList.remove('pickingMission');
 }
+const waypointFields={waypointHeight:'height',waypointSpeed:'speed',waypointYaw:'yaw',waypointGimbal:'tilt',waypointZoom:'zoom',waypointHold:'hold',waypointCamera:'camera',waypointPhoto:'photo'};
+const pointPattern=type=>type==='polygon'||type==='waypoint';
+function refreshMissionEditor() {
+  const type=$('searchPattern').value, point=mission.points[mission.selected];
+  const locked=missionActive()||mission.state==='preparing';
+  const select=$('missionPoint');
+  $('missionEditor').hidden=!pointPattern(type);
+  $('waypointActions').hidden=type!=='waypoint'||!point;
+  select.replaceChildren(...(mission.points.length?mission.points.map((_,i)=>new Option((type==='polygon'?'꼭짓점 ':'WP ')+(i+1),i)):[new Option('지점 없음','')]));
+  if(point)select.value=String(mission.selected);
+  for(const id of ['missionPoint','missionMovePoint','missionDeletePoint','missionClearPoints'])$(id).disabled=locked||!point;
+  for(const [id,key] of Object.entries(waypointFields)){
+    const field=$(id);
+    field.disabled=locked||!point;
+    if(!point)continue;
+    if(key==='photo')field.checked=Boolean(point[key]);
+    else field.value=point[key]??(key==='hold'?0:'');
+  }
+}
+function beginMissionPick(mode) {
+  mission.picking=mode;
+  $('missionPick').setAttribute('aria-pressed',String(mode==='add'));
+  $('stage').classList.add('pickingMission');
+  const type=$('searchPattern').value;
+  $('missionPlanState').value=mode==='move'?'지도에서 이 지점의 새 위치를 클릭하세요':type==='polygon'?'구역 둘레를 따라 꼭짓점을 차례로 클릭하세요':type==='waypoint'?'비행 순서대로 지도에서 웨이포인트를 클릭하세요':'EO 또는 IR 지도에서 수색 중심을 클릭하세요';
+}
 function pickMissionCenter(point) {
   if(!mission.picking)return false;
-  if(validCoordinates(point.lng,point.lat)) {
-    mission.center={lng:point.lng,lat:point.lat};
+  if(!validCoordinates(point.lng,point.lat))return true;
+  const coords={lng:point.lng,lat:point.lat}, type=$('searchPattern').value;
+  if(pointPattern(type)){
+    if(mission.picking==='add'&&mission.points.length>=24){$('missionPlanState').value='지점은 최대 24개입니다';cancelMissionPick();return true;}
+    if(mission.points.some((p,i)=>(mission.picking!=='move'||i!==mission.selected)&&geoDistance(p,coords)<1)){
+      $('missionPlanState').value='이미 지정한 지점입니다 · 다른 지점을 클릭하세요';return true;
+    }
+    if(mission.picking==='move'){
+      Object.assign(mission.points[mission.selected],coords);
+      cancelMissionPick();
+    } else {
+      mission.points.push(coords);
+      mission.selected=mission.points.length-1;
+    }
+    invalidateMissionPlan();
+    refreshMissionEditor();
+    $('missionPlanState').value=mission.points.length+'개 지정 · '+(type==='polygon'?'3개 이상에서 경로 미리보기':'2개 이상에서 경로 미리보기');
+  } else {
+    mission.center=coords;
     invalidateMissionPlan();
     $('missionPlanState').value='중심 지정 · '+point.lat.toFixed(5)+', '+point.lng.toFixed(5);
+    cancelMissionPick();
   }
-  cancelMissionPick();
   return true;
 }
 function updateMissionFields() {
   const pattern=$('searchPattern').value;
-  $('missionWidthLabel').hidden=pattern==='line';
+  $('missionWidthLabel').hidden=pattern!=='grid'&&pattern!=='orbit';
   $('missionWidthLabel').firstElementChild.textContent=pattern==='orbit'?'반경':'폭';
-  $('missionLengthLabel').hidden=pattern==='orbit';
-  $('missionSpacingLabel').hidden=pattern!=='grid';
+  $('missionLengthLabel').hidden=pattern!=='grid'&&pattern!=='line';
+  $('missionSpacingLabel').hidden=pattern!=='grid'&&pattern!=='polygon';
+  $('missionHeadingLabel').hidden=pattern==='waypoint';
+  $('missionPick').textContent=pattern==='polygon'?'지도에서 꼭짓점 추가':pattern==='waypoint'?'지도에서 웨이포인트 추가':'지도에서 중심 지정';
+  refreshMissionEditor();
 }
 const missionFields=['missionHeight','missionSpeed','missionWidth','missionLength','missionSpacing','missionHeading','missionEnd','searchPattern'];
 function updateMissionUI() {
   const active=missionActive(), paused=mission.state==='paused', preparing=mission.state==='preparing';
   $('missionStop').disabled=!active;
+  $('missionStop').hidden=!active;
   $('missionStop').textContent=paused?'재개':'일시정지';
   $('missionRun').disabled=!(mission.state==='ready'||paused);
   $('missionRun').textContent=paused?'임무 재개':'비행 전 점검';
@@ -1163,6 +1391,8 @@ function updateMissionUI() {
   $('missionSaved').disabled=active||preparing;
   $('missionSave').disabled=mission.state!=='ready';
   for(const field of missionFields)$(field).disabled=active||preparing;
+  const pointLocked=active||preparing||!mission.points.length;
+  for(const id of ['missionPoint','missionMovePoint','missionDeletePoint','missionClearPoints',...Object.keys(waypointFields)])$(id).disabled=pointLocked;
   $('missionHud').hidden=!mission.run||preparing;
   if(mission.run){
     const run=mission.run;
@@ -1194,6 +1424,8 @@ function loadMissionPlan() {
   const name=$('missionSaved').value, saved=missionLibrary.get(name);
   if(!saved||missionActive()||mission.state==='preparing')return;
   mission.center=saved.center;
+  mission.points=(Array.isArray(saved.nodes)?saved.nodes:[]).filter(p=>validCoordinates(p?.lng,p?.lat)).slice(0,24).map(p=>({...p}));
+  mission.selected=0;
   $('missionName').value=name;
   for(const [field,value] of Object.entries(saved)) {
     if(field==='center')continue;
@@ -1205,12 +1437,13 @@ function loadMissionPlan() {
   prepareMission();
 }
 function clearMission() {
-  Object.assign(mission,{state:'empty',plan:null,run:null,center:null});
+  Object.assign(mission,{state:'empty',plan:null,run:null,center:null,points:[],selected:0});
   cancelMissionPick();
   $('missionStats').value='경로 미생성';
   $('missionPlanState').value='지도에서 수색 중심을 잡으세요';
   maps.forEach(renderMissionRoute);
   updateMissionAircraft();
+  refreshMissionEditor();
   updateMissionUI();
 }
 function invalidateMissionPlan() {
@@ -1224,26 +1457,39 @@ function invalidateMissionPlan() {
 function prepareMission() {
   if(missionActive()||mission.state==='preparing')return;
   const map=maps[selectedIndex()];
-  if(!map || !terrainOk.every(Boolean)){ $('missionPlanState').value='3D 지형이 연결된 뒤 경로를 준비할 수 있습니다';return; }
+  if(!map || !terrainOk[selectedIndex()]){ $('missionPlanState').value='3D 지형이 연결된 뒤 경로를 준비할 수 있습니다';return; }
+  if($('searchPattern').value==='waypoint'&&!$('waypointActions').hidden){
+    const invalid=Object.keys(waypointFields).map($).find(field=>!field.validity.valid);
+    if(invalid){invalid.reportValidity();return;}
+  }
   const inputs=missionFields.map($).filter(field=>field.type==='number'&&!field.parentElement.hidden);
   if(inputs.some(field=>field.value===''||!field.validity.valid)){
     inputs.find(field=>field.value===''||!field.validity.valid).reportValidity();
     $('missionPlanState').value='허용 범위의 숫자를 입력하세요';return;
   }
-  const center=mission.center||map.getCenter();
-  const plan=buildMissionPlan({lng:center.lng,lat:center.lat},{pattern:$('searchPattern').value,
-    height:Number($('missionHeight').value),speed:Number($('missionSpeed').value),width:Number($('missionWidth').value),
-    length:Number($('missionLength').value),spacing:Number($('missionSpacing').value),heading:Number($('missionHeading').value),end:$('missionEnd').value});
-  if(!plan.points.every(point=>validCoordinates(point.lng,point.lat))){$('missionPlanState').value='수색 경로가 지도 범위를 벗어났습니다';return;}
+  const pattern=$('searchPattern').value, nodes=mission.points.map(point=>({...point}));
+  let center=mission.center||map.getCenter();
+  if(pointPattern(pattern)&&nodes.length){
+    center={lng:nodes.reduce((s,p)=>s+p.lng,0)/nodes.length,lat:nodes.reduce((s,p)=>s+p.lat,0)/nodes.length};
+    if(nodes.some(p=>geoDistance(center,p)>1200)){$('missionPlanState').value='경로는 중심에서 1.2 km 이내로 지정하세요';return;}
+  }
+  let plan;
+  try {
+    plan=buildMissionPlan({lng:center.lng,lat:center.lat},{pattern,nodes,
+      height:Number($('missionHeight').value),speed:Number($('missionSpeed').value),width:Number($('missionWidth').value),
+      length:Number($('missionLength').value),spacing:Number($('missionSpacing').value),heading:Number($('missionHeading').value),end:$('missionEnd').value});
+  } catch(error) {$('missionPlanState').value=error.message;return;}
+  if(plan.distance<1||!plan.points.every(point=>validCoordinates(point.lng,point.lat))){$('missionPlanState').value='경로 길이와 지도 범위를 확인하세요';return;}
   mission.plan=plan;mission.run=null;mission.state='ready';
   $('missionPreflight').hidden=true;
   cancelMissionPick();
-  $('missionStats').value=missionTypes[plan.pattern]+' · '+Math.round(plan.distance)+' m · 수색 구간 약 '+Math.ceil(plan.distance/plan.speed)+'초';
+  const seconds=pattern==='waypoint'?nodes.reduce((sum,p,i)=>sum+(p.hold||0)+(i?geoDistance(nodes[i-1],p)/(p.speed??plan.speed):0),0):plan.distance/plan.speed;
+  $('missionStats').value=missionTypes[plan.pattern]+' · '+Math.round(plan.distance)+' m · 경로 약 '+Math.ceil(seconds)+'초';
   $('missionPlanState').value='경로 준비 · 지도에서 확인하세요';
   if(flight.phase==='off'){
-    const scale= Math.max(plan.pattern==='orbit'?plan.width*2:plan.width,plan.length);
+    const scale=2*Math.max(...plan.points.map(point=>geoDistance(center,point)),20);
     const pixels=Math.max(180,Math.min(map.getCanvas().clientWidth,map.getCanvas().clientHeight));
-    const zoom=clamp(Math.log2(40075017*Math.cos(center.lat*degrees)*pixels/(512*(scale+80)*1.4)),14,18);
+    const zoom=clamp(Math.log2(40075017*Math.cos(center.lat*degrees)*pixels/(512*(scale+80)*1.4)),10,18);
     jumpBoth({center,zoom,pitch:0,bearing:0});
   }
   maps.forEach(renderMissionRoute);
@@ -1255,21 +1501,24 @@ function showMissionPreflight() {
   const {pattern,height,speed,end}=mission.plan;
   $('missionPreflightInfo').value=missionTypes[pattern]+' · AGL '+height+' m · '+speed+' m/s · '+(end==='home'?'출발점 복귀·착륙':'제자리 대기');
   $('missionPreflight').hidden=false;
-  $('missionConfirm').focus();
+  $('missionConfirm').disabled=true;
+  $('missionUpload').disabled=false;
+  $('missionUpload').focus();
 }
 async function startMission() {
   if(mission.state==='paused'){resumeMission();return;}
   if(mission.state!=='ready')return;
+  if(flight.assisted){$('missionPlanState').value='현재 이륙·복귀·착륙이 끝난 뒤 시작하세요';return;}
   const map=maps[selectedIndex()];
-  if(!map||!terrainOk.every(Boolean)){ $('missionPlanState').value='3D 지형 연결 후 실행하세요';return; }
-  const plan=mission.plan, home=flight.point||plan.center;
-  if(geoDistance(home,plan.center)>1500){$('missionPlanState').value='수색 중심에서 1.5 km 이내로 이동 후 실행하세요';return;}
+  if(!map||!terrainOk[selectedIndex()]){ $('missionPlanState').value='3D 지형 연결 후 실행하세요';return; }
+  const plan=mission.plan, start=flight.point||plan.center, home=flight.home||start;
+  if([start,home].some(point=>geoDistance(point,plan.center)>1500)){$('missionPlanState').value='기체와 출발점이 경로 중심에서 1.5 km 이내여야 합니다';return;}
   const run={phase:'climb',home:{lng:home.lng,lat:home.lat},index:0,travelled:0,lastPose:0,tiles:null};
   mission.run=run;
   mission.state='preparing';
   $('missionPlanState').value='경로와 출발점의 지형 고도 확인 중';
   updateMissionUI();
-  try {run.tiles=await prepareMissionTerrain([home,...plan.points]);}
+  try {run.tiles=await prepareMissionTerrain([start,home,...plan.points]);}
   catch {
     if(mission.state!=='preparing'||mission.run!==run)return;
     mission.run=null;mission.state='ready';
@@ -1277,13 +1526,17 @@ async function startMission() {
     updateMissionUI();return;
   }
   if(mission.state!=='preparing'||mission.run!==run)return;
-  if(!terrainOk.every(Boolean)) {
+  if(!terrainOk[selectedIndex()]) {
     mission.run=null;mission.state='ready';
     $('missionPlanState').value='지도 전환 완료 후 다시 실행하세요';
     updateMissionUI();return;
   }
-  const ground=missionGround(home,run.tiles);
-  if(flight.phase!=='air')Object.assign(flight,{phase:'air',point:{lng:home.lng,lat:home.lat},ground,alt:ground,yaw:map.getBearing(),vs:0,speed:0});
+  const ground=missionGround(start,run.tiles);
+  if(!Number.isFinite(ground)){
+    mission.run=null;mission.state='ready';
+    $('missionPlanState').value='이륙 지점의 고도를 확인하지 못했습니다';updateMissionUI();return;
+  }
+  if(flight.phase!=='air')Object.assign(flight,{phase:'air',point:{lng:start.lng,lat:start.lat},home:run.home,ground,alt:ground,yaw:map.getBearing(),vs:0,speed:0});
   flight.ground=ground;
   mission.state='running';
   $('missionPlanState').value='임무 실행 중';
@@ -1300,7 +1553,7 @@ function pauseMission(message='임무 일시정지 · 현재 위치 유지') {
   updateMissionUI();
 }
 function resumeMission() {
-  if(mission.state!=='paused'||!terrainOk.every(Boolean))return;
+  if(mission.state!=='paused'||!terrainOk[selectedIndex()])return;
   mission.state='running';
   status('자동 임무 재개');
   $('missionPlanState').value='임무 실행 중';
@@ -1321,17 +1574,17 @@ function missionAltitude(target,dt,rate) {
 }
 function missionMotion(destination,dt) {
   const from=flight.point, remaining=geoDistance(from,destination);
-  const distance=Math.min(remaining,mission.plan.speed*dt);
+  const distance=Math.min(remaining,(destination.speed??mission.plan.speed)*dt);
   const fraction=remaining>0?distance/remaining:1;
-  const point={lng:from.lng+(destination.lng-from.lng)*fraction,lat:from.lat+(destination.lat-from.lat)*fraction};
+  const point=distance>=remaining?{lng:destination.lng,lat:destination.lat}:{lng:from.lng+(destination.lng-from.lng)*fraction,lat:from.lat+(destination.lat-from.lat)*fraction};
   const ground=missionGround(point,mission.run.tiles);
   if(!Number.isFinite(ground)){
     pauseMission('지형 고도 확인 대기 · 지도 로딩 후 재개하세요');
     return false;
   }
-  const target=ground+mission.plan.height;
+  const target=ground+(destination.height??mission.plan.height);
   missionAltitude(target,dt,5);
-  if(flight.alt+3<target){flight.speed=0;return false;}
+  if(flight.alt+1<target){flight.speed=0;return false;}
   flight.ground=ground;
   if(remaining>.03){
     const focus=mission.plan.pattern==='orbit'&&mission.run.phase==='route'&&mission.run.index>0?mission.plan.center:destination;
@@ -1340,21 +1593,57 @@ function missionMotion(destination,dt) {
   flight.point=point;
   flight.speed=distance/dt;
   if(mission.run.phase==='route'&&mission.run.index>0)mission.run.travelled+=distance;
-  return distance>=remaining;
+  const heightReached=mission.plan.pattern!=='waypoint'||Math.abs(flight.alt-target)<.02;
+  return distance>=remaining&&heightReached;
 }
-function advanceMission(dt, now) {
+function nextMissionPoint() {
+  const {plan,run}=mission;
+  if(++run.index<plan.points.length){run.phase='route';return;}
+  run.travelled=plan.distance;
+  if(plan.end==='home')run.phase='return';
+  else finishMission('completed','임무 완료 · 현재 위치 대기');
+}
+function applyWaypointCamera(point) {
+  const map=maps[selectedIndex()];
+  const tilt=point.tilt??map.getPitch()-90;
+  const zoom=point.zoom==null?(point.camera==='zoom'?Math.max(14,map.getZoom()):map.getZoom()):13+Math.log2(point.zoom);
+  aircraftCamera({tilt,zoom});
+}
+function advanceWaypointAction(dt) {
+  const run=mission.run, point=mission.plan.points[run.index];
+  flight.vs=0;flight.speed=0;
+  if(point.yaw!=null){
+    turnToward(point.yaw,dt);
+    if(Math.abs((point.yaw-flight.yaw+540)%360-180)>.1)return;
+  }
+  if(!run.actionApplied){
+    // The newly visible single-view canvas must have its final dimensions first.
+    if(!run.cameraReady){if(point.camera)selectCamera(point.camera);run.cameraReady=true;return;}
+    applyWaypointCamera(point);
+    run.actionApplied=true;
+    if(point.photo)run.photoResult=takePhoto();
+  }
+  run.actionRemaining=Math.max(0,run.actionRemaining-dt);
+  if(run.photoResult==='busy')run.photoResult=takePhoto();
+  if(run.photoResult==='busy'||run.photoResult==='pending'&&photoPending)return;
+  if(run.actionRemaining<=0)nextMissionPoint();
+}
+function advanceMission(dt, now, render=true) {
   if(mission.state!=='running'||document.hidden||dt<=0)return;
   const {plan,run}=mission, map=maps[selectedIndex()];
-  if(!map||!terrainOk.every(Boolean)){pauseMission('지형 연결 대기 · 임무 일시정지');return;}
+  if(!map||!terrainOk[selectedIndex()]){pauseMission('지형 연결 대기 · 임무 일시정지');return;}
   if(run.phase==='climb') {
     missionAltitude(flight.ground+plan.height,dt,5);
     if(Math.abs(flight.alt-flight.ground-plan.height)<.01)run.phase='route';
   } else if(run.phase==='route') {
-    if(missionMotion(plan.points[run.index],dt)&&++run.index===plan.points.length){
-      run.travelled=plan.distance;
-      if(plan.end==='home')run.phase='return';
-      else finishMission('completed','수색 완료 · 현재 위치 대기');
+    const point=plan.points[run.index];
+    if(missionMotion(point,dt)){
+      if(plan.pattern==='waypoint'){
+        run.phase='action';run.actionRemaining=point.hold||0;run.actionApplied=false;run.cameraReady=false;run.photoResult=null;
+      } else nextMissionPoint();
     }
+  } else if(run.phase==='action') {
+    advanceWaypointAction(dt);
   } else if(run.phase==='return') {
     if(missionMotion(run.home,dt)){run.phase='land';flight.speed=0;}
   } else {
@@ -1364,7 +1653,7 @@ function advanceMission(dt, now) {
       finishMission('completed','수색 완료 · 출발점 착륙');
     }
   }
-  if(now-run.lastPose>=65){
+  if((render&&now-run.lastPose>=65)||mission.state==='completed'){
     run.lastPose=now;
     aircraftCamera();
     if(missionActive())updateMissionAircraft();
@@ -1378,21 +1667,48 @@ function setupMission() {
     }
   } catch {}
   refreshMissionLibrary();
-  $('missionStart').onclick=()=>setMissionPanel(true);
   $('missionOpen').onclick=()=>setMissionPanel($('missionPanel').hidden);
   $('missionClose').onclick=()=>setMissionPanel(false);
   $('missionPick').onclick=()=>{
     if(mission.picking){cancelMissionPick();return;}
-    mission.picking=true;
-    $('missionPick').setAttribute('aria-pressed','true');
-    $('stage').classList.add('pickingMission');
-    $('missionPlanState').value='EO 또는 IR 지도에서 수색 중심을 클릭하세요';
+    beginMissionPick('add');
   };
-  for(const id of missionFields)$(id).addEventListener('input',()=>{updateMissionFields();invalidateMissionPlan();});
+  for(const id of missionFields)$(id).addEventListener('input',()=>{
+    if(id==='searchPattern'){mission.points=[];mission.selected=0;cancelMissionPick();updateMissionFields();}
+    invalidateMissionPlan();
+  });
+  $('missionPoint').onchange=()=>{
+    mission.selected=Number($('missionPoint').value);
+    refreshMissionEditor();maps.forEach(renderMissionNodes);
+  };
+  $('missionMovePoint').onclick=()=>beginMissionPick('move');
+  $('missionDeletePoint').onclick=()=>{
+    mission.points.splice(mission.selected,1);
+    mission.selected=Math.max(0,Math.min(mission.selected,mission.points.length-1));
+    cancelMissionPick();invalidateMissionPlan();refreshMissionEditor();
+  };
+  $('missionClearPoints').onclick=()=>{
+    mission.points=[];mission.selected=0;
+    cancelMissionPick();invalidateMissionPlan();refreshMissionEditor();
+  };
+  for(const [id,key] of Object.entries(waypointFields))$(id).onchange=()=>{
+    const field=$(id), point=mission.points[mission.selected];
+    if(!point)return;
+    if(!field.validity.valid){field.reportValidity();refreshMissionEditor();return;}
+    point[key]=key==='photo'?field.checked:field.value===''?null:field.type==='number'?Number(field.value):field.value;
+    invalidateMissionPlan();
+  };
   $('missionPreview').onclick=prepareMission;
   $('missionSave').onclick=saveMissionPlan;
   $('missionSaved').onchange=loadMissionPlan;
   $('missionRun').onclick=showMissionPreflight;
+  $('missionUpload').onclick=()=>{
+    if(mission.state!=='ready'||$('missionPreflight').hidden)return;
+    $('missionUpload').disabled=true;
+    $('missionConfirm').disabled=false;
+    $('missionPlanState').value='가상 기체에 경로 업로드 완료';
+    $('missionConfirm').focus();
+  };
   $('missionConfirm').onclick=startMission;
   $('missionStop').onclick=()=>mission.state==='paused'?resumeMission():pauseMission();
   $('missionCancel').onclick=()=>{
@@ -1407,7 +1723,7 @@ function setupMission() {
   updateMissionUI();
 }
 
-const flight = {phase:'off', point:null, ground:0, alt:0, yaw:0, vs:0, speed:0, stopHold:0, stopCscHold:0, csc:false, cscHold:0};
+const flight = {phase:'off', point:null, home:null, assisted:null, ground:0, alt:0, yaw:0, vs:0, speed:0, stopHold:0, stopCscHold:0, csc:false, cscHold:0};
 const keyState = new Set();
 const mouseAxes = [0,0,0,0];
 let virtualCommand = 0;
@@ -1416,16 +1732,25 @@ let lastFlightFrame = performance.now();
 let lastFlightPaint = 0;
 let lastFlightText = 0;
 let resumeNeutral = true;
+let lastRcInput = null;
 const cscPattern = (axes, direction) => axes[1]>.77 && axes[3]>.77 && direction*axes[0]>.77 && direction*axes[2]<-.77;
 
 function resetFlight() {
-  Object.assign(flight,{phase:'off',point:null,ground:0,alt:0,vs:0,speed:0,stopHold:0,stopCscHold:0,csc:false,cscHold:0});
+  Object.assign(flight,{phase:'off',point:null,home:null,assisted:null,ground:0,alt:0,vs:0,speed:0,stopHold:0,stopCscHold:0,csc:false,cscHold:0});
   updateFlightUI();
 }
 function updateFlightUI() {
-  $('flightMode').textContent = missionFlightLabel() || {off:'시동 대기', idle:'모터 시동 · 지상', air:'N 모드 · 수동 비행'}[flight.phase];
+  $('flightMode').textContent = missionFlightLabel() || ({takeoff:'자동 이륙',return:'홈 복귀',land:'자동 착륙'}[flight.assisted?.mode]) || {off:'시동 대기', idle:'모터 시동 · 지상', air:'N 모드 · 수동 비행'}[flight.phase];
   $('flightMode').classList.toggle('airborne',flight.phase==='air');
   $('flightTelemetry').value = 'H '+Math.max(0,flight.alt-flight.ground).toFixed(1)+' m　V.S. '+flight.vs.toFixed(1)+' m/s　H.S. '+flight.speed.toFixed(1)+' m/s';
+  $('flightNavigation').value=flight.point&&flight.home?'HDG '+Math.round(flight.yaw%360)+'° · HOME '+Math.round(geoDistance(flight.point,flight.home))+' m':'HDG — · HOME —';
+  const ready=maps.length===2&&terrainOk[selectedIndex()]&&!flight.assisted&&!missionActive()&&mission.state!=='preparing';
+  $('flightTakeoff').disabled=!ready||flight.phase==='air';
+  $('flightReturn').disabled=!ready||flight.phase!=='air'||!flight.home;
+  $('flightLand').disabled=!ready||flight.phase!=='air';
+  $('flightTakeoff').hidden=flight.phase==='air'||missionActive();
+  $('flightReturn').hidden=flight.phase!=='air'||missionActive();
+  $('flightLand').hidden=flight.phase!=='air'||missionActive();
 }
 function motorStart() {
   const map = maps[selectedIndex()];
@@ -1433,17 +1758,22 @@ function motorStart() {
   const c = map.getCenter();
   const elevation = map.queryTerrainElevation(c);
   if (!Number.isFinite(elevation)) return;
-  Object.assign(flight,{phase:'idle',point:c,ground:elevation,alt:elevation,yaw:map.getBearing(),stopHold:0});
+  Object.assign(flight,{phase:'idle',point:c,home:{lng:c.lng,lat:c.lat},ground:elevation,alt:elevation,yaw:map.getBearing(),stopHold:0});
   status('모터 시동 · 스로틀을 올려 이륙');
   updateFlightUI();
 }
 
-function aircraftCamera() {
+function aircraftCamera({tilt,zoom}={}) {
   if (!flight.point) return;
   const i=selectedIndex(), m=maps[i];
-  const pose=cameraAt(m,{lng:flight.point.lng,lat:flight.point.lat,alt:flight.alt},m.getPitch()-90,flight.yaw,m.getZoom());
-  m.setCenterClampedToGround(false);
-  m.jumpTo(pose);
+  if(!m)return;
+  const position={lng:flight.point.lng,lat:flight.point.lat,alt:flight.alt};
+  const pose=cameraAt(m,position,tilt??m.getPitch()-90,flight.yaw,zoom??m.getZoom());
+  if(linked())jumpBoth(pose,false);
+  else {
+    m.setCenterClampedToGround(false);
+    m.jumpTo(pose);
+  }
   if (!linked()) {
     const other=maps[1-i];
     if (isVisible(1-i)) {
@@ -1451,6 +1781,49 @@ function aircraftCamera() {
       other.jumpTo(cameraAt(other,{lng:flight.point.lng,lat:flight.point.lat,alt:flight.alt},other.getPitch()-90,flight.yaw,other.getZoom()));
     }
   }
+}
+async function assistFlight(mode) {
+  if(mode==='takeoff'&&flight.phase==='off')motorStart();
+  if(!flight.point||flight.assisted||missionActive()||mission.state==='preparing')return;
+  const job={mode,ready:mode!=='return',height:Math.max(30,flight.alt-flight.ground),tiles:null};
+  flight.assisted=job;
+  updateFlightUI();
+  if(mode==='takeoff'){
+    flight.phase='air';job.height=12;
+    status('자동 이륙 · 지면 위 12 m');
+  } else if(mode==='return') {
+    status('홈 복귀 경로의 지형을 확인하는 중');
+    try {job.tiles=await prepareMissionTerrain([flight.point,flight.home]);job.ready=true;}
+    catch {if(flight.assisted===job){flight.assisted=null;status('복귀 경로의 지형을 확인할 수 없습니다');}}
+  } else status('현재 위치에 착륙합니다');
+  updateFlightUI();
+}
+function advanceAssistedFlight(dt,now,axes) {
+  const job=flight.assisted;
+  if(axes.some(value=>Math.abs(value)>.2)){
+    flight.assisted=null;flight.speed=flight.vs=0;status('스틱 입력 · 수동 비행');return;
+  }
+  if(!job.ready||dt<=0||document.hidden)return;
+  if(job.mode==='takeoff'){
+    missionAltitude(flight.ground+job.height,dt,4);
+    if(Math.abs(flight.alt-flight.ground-job.height)<.01){flight.assisted=null;flight.vs=0;status('이륙 완료 · 현재 위치 대기');}
+  } else if(job.mode==='land') {
+    missionAltitude(flight.ground,dt,3);
+    if(flight.alt<=flight.ground+.01){flight.assisted=null;flight.phase='idle';flight.vs=0;status('착륙 · 모터 회전 중');}
+  } else {
+    const from=flight.point, home=flight.home, remaining=geoDistance(from,home);
+    const ratio=remaining>0?Math.min(1,8*dt/remaining):1;
+    const point={lng:from.lng+(home.lng-from.lng)*ratio,lat:from.lat+(home.lat-from.lat)*ratio};
+    const ground=missionGround(point,job.tiles);
+    if(!Number.isFinite(ground)){flight.assisted=null;flight.speed=flight.vs=0;status('지형 확인 실패 · 현재 위치 대기');return;}
+    missionAltitude(ground+job.height,dt,5);
+    if(flight.alt>=ground+job.height-1){
+      flight.ground=ground;flight.point=point;flight.speed=remaining*ratio/dt;
+      if(remaining>.03)turnToward(bearingTo(from,home),dt);
+      if(ratio===1){job.mode='land';flight.speed=0;}
+    } else flight.speed=0;
+  }
+  if(now-lastFlightPaint>=65){lastFlightPaint=now;aircraftCamera();}
 }
 
 function flySticks(dt, now, axes, centeredThrottle) {
@@ -1550,10 +1923,12 @@ const mappingFields = [
   ['lx','왼쪽 스틱 가로','axis',0],['ly','왼쪽 스틱 세로','axis',1],['rx','오른쪽 스틱 가로','axis',2],['ry','오른쪽 스틱 세로','axis',3],
   ['tilt','짐벌 다이얼','axis',null],['zoom','줌 다이얼','axis',null],
   ['zoomIn','확대 버튼','button',null],['zoomOut','축소 버튼','button',null],
-  ['photo','사진 버튼','button',null],['record','녹화 버튼','button',null],['shutter','사진·녹화 겸용','button',null]
+  ['photo','사진 버튼','button',null],['record','녹화 버튼','button',null],['shutter','사진·녹화 겸용','button',null],
+  ['pause','비행 일시정지 버튼','button',null],['return','홈 복귀 버튼','button',null],['recenter','짐벌 중앙 버튼','button',null]
 ];
 const buttonActions = {zoomIn:()=>zoomStep(.5),zoomOut:()=>zoomStep(-.5),photo:()=>takePhoto(),
-  record:()=>toggleRecording(),shutter:()=> $('shutter').click()};
+  record:()=>toggleRecording(),shutter:()=>$('shutter').click(),pause:()=>$('missionStop').click(),
+  return:()=>$('flightReturn').click(),recenter:()=>setGimbal(0)};
 const rc = {index:null, identity:'', settings:null, learning:null, buttons:{}, lastPaint:0, deltaAt:0};
 
 function getPads() {
@@ -1596,8 +1971,18 @@ function scanPads() {
   if ((current?.index??null)!==rc.index || (current?.id??'')!==rc.identity || !rc.settings) setRcPad(current);
   select.value=current?String(current.index):'';
   $('rcTop').value=current?'조종기 입력 감지':'조종기 대기';
-  if(!current)$('rcState').value='연결 대기 · 장치에서 버튼을 눌러 주세요';
+  if(!current){
+    lastRcInput=null;
+    $('rcState').value='브라우저에서 조종기 입력 장치를 찾는 중';
+    $('rcSignals').value='축 — · 버튼 —';
+  }
+  if($('rcDialog').open)showRcProfile(current);
   return current;
+}
+function showRcProfile(pad) {
+  const profile=$('rcProfile').value;
+  const hint=profile.startsWith('DJI')?'Windows·브라우저에서 이 조종기를 입력 장치로 제공해야 매핑할 수 있습니다.':profile.startsWith('RadioMaster')?'조종기의 USB 메뉴에서 Joystick을 선택하세요.':'장치가 나타난 뒤 입력을 하나씩 지정하세요.';
+  $('rcProfileHint').textContent=pad?(profile?profile+' 점검 중 · ':'')+pad.id+' · 연결된 장치의 실제 입력으로 확인하세요.':hint;
 }
 function renderMapping() {
   $('rcSpring').checked=rc.settings.spring;
@@ -1642,6 +2027,10 @@ function readController(now,dt) {
   const pad=now-rc.lastPaint>500 ? scanPads() : getPads().find(p=>p.index===rc.index);
   if(now-rc.lastPaint>500)rc.lastPaint=now;
   if (!pad || !rc.settings) return null;
+  if($('rcDialog').open){
+    const signature=pad.axes.map(v=>v.toFixed(2)).join(' / ')+' · 버튼 '+(pad.buttons.flatMap((button,i)=>button.pressed||button.value>.5?[i+1]:[]).join(', ')||'—');
+    if(signature!==lastRcInput){lastRcInput=signature;$('rcSignals').value='축 '+signature;}
+  }
   const input=rc.settings.input;
   if (rc.learning) {
     const {key,type,base,at}=rc.learning;
@@ -1695,18 +2084,34 @@ function readController(now,dt) {
   return axes;
 }
 function flightTick(now) {
-  const dt=Math.min(.05,(now-lastFlightFrame)/1000);
+  const elapsed=Math.max(0,(now-lastFlightFrame)/1000);
+  const dt=Math.min(.05,elapsed);
   lastFlightFrame=now;
   const physical=readController(now,dt);
   const virtual=virtualAxes(now);
   const useVirtual=!physical || virtual.some(Boolean);
   const axes=useVirtual?virtual:physical;
+  // A throttle that rests at its lower endpoint is neutral for mission override.
+  const overrideAxes=useVirtual||rc.settings.spring?axes:[axes[0],axes[1]>.7?0:1-axes[1],axes[2],axes[3]];
   if(!$('flightPanel').hidden)updateSticks(axes);
   if (missionActive()) {
-    if (!document.querySelector('dialog[open]') && !document.hidden && axes.some(value=>Math.abs(value)>.2)) {
+    if (!document.querySelector('dialog[open]') && !document.hidden && overrideAxes.some(value=>Math.abs(value)>.3)) {
       pauseMission('스틱 입력 · 임무 일시정지');
     }
-    advanceMission(dt, now);
+    let remaining=Math.min(.25,elapsed);
+    while(remaining>1e-6&&mission.state==='running'){
+      const step=Math.min(.05,remaining);
+      remaining-=step;
+      advanceMission(step,now,remaining<=1e-6);
+    }
+  } else if(flight.assisted){
+    const safeAxes=document.querySelector('dialog[open]')?[]:overrideAxes;
+    let remaining=Math.min(.25,elapsed);
+    while(remaining>1e-6&&flight.assisted){
+      const step=Math.min(.05,remaining);
+      remaining-=step;
+      advanceAssistedFlight(step,now,safeAxes);
+    }
   } else if (mission.state!=='preparing' && !document.querySelector('dialog[open]') && (physical || virtual.some(Boolean) || flight.phase!=='off')) {
     flySticks(dt,now,axes,useVirtual||rc.settings.spring);
   }
@@ -1718,7 +2123,11 @@ function setupFlight() {
   $('flightControls').onclick=()=>setFlightPanel($('flightPanel').hidden);
   $('closeSticks').onclick=()=>setFlightPanel(false);
   setFlightPanel(true);
+  $('flightTakeoff').onclick=()=>assistFlight('takeoff');
+  $('flightReturn').onclick=()=>assistFlight('return');
+  $('flightLand').onclick=()=>assistFlight('land');
   $('rcOpen').onclick=()=>{$('rcDialog').showModal();scanPads();};
+  $('rcProfile').onchange=()=>showRcProfile(scanPads());
   $('rcClose').onclick=()=>$('rcDialog').close();
   $('rcDialog').addEventListener('close',()=>{rc.learning=null;resumeNeutral=true;});
   $('rcDevice').onchange=()=>setRcPad(getPads().find(p=>p.index===Number($('rcDevice').value)));
@@ -1818,7 +2227,7 @@ function remember(entry) {
   while(recordings.length>24)recordings.pop();
 }
 function takePhoto() {
-  if(photoPending)return;
+  if(photoPending)return 'busy';
   const indices=captureIndices();
   if (!indices.every(i=>terrainOk[i]&&maps[i].getTerrain())) {targetText('카메라 영상 로딩 후 촬영하세요');return;}
   const pending={kind:'photo',...captureMeta(indices), frames:new Map(), timer:0};
@@ -1829,6 +2238,7 @@ function takePhoto() {
   },2300);
   photoPending=pending;
   indices.forEach(i=>maps[i].triggerRepaint());
+  return 'pending';
 }
 
 function finishPhoto(pending) {
@@ -2275,6 +2685,11 @@ async function searchPlace(peakOnly) {
 }
 
 function setupControls() {
+  $('cameraSettings').onclick=()=>{
+    const strip=$('cameraStrip'), visible=strip.hidden;
+    strip.hidden=!visible;
+    $('cameraSettings').setAttribute('aria-expanded',String(visible));
+  };
   fillRegions('province',adminRows,'전국 시·도');
   provinceChanged();
   $('province').onchange=provinceChanged;
@@ -2325,6 +2740,10 @@ function setupControls() {
   $('gimbalPitch').oninput=e=>setGimbal(e.target.value);
   $('gimbalHorizon').onclick=()=>setGimbal(0);
   $('gimbalNadir').onclick=()=>setGimbal(-90);
+  $('gimbalModeToggle').onclick=()=>{
+    const map=maps[selectedIndex()];
+    if(map)setGimbal(map.getPitch()<.1?0:-90);
+  };
   $('targetDeploy').onclick=redeployMissionTargets;
   $('targetScan').onclick=scanTarget;
   $('targetReveal').onclick=()=>{
@@ -2334,10 +2753,11 @@ function setupControls() {
     targetAudit();
   };
   $('missionMark').onclick=()=>{
-    const pos=scanAim||maps[selectedIndex()]?.getCenter();
+    const pos=scanAim||flight.point||maps[selectedIndex()]?.getCenter();
     if(pos)markAt([pos.lng,pos.lat]);
   };
-  $('missionClear').onclick=()=>{clearMarkers(scanPins);clearMarkers(markPins);scanAim=null;$('targetStatus').hidden=true;};
+  $('lookAt').onclick=lookAtObservation;
+  $('missionClear').onclick=()=>{clearMarkers(scanPins);clearObservation();scanAim=null;$('targetStatus').hidden=true;};
 }
 
 setupControls();
