@@ -1619,7 +1619,101 @@ html,body{margin:0!important;background:#0b1420!important;color:#e5effa!importan
 @media(min-width:1250px){#tsd-right{position:sticky;top:12px}}
 @media(max-width:1100px){#tsd-columns{grid-template-columns:1fr!important}#tsd-right{grid-row:1}#fpv-lab{padding:16px!important}}
 @media(max-width:620px){#fpv-lab .views{grid-template-columns:1fr!important}#fpv-lab .tsd-att-grid{grid-template-columns:1fr 1fr!important}#fpv-lab #attQuad,#fpv-lab #attHorizon{height:160px!important}#fpv-lab #hardware{grid-template-columns:1fr 1fr}#fpv-lab #settings input{font-size:11px!important;padding:3px!important}#fpv-lab #bfPanel{padding:10px!important}}
-&lt;/style&gt;&lt;/head&gt;
+&lt;/style&gt;
+&lt;style id=&quot;tsd-flight-lab-theme&quot;&gt;
+/* TSD site palette for the embedded flight lab. */
+:root[data-visualize-standalone] {
+  color-scheme: light;
+  --background: #f2f6fb !important;
+  --foreground: #162743 !important;
+  --card: #fff;
+  --card-foreground: #162743;
+  --muted: #eaf1fb !important;
+  --muted-foreground: #52627a !important;
+  --border: #dce5f1 !important;
+  --primary: #1553ce !important;
+  --primary-foreground: #fff;
+  --input: #b7c8df;
+  --accent: #e5eeff;
+  --accent-foreground: #1749aa;
+  --ring: #1a73eb;
+  --destructive: #a6253e;
+  --blue: #1553ce !important;
+  --green: #126a4e !important;
+  --viz-series-1: #1553ce !important;
+  --viz-series-2: #a64b0e !important;
+}
+:root[data-visualize-standalone], html &gt; body {
+  color: var(--foreground) !important;
+  background: var(--background) !important;
+}
+#fpv-lab {
+  padding: clamp(12px, 2vw, 26px) !important;
+}
+#fpv-lab &gt; h2 {
+  padding: 13px 17px;
+  border-radius: 9px;
+  background: linear-gradient(100deg, #141f49, #1b3872);
+  color: white;
+}
+#fpv-lab .brand {color:#bbd6ff;letter-spacing:.09em}
+#fpv-lab &gt; h2 small {color:#e7efff;opacity:1 !important}
+#fpv-lab .text-muted {color:var(--muted-foreground) !important}
+#tsd-columns {gap:16px !important;margin-top:16px}
+#fpv-lab #bfPanel, #fpv-lab .tsd-bb, #fpv-lab details,
+#fpv-lab .tsd-attitude, #fpv-lab .views section {
+  background:white !important;
+  border-color:var(--border) !important;
+  border-radius:9px !important;
+  box-shadow:0 2px 8px #13244009;
+}
+#fpv-lab #bfPanel, #fpv-lab .views section {
+  padding:clamp(10px, 1.2vw, 16px) !important;
+}
+#fpv-lab .text-destructive {color:var(--destructive) !important}
+#fpv-lab .form-label {color:#334865 !important}
+#fpv-lab .form-control, #fpv-lab .form-select {
+  background-color:white !important;
+  color:var(--foreground) !important;
+  border-color:var(--input) !important;
+  border-radius:5px !important;
+}
+#fpv-lab input:disabled {color:#526782 !important;background:#eaf1fb !important}
+#fpv-lab input[type=range] {accent-color:var(--primary)}
+#fpv-lab :is(input,select,button,a,summary):focus-visible {
+  outline:2px solid var(--ring) !important;outline-offset:2px;
+}
+#fpv-lab .btn {
+  background:white !important;
+  color:var(--foreground) !important;
+  border-color:var(--input) !important;
+  border-radius:6px !important;
+}
+#fpv-lab .btn:hover {
+  background:var(--accent) !important;color:var(--accent-foreground) !important;
+}
+#fpv-lab .btn[aria-pressed=true], #fpv-lab .btn-primary {
+  background:var(--primary) !important;border-color:var(--primary) !important;
+  color:white !important;font-weight:700;
+}
+#fpv-lab .btn[aria-pressed=true]:hover, #fpv-lab .btn-primary:hover {background:#1045ae !important}
+#fpv-lab th, #fpv-lab td {border-color:var(--border) !important}
+#fpv-lab thead th {background:#eaf2ff;color:#254471}
+#fpv-lab #liveTelemetry, #fpv-lab #termTelemetry {background:#edf4ff;border-left-color:var(--primary)}
+#fpv-lab .tsd-att-numbers {color:#334865}
+#fpv-lab .tsd-att-numbers span {border:1px solid var(--border)}
+#fpv-lab #heat {color:#954910}
+#fpv-lab a {color:#1749aa}
+#fpv-lab .pid-invalid {border-color:#a6253e !important;background:#fff1f3 !important}
+#fpv-lab .pid-risk:not(.pid-invalid) {border-color:#b36915 !important;background:#fff6e7 !important}
+#fpv-lab #bbTrace {background:#fff;border:1px solid var(--border)}
+@media (max-width:620px) {
+  #fpv-lab #settings .form-control {padding-inline:3px !important}
+  #fpv-lab .tsd-att-grid {grid-template-columns:minmax(0, 1fr) !important}
+  #fpv-lab .views section, #fpv-lab .tsd-attitude {padding:10px !important}
+}
+&lt;/style&gt;
+&lt;/head&gt;
 &lt;body&gt;
 &lt;script id=&quot;codex-visualization-widget-state&quot; type=&quot;application/json&quot;&gt;__CODEX_VISUALIZATION_WIDGET_STATE__&lt;/script&gt;
 &lt;script&gt;(() =&gt; {
@@ -2253,7 +2347,7 @@ const FlightEngine = (() =&gt; {
   return inverse?rx(ry(rz(v,-y),-p),-r):rz(ry(rx(v,r),p),y);
  }
  function drone(n,i){
-  const {ctx:c,w,h}=setup($('drone'+n)),q=pose(t),fg=color('--foreground'),muted=color('--muted-foreground'),green=color('--green'),blue=color('--blue'),ground=color('--muted'),series=color('--viz-series-1');
+  const {ctx:c,w,h}=setup($('drone'+n)),q=pose(t),fg='#f1f6ff',muted=color('--muted-foreground'),green=color('--green'),blue=color('--blue'),ground=color('--muted'),series=color('--viz-series-1');
   const chaseYaw=s.test==='yaw'?q.y:s.test.startsWith('split-')?Math.PI*Math.max(0,Math.min(1,t-(sampleAt(t).rotationStart??Infinity)-.5)):0;
   const camera=i?q.pos:[q.pos[0]-1.8*Math.cos(chaseYaw),q.pos[1]-1.8*Math.sin(chaseYaw),q.pos[2]-.65];
   const angles=i?[q.r,q.p,q.y]:[0,-.22,chaseYaw],f=w*.66;
@@ -2330,13 +2424,13 @@ const FlightEngine = (() =&gt; {
  let spectrumCache={};
  function blackbox(){
   if(!pidTrajectory.length)return;const {ctx:c,w,h}=setup($('bbTrace')),k=axes.indexOf($('bbAxis').value||'roll'),mode=$('bbMode').value,l=54,r=w-18,top=25,bot=h-30;
-  c.font='11px sans-serif';c.fillStyle='#b2c4da';c.strokeStyle='#263b52';c.textAlign='center';
+  c.font='11px sans-serif';c.fillStyle='#52627a';c.strokeStyle='#dce5f1';c.textAlign='center';
   if(mode==='spectrum'){
    if(!spectrumCache[k]){const q=pidTrajectory.filter(q=&gt;q.t&gt;=recoveryStart()&amp;&amp;!q.crash).slice(-4096),N=q.length,bins=[];const mean=q.reduce((a,v)=&gt;a+v.rates[k]-v.targets[k],0)/Math.max(1,N);
     if(N&gt;2)for(let hz=1;hz&lt;=200;hz++){let re=0,im=0;for(let j=0;j&lt;N;j++){const v=((q[j].rates[k]-q[j].targets[k])-mean)*180/Math.PI*(.5-.5*Math.cos(2*Math.PI*j/(N-1))),ph=2*Math.PI*hz*j/500;re+=v*Math.cos(ph);im-=v*Math.sin(ph);}bins.push({hz,amp:4*Math.hypot(re,im)/N});}spectrumCache[k]=bins;}
    const bins=spectrumCache[k],max=Math.max(.01,...bins.map(x=&gt;x.amp)),x=v=&gt;l+(r-l)*v/200,y=v=&gt;bot-(bot-top)*v/max;
    for(let hz=0;hz&lt;=200;hz+=40){c.fillText(hz+'',x(hz),h-10);c.beginPath();c.moveTo(x(hz),top);c.lineTo(x(hz),bot);c.stroke();}
-   c.strokeStyle='#f3b35b';c.beginPath();bins.forEach((v,i)=&gt;i?c.lineTo(x(v.hz),y(v.amp)):c.moveTo(x(v.hz),y(v.amp)));c.stroke();c.textAlign='left';c.fillText('각속도 오차 진폭 °/s · Hz · 500Hz 기록 / Hann 창',l,15);
+   c.strokeStyle='#a64b0e';c.beginPath();bins.forEach((v,i)=&gt;i?c.lineTo(x(v.hz),y(v.amp)):c.moveTo(x(v.hz),y(v.amp)));c.stroke();c.textAlign='left';c.fillText('각속도 오차 진폭 °/s · Hz · 500Hz 기록 / Hann 창',l,15);
    const peak=bins.reduce((a,b)=&gt;b.amp&gt;a.amp?b:a,{hz:0,amp:0});$('bbStats').textContent='기동 후 마지막 최대 8.192초 · 피크 '+peak.hz+'Hz / '+peak.amp.toFixed(3)+'°/s · 1Hz 간격 DFT · 250Hz 이상 분석 불가';return;
   }
   const points=pidTrajectory.filter((_,i)=&gt;i%10===0),scale=180/Math.PI,max=Math.max(30,...points.flatMap(q=&gt;mode==='error'?[Math.abs(q.rates[k]-q.targets[k])*scale]:[Math.abs(q.rates[k])*scale,Math.abs(q.targets[k])*scale]))*1.1;
@@ -2344,14 +2438,14 @@ const FlightEngine = (() =&gt; {
   for(let j=0;j&lt;=6;j++){c.fillText(j*5+'s',x(j*5),h-10);c.beginPath();c.moveTo(x(j*5),top);c.lineTo(x(j*5),bot);c.stroke();}
   for(const v of [-max,0,max]){c.textAlign='right';c.fillText(v.toFixed(0),l-5,y(v)+3);}
   function plot(fn,col,dash){c.strokeStyle=col;c.setLineDash(dash);c.beginPath();points.forEach((q,i)=&gt;i?c.lineTo(x(q.t),y(fn(q)*scale)):c.moveTo(x(q.t),y(fn(q)*scale)));c.stroke();}
-  if(mode==='error')plot(q=&gt;q.rates[k]-q.targets[k],'#f3b35b',[]);else{plot(q=&gt;q.targets[k],'#69c9ff',[5,4]);plot(q=&gt;q.rates[k],'#ffb45a',[]);}c.setLineDash([]);c.strokeStyle='#d6edff';c.beginPath();c.moveTo(x(t),top);c.lineTo(x(t),bot);c.stroke();c.textAlign='left';c.fillStyle='#b2c4da';c.fillText('각속도 °/s · 점선 목표 / 실선 계산값',l,15);
+  if(mode==='error')plot(q=&gt;q.rates[k]-q.targets[k],'#a64b0e',[]);else{plot(q=&gt;q.targets[k],'#1553ce',[5,4]);plot(q=&gt;q.rates[k],'#a64b0e',[]);}c.setLineDash([]);c.strokeStyle='#52627a';c.beginPath();c.moveTo(x(t),top);c.lineTo(x(t),bot);c.stroke();c.textAlign='left';c.fillStyle='#52627a';c.fillText('각속도 °/s · 점선 목표 / 실선 계산값',l,15);
   const q=sampleAt(t);$('bbStats').textContent=axes[k].toUpperCase()+' · 목표 '+(q.targets[k]*scale).toFixed(1)+'°/s · 계산값 '+(q.rates[k]*scale).toFixed(1)+'°/s · D 적용 '+q.effectiveD[k].toFixed(1);
  }
  function drawHorizon(R,P){
   const {ctx:g,w:hw,h:hh}=setup($('attHorizon')),x=hw/2,y=hh/2,radius=Math.min(hw,hh)*.35;
   // Equivalent upright Euler attitude: a half roll + half loop is level with reversed heading.
   const bank=Math.atan2(Math.sin(R)*Math.cos(P),Math.cos(R)*Math.cos(P)),pitch=Math.asin(Math.sin(P));
-  g.fillStyle='#101e2e';g.fillRect(0,0,hw,hh);
+  g.fillStyle='#132440';g.fillRect(0,0,hw,hh);
   g.save();g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.clip();g.translate(x,y);g.rotate(-bank);g.translate(0,pitch*radius*.8);
   g.fillStyle='#3978a8';g.fillRect(-hw*2,-hh*3,hw*4,hh*3);g.fillStyle='#80694d';g.fillRect(-hw*2,0,hw*4,hh*3);
   g.strokeStyle='#edf6ff';g.lineWidth=1.5;g.beginPath();g.moveTo(-hw,0);g.lineTo(hw,0);g.stroke();
@@ -2373,7 +2467,7 @@ const FlightEngine = (() =&gt; {
  function attitude(){
   if(!pidTrajectory.length)return;const q=pose(t),R=q.r,P=q.p,Y=q.y;
   const {ctx:c,w,h}=setup($('attQuad'));
-  c.fillStyle='#17232f';c.fillRect(0,0,w,h);
+  c.fillStyle='#132440';c.fillRect(0,0,w,h);
   // Use the same nose (+X), lateral (+Y), and attitude as the chase camera.
   // Project into a clear 3/4 overhead view: nose (+X) points toward screen top.
   const chaseYaw=s.test==='yaw'?q.y:s.test.startsWith('split-')?Math.PI*Math.max(0,Math.min(1,t-(sampleAt(t).rotationStart??Infinity)-.5)):0;
