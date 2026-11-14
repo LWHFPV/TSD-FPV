@@ -725,6 +725,144 @@ body[data-view="fly"] .profile,body[data-view="fly"] .maphead{display:none}body[
 #courseHome .course-foot {background:transparent;color:var(--course-muted);border-top:1px solid var(--course-line);padding-top:13px;line-height:1.7}
 @media(max-width:480px){#courseHome .course-nav{min-height:55px}#courseHome .course-actions button{font-size:13px}}
 </style>
+<style id="workspaceTheme">
+/* TSD portal colors for the operational screens. */
+:root {
+  color-scheme: light;
+  --bg: #f2f6fb;
+  --panel: #fff;
+  --line: #dce5f1;
+  --muted: #52627a;
+  --blue: #1553ce;
+  --yellow: #1553ce;
+  --green: #1c7959;
+  --red: #a52546;
+  --workspace-ink: #162743;
+  --workspace-soft: #edf4ff;
+  --workspace-field: #bccde4;
+}
+body {background:var(--bg);color:var(--workspace-ink)}
+body > header, body > footer {
+  background:#fff;color:var(--workspace-ink);border-color:var(--line);
+}
+body > header .brand {background:#194cb9;color:#fff}
+body > header .vehicle span, body > footer, .menu .menu-version {color:var(--muted)}
+body > footer b {color:var(--blue)}
+body > .demo-banner {
+  background:linear-gradient(100deg,#141f49,#1b3872);
+  color:#e7efff;
+}
+body > .demo-banner b {color:#b7d8ff}
+body > .demo-banner button {background:transparent;color:#fff;border-color:#a8bfe366}
+body > .demo-banner button:hover {background:#ffffff24}
+body > header button, body > main button, body > footer button,
+#menu button, #screenPane button, #dialog button, #tutorial button {
+  background:#fff;color:var(--workspace-ink);border-color:var(--workspace-field);border-radius:5px;
+}
+body > header button:not(.brand):hover, body > main button:hover, body > footer button:hover,
+#menu button:hover, #screenPane button:hover, #dialog button:hover, #tutorial button:hover {
+  background:var(--workspace-soft);color:var(--blue);
+}
+body > header button.primary, body > main button.primary,
+#screenPane button.primary, #dialog button.primary, #tutorial button.primary {
+  background:var(--blue);border-color:var(--blue);color:#fff;
+}
+body > header button.primary:hover, body > main button.primary:hover,
+#screenPane button.primary:hover, #dialog button.primary:hover, #tutorial button.primary:hover {
+  background:#1045ae;color:#fff;
+}
+body > header nav button.active, body > main button.active, #screenPane button.active {
+  background:var(--workspace-soft);border-color:#87a7e4;color:#1749aa;
+}
+body > header nav button.active, body > main .paneltabs button.active {
+  border-bottom-color:var(--blue);border-radius:5px 5px 0 0;
+}
+body > header :focus-visible, body > main :focus-visible, body > footer :focus-visible,
+#menu :focus-visible, #screenPane :focus-visible, #dialog :focus-visible, #tutorial :focus-visible {
+  outline:2px solid #1a73eb;outline-offset:2px;
+}
+body > main input:not([type=range]):not([type=checkbox]), body > main select,
+#screenPane input:not([type=range]):not([type=checkbox]), #screenPane select,
+#dialog input:not([type=range]):not([type=checkbox]), #dialog select {
+  background:#fff;border-color:var(--workspace-field);color:var(--workspace-ink);border-radius:5px;
+}
+body > main label, #screenPane label, #dialog label {color:var(--muted)}
+body > main input[type=range], #screenPane input[type=range], #dialog input[type=range] {accent-color:var(--blue)}
+body > main .maphead, body > main .map-options, body > main .profile,
+body > main aside, body > main .paneltabs {
+  background:#fff;border-color:var(--line);color:var(--workspace-ink);
+}
+body > main .settings, body > main .waypoint, body > main .estimated {
+  background:#f6f9ff;border-color:var(--line);border-radius:6px;
+}
+body > main .selected .wphead {background:#dce9ff;color:#1749aa}
+body > main .wphead b {border-color:#a1b7d9}
+body > main .wpbody .delete {color:var(--red)}
+body > main .pill {border-color:#b4c9eb;color:#164bb4;background:#f1f6ff}
+body > main .profile-head b span, body > main .legend, body > main #profileInfo,
+body > main .note, body > main .wpbody p, body > main .events,
+body > main .format-note, body > main .source-info, body > main .micro {
+  color:var(--muted);
+}
+body > main .events div {border-color:var(--line)}
+body > main #profile text {fill:var(--muted)}
+body > main #profile line[stroke="#494949"] {stroke:#c9d7ea}
+body > main #profile polyline[stroke="#f4d34f"] {stroke:var(--blue)}
+body > main #profile polyline[stroke="#79c39a"] {stroke:var(--green)}
+body > main #profile polygon[fill="#79c39a22"] {fill:#16835e25}
+body > main .coach {background:#eaf2ff;border-color:#98b5e8}
+body > main .coach small, body > main .coach p {color:#375581}
+body > main .emergency-box {background:#fff3ed;border-color:#e8b29a}
+body > main .emergency-box h3 {color:#933920}
+body > main .emergency-box p {color:#654536}
+body > main .scenario-status {background:#fff9f3;color:#674633}
+body > main #mapNote, body > main .coords {background:#142746ec;color:#fff;border-radius:5px}
+body > main .coords select {border-color:#b7c9e0}
+body > main #planTools button, body > main #flyTools button {
+  background:#f6f9fff5;color:#193664;border-color:#abc3e1;box-shadow:0 2px 6px #12264755;
+}
+body > main #planTools button:hover, body > main #flyTools button:hover {
+  background:#dfeaff;color:#1749aa;
+}
+body > main #planTools button.active, body > main #flyTools button.active {
+  background:var(--blue);color:#fff;border-color:var(--blue);
+}
+body > main #planPanel .paneltabs button.active {
+  background:#e5eeff;color:#1749aa;border-bottom-color:var(--blue);
+}
+body > main .leaflet-control-zoom a {background:#fff!important;color:#153e82!important}
+body > main .leaflet-control-zoom a:hover {background:#eaf2ff!important}
+body > main .notice-bar, body > main .osd-panel, body > main .video-pip,
+body > main .telemetry {color:#fff;color-scheme:dark}
+body > main .osd-panel {border-top-color:#80adff}
+body > main .osd-panel .osd-head {color:#b4d0ff}
+body > main .map-marker {background:#1553ce;color:white;border-color:#fff}
+body > main .map-marker.home, body > main .map-marker.selected {background:#fff;color:#1749aa;border-color:#1553ce}
+#menu, #dialog, #tutorial {
+  background:#fff;color:var(--workspace-ink);border-color:var(--workspace-field);
+}
+#dialog .dialoghead, #screenPane .screen-nav {border-color:var(--line)}
+#dialog a, #screenPane a, #tutorial a {color:var(--blue)}
+#dialog .confirm, #dialog .metric-grid div, #dialog .setupnav button {
+  background:#edf4ff;color:var(--workspace-ink);border-color:var(--line);
+}
+#screenPane {background:var(--bg);color:var(--workspace-ink)}
+#screenPane .screen-nav {background:#fff}
+#screenPane .config-card, #screenPane .airframe-card {
+  background:#fff;color:var(--workspace-ink);border-color:var(--workspace-field);border-radius:6px;
+}
+#screenPane .airframe-card.active {border-color:var(--blue)}
+#screenPane .screen-body > p, #screenPane .airframe-card small,
+#screenPane .micro, #screenPane .mode2-sticks small {color:var(--muted)}
+#screenPane .read-only-hint {background:#edf4ff;border-color:#759ad8;color:#284574}
+#screenPane .chip {background:#e1ecff;color:#1749aa}
+#screenPane .pending-label {color:#77510e}
+#screenPane .calibration-poses button.done {background:#e1f5e9;color:#176246}
+#screenPane .log-chart {background:#17283f}
+#tutorial header, #tutorial p {background:transparent;color:var(--workspace-ink)}
+#tutorial .step-state {color:#234f9b}
+#toast {background:#173b80;color:#fff;border-radius:6px}
+</style>
 </head>
 <body>
 <header><button id="menuButton" class="brand" aria-label="주 메뉴">Q<span>☰</span></button><nav><button data-view="fly">Fly <small>비행</small></button><button data-view="plan" class="active">Plan <small>계획</small></button></nav><div class="vehicle"><b>PX4 멀티콥터</b><span id="flightStatus">연결되지 않음</span></div><div class="health"><span id="gps">◉ GPS —</span><span id="link">▥ LINK —</span><span id="battery">▰ 100%</span></div><button id="connect" class="primary">가상 기체 연결</button></header>
