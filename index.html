@@ -59,9 +59,10 @@ footer{background:#fff;border-top:1px solid var(--line);color:var(--muted)}
 #protectedDownload{border:1px solid #bccbe0;border-radius:5px;background:#f4f8ff;color:var(--ink);padding:6px 10px;font-size:13px}
 @media(max-width:900px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){
- .headerInner{gap:8px 12px;min-height:56px}
- .siteNav{margin-left:auto;gap:12px}
- .siteNav a{padding:15px 0;font-size:14px}
+ .headerInner{display:grid;grid-template-columns:1fr auto;gap:0 8px;min-height:0;padding-top:8px}
+ .headerInner .brand{grid-column:1/-1;justify-self:start}
+ .siteNav{margin:0;gap:clamp(8px,3vw,20px)}
+ .siteNav a{padding:10px 0;font-size:clamp(12px,3.5vw,14px)}
  .services{padding-top:30px}
  .hero::before{background-position:right center}
 }
@@ -82,7 +83,9 @@ footer{background:#fff;border-top:1px solid var(--line);color:var(--muted)}
   <div class="wrap headerInner">
     <a class="brand" href="./index.html" aria-current="page"><span class="brandMark" aria-hidden="true">TSD</span> TSD Aero Systems</a>
     <nav class="siteNav" aria-label="주 메뉴">
-      <a href="#technology" id="servicesLink">서비스</a>
+      <a href="./education.html">체험교육</a>
+      <a href="#technology" id="servicesLink">시뮬레이터 체험</a>
+      <a href="./drone-design.html">드론설계</a>
     </nav>
     <a class="headerContact" href="./contact.html">문의</a>
   </div>
