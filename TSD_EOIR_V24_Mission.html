@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TSD EO/IR V24.10.1 · Mavic 3T 수색 훈련</title>
+<title>TSD EO/IR V24.10.2 · Mavic 3T 수색 훈련</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css">
 <style>:root{color-scheme:dark;--ink:#f1f3f5;--muted:#aeb8c4;--panel:#1e242b;--line:#46515c;--blue:#77cce8;--overlay:#11171cdd;--pad:clamp(8px,1.5vw,18px)}
 *{box-sizing:border-box}
@@ -103,8 +103,6 @@ output{font-variant-numeric:tabular-nums}
 .observationPin{font-size:25px;color:#ffdc76;text-shadow:0 0 3px #000;pointer-events:none}
 .scanBox,.reviewBox{border:1px dashed #ffdb83;background:#ffdc3f25;pointer-events:none}
 .flightPanel{position:absolute;left:50%;bottom:calc(var(--nav-size) + 59px);transform:translateX(-50%);width:min(340px,75%);background:#141c24f5;border:1px solid #697b8c;border-radius:8px;padding:9px;z-index:6}
-#stage:has(.flightPanel:not([hidden])) #targetStatus{bottom:calc(var(--nav-size) + 238px)}
-#stage:has(.flightPanel:not([hidden])) #measureReadout{bottom:calc(var(--nav-size) + 274px)}
 .sticks{display:flex;justify-content:space-around;text-align:center;margin:7px 0}
 .stick{position:relative;width:94px;height:94px;border:1px solid #687684;border-radius:50%;background:radial-gradient(circle,#273642,#111921);touch-action:none;cursor:crosshair}
 .stick i{position:absolute;left:50%;top:50%;width:24px;height:24px;border-radius:50%;background:#d5e2eb;box-shadow:0 0 0 2px #5c7487;transform:translate(-50%,-50%);pointer-events:none}
@@ -139,8 +137,6 @@ dialog::backdrop{background:#000b}
  #cameraStrip{gap:5px}
  .pilotBottom{justify-content:flex-start}
  .reviewFrame canvas{max-height:40vh}
- #stage:has(.flightPanel:not([hidden])) #targetStatus{top:32px;bottom:auto}
- #stage:has(.flightPanel:not([hidden])) #measureReadout{top:65px;bottom:auto}
 }
 
 :root {
@@ -407,6 +403,54 @@ dialog::backdrop {background:#132440ab}
  .tutorialLayout{grid-template-columns:minmax(0,1fr);gap:12px;padding:12px}
  #tutorialTopics{max-height:28vh}
 }
+#stage .rail {bottom:calc(var(--inset-width) * .5625 + 61px)}
+#flightPanelDock {grid-column:1/-1;background:#edf3fa;border-bottom:1px solid var(--line);padding:6px var(--pad)}
+#flightPanelDock:has(#flightPanel[hidden]),#flightPanelDock:has(#flightPanel[data-floating]) {display:none}
+.flightPanel {position:relative;inset:auto;transform:none;width:min(330px,100%);margin-inline:auto;padding:5px 8px 7px}
+.flightPanel[data-floating] {position:fixed;top:0;left:0;z-index:20;width:min(330px,calc(100vw - 16px));margin:0;box-shadow:0 4px 20px #14253850}
+#flightPanelDock:has(#flightPanel[data-floating]:not([hidden])) {display:contents}
+.flightPanel .sticks {margin:4px 0}
+.panelTitle {display:flex;align-items:center;gap:3px;min-width:0}
+.panelGrip {cursor:grab;touch-action:none;user-select:none}
+.panelGrip:active,.insetResize:active {cursor:grabbing}
+#stickGrip {flex:1;min-width:0;text-align:left;background:transparent;border-color:transparent;font-weight:700}
+.flightPanel .panelTitle button {min-height:27px}
+.pilotInset[data-front] {z-index:7}
+.pilotInset .panelTitle {padding:2px 3px;background:#13202d;border-bottom:1px solid #ffffff25}
+.pilotInset .panelGrip {text-align:left;flex:1;font-weight:700;border-color:transparent;background:transparent;white-space:nowrap;padding-inline:3px}
+.pilotInset .panelTitle [data-inset-step] {width:22px;min-width:22px;padding:0;font-size:14px;line-height:1}
+.pilotInset .panelTitle button:disabled {opacity:.38}
+.pilotInset .insetResize {margin-inline-start:auto;cursor:ew-resize;touch-action:none;padding-inline:3px}
+#visionPanel .insetControls {justify-content:initial}
+.pilotInset[data-size=closed] .panelTitle [data-inset-step] {display:none}
+.pilotInset[data-size=closed] .insetResize,#miniMapPanel[data-size=large] .insetResize {display:none}
+.pilotInset[data-size=closed] .panelTitle {border-bottom:0}
+#miniMapPanel[data-size=large] .panelTitle [data-inset-step] {display:none}
+#miniMapPanel[data-size=large] #miniMapGrip {cursor:default}
+#miniMapStatus,#visionStatus {display:flex;align-items:center;justify-content:center;padding:2px 6px;line-height:1.15;overflow-wrap:anywhere}
+#visionBody:has(#visionStatus:not([hidden])) :is(#visionHeading,.visionDirections,.visionSimulation) {visibility:hidden}
+#mapCredits {grid-column:1/-1;padding:4px var(--pad);background:#fff;color:#3b506a;font-size:11px;overflow-wrap:anywhere}
+#mapCredits a {color:inherit;text-decoration:underline}
+@media(min-width:940px) {
+ #flightPanelDock:not(:has(#flightPanel[data-floating])) {grid-row:5}
+ #mapCredits {grid-row:6}
+}
+@container (max-width:590px) {
+ .pilotInset,#stage .rail {--inset-width:clamp(104px,29cqw,142px)}
+ .pilotInset .panelGrip {font-size:10px}
+ .pilotInset .panelTitle [data-inset-step] {width:20px;min-width:20px}
+ .insetControls {padding-inline:2px;gap:2px}
+ .insetControls button {min-width:18px}
+ #stage .rail {bottom:calc(var(--inset-width) * .5625 + 58px)}
+}
+@media(max-height:485px) {
+ .flightPanel[data-floating] .stick {width:72px;height:72px}
+}
+
+.flightPanel {--stick-travel:34px}
+#leftStick i {translate:calc(var(--left-x,0) * var(--stick-travel)) calc(var(--left-y,0) * var(--stick-travel))}
+#rightStick i {translate:calc(var(--right-x,0) * var(--stick-travel)) calc(var(--right-y,0) * var(--stick-travel))}
+@media(max-height:485px){.flightPanel[data-floating]{--stick-travel:25px}}
 </style>
 </head>
 <body>
@@ -416,7 +460,7 @@ dialog::backdrop {background:#132440ab}
  </feComponentTransfer></filter>
 </defs></svg>
 <section id="admin" aria-label="시뮬레이션 설정">
- <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.1 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
+ <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.2 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
  <div id="adminBody">
   <div class="row">
    <label>시·도 <select id="province"></select></label>
@@ -519,22 +563,20 @@ dialog::backdrop {background:#132440ab}
    <button id="playback" aria-label="촬영본 재생" title="촬영본 재생"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></button>
    <div class="zoomRail"><button id="zoomIn" aria-label="확대">+</button><output id="zoomLabel">1.0×</output><button id="zoomOut" aria-label="축소">−</button></div>
   </div>
-  <div id="flightPanel" class="flightPanel" hidden>
-   <div class="row"><b>가상 조종기 · Mode 2</b><span class="spacer"></span><button id="closeSticks" aria-label="가상 스틱 닫기">×</button></div>
-   <div class="sticks">
-    <div><div class="stick" id="leftStick" tabindex="0" aria-label="왼쪽 스틱, 스로틀과 기수"><i></i></div><small>스로틀 · 기수</small></div>
-    <div><div class="stick" id="rightStick" tabindex="0" aria-label="오른쪽 스틱, 전후좌우"><i></i></div><small>전후 · 좌우</small></div>
-   </div>
-   <div class="row csc"><button id="virtualMotorStart" type="button" disabled>모터 시동</button></div>
-  </div>
   <div id="measureReadout" hidden aria-live="polite"></div>
   <section id="miniMapPanel" class="pilotInset" aria-label="미니맵" data-size="small">
+   <div class="panelTitle">
+    <button id="miniMapGrip" class="panelGrip" type="button" aria-label="미니맵 이동" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Home" title="드래그 또는 방향키로 이동 · Home은 기본 위치">지도</button>
+    <button type="button" data-inset-step="-1" aria-label="미니맵 창 줄이기">−</button>
+    <button type="button" data-inset-step="1" aria-label="미니맵 창 키우기">+</button>
+   </div>
    <div id="miniMapBody"><div id="miniMapCanvas" aria-label="비행 위치 지도"></div><output id="miniMapStatus">지도 연결 중</output><button id="miniMapPreview" aria-label="미니맵 확대"></button></div>
    <div class="insetControls">
     <button id="miniMapToggle" aria-controls="miniMapBody" aria-expanded="true" title="지도 접기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2ZM9 3v16m6-14v16"/></svg></button>
     <button id="miniMapSize" aria-label="지도 최대화" title="지도 최대화" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></svg></button>
     <button id="miniMapNorth" title="북쪽 고정" aria-pressed="true">N</button>
     <button id="miniMapCenter" aria-label="기체 위치로 지도 중앙 이동" title="기체 위치로 지도 중앙 이동" hidden>⊙</button>
+    <button class="insetResize" type="button" aria-label="미니맵 창 크기 조절" title="좌우로 드래그해서 크기 조절">↔</button>
    </div>
   </section>
   <section id="navigationDisplay" aria-label="시뮬레이션 항법 표시" title="항법 표시 · 기수, 이동 방향, 홈 위치">
@@ -559,28 +601,48 @@ dialog::backdrop {background:#132440ab}
    </div>
    <div class="navReadings"><span>ALT</span><output id="navAltitude" aria-label="이륙점 위 고도 (m)">0.0</output><small>m</small><output id="navVertical" aria-label="상승 또는 하강 속도">0.0 VS</output></div>
   </section>
-  <section id="visionPanel" class="pilotInset" aria-label="모의 비전 어시스트">
+  <section id="visionPanel" class="pilotInset" aria-label="모의 비전 어시스트" data-size="small">
+   <div class="panelTitle">
+    <button id="visionGrip" class="panelGrip" type="button" aria-label="비전 어시스트 이동" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Home" title="드래그 또는 방향키로 이동 · Home은 기본 위치">비전</button>
+    <button type="button" data-inset-step="-1" aria-label="비전 어시스트 창 줄이기">−</button>
+    <button type="button" data-inset-step="1" aria-label="비전 어시스트 창 키우기">+</button>
+   </div>
    <div id="visionBody">
     <div id="visionCanvas"></div><output id="visionStatus">이륙 후 모의 비전 표시</output>
     <button id="visionHeading" aria-label="표시 중인 비전 방향 고정" aria-pressed="false" title="길게 누르거나 Enter를 눌러 방향 고정">FRONT</button>
     <div class="visionDirections" role="group" aria-label="비전 카메라 방향"><button data-vision="0" aria-label="전방 비전" title="전방">⌃</button><button data-vision="270" aria-label="좌측 비전" title="좌측">‹</button><button data-vision="90" aria-label="우측 비전" title="우측">›</button><button data-vision="180" aria-label="후방 비전" title="후방">⌄</button></div>
     <span class="visionSimulation">모의 영상</span>
    </div>
-   <div class="insetControls"><button id="visionToggle" aria-controls="visionBody" aria-expanded="true" title="비전 어시스트 접기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+   <div class="insetControls"><button id="visionToggle" aria-controls="visionBody" aria-expanded="true" title="비전 어시스트 접기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/><circle cx="12" cy="12" r="3"/></svg></button><button class="insetResize" type="button" aria-label="비전 어시스트 창 크기 조절" title="좌우로 드래그해서 크기 조절">↔</button></div>
   </section>
   <div id="missionHud" hidden><div class="row"><output id="missionProgress" aria-live="off"></output><button id="missionStop" disabled hidden>일시정지</button><button id="missionEndFlight" hidden>임무 종료</button></div><progress id="missionProgressBar" max="1" value="0" aria-label="임무 진행률"></progress></div>
   <output id="targetStatus" role="status" hidden></output>
   <div id="flash" aria-hidden="true"></div>
  </section>
+ <div id="flightPanelDock">
+  <div id="flightPanel" class="flightPanel" hidden>
+   <div class="panelTitle">
+    <button id="stickGrip" class="panelGrip" type="button" aria-label="가상 조종기 Mode 2 이동" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Home" title="드래그 또는 방향키로 이동 · Home은 하단으로">⠿ 가상 조종기 · Mode 2</button>
+    <button id="dockSticks" type="button" title="하단에 고정" hidden>하단</button>
+    <button id="closeSticks" type="button" aria-label="가상 스틱 닫기">×</button>
+   </div>
+   <div class="sticks">
+    <div><div class="stick" id="leftStick" tabindex="0" aria-label="왼쪽 스틱, 스로틀과 기수"><i></i></div><small>스로틀 · 기수</small></div>
+    <div><div class="stick" id="rightStick" tabindex="0" aria-label="오른쪽 스틱, 전후좌우"><i></i></div><small>전후 · 좌우</small></div>
+   </div>
+   <div class="row csc"><button id="virtualMotorStart" type="button" disabled>모터 시동</button></div>
+  </div>
+ </div>
  <div class="pilotBottom">
   <div class="row"><label>짐벌 피치 <input id="gimbalPitch" type="range" min="-90" max="35" value="0"></label><output id="gimbalValue">0°</output><button id="gimbalHorizon">0° 수평</button><button id="gimbalNadir">−90° 직하</button></div>
   <div class="row flightReadings"><output id="flightTelemetry">H 0.0 m　V.S. 0.0 m/s　H.S. 0.0 m/s</output></div>
   <button id="missionClear">표식 지우기</button>
  </div>
+ <div id="mapCredits">지도 <span id="satelliteCredit">© Esri 및 영상 제공자</span><span id="streetCredit" hidden>© <a href="https://openfreemap.org/">OpenFreeMap</a> · <a href="https://www.openstreetmap.org/copyright">OpenStreetMap 기여자</a></span> · 지형 Mapzen/AWS Terrain Tiles</div>
 </main>
 <footer>
  <p>마우스 클릭으로 지점을 선택합니다. 일반 모드에서 드래그하면 시점이 움직이고 휠로 확대합니다. IR 측정을 켜면 클릭으로 한 점을, 드래그로 영역을 측정합니다.</p>
- <p>가상 스틱은 W/S·A/D(왼쪽), 방향키(오른쪽)로도 조작합니다. 조종기 입력 매핑은 상단 설정에서 확인할 수 있습니다.</p>
+ <p>가상 조종기와 보조창은 제목을 드래그해 옮깁니다. 보조창은 −/+ 또는 ↔ 드래그로 크기를 조절합니다. 가상 스틱은 키보드 W/S·A/D(왼쪽), 방향키(오른쪽)로도 조작합니다.</p>
  <p>가상 비행 및 모의 열화상 영상입니다. 지도는 인터넷이 필요합니다. 행정구역은 2026년 2월 법정동 자료 기준입니다. <a href="https://github.com/swuhalee/korea-regions-with-coords">출처 · 행정안전부 / 브이월드, 공공누리 제1유형</a></p>
 </footer>
 
@@ -2729,14 +2791,188 @@ function flySticks(dt, now, axes, centeredThrottle) {
   }
 }
 
+function bindPanelDrag(handle, onStart) {
+  let drag=null;
+  handle.addEventListener('pointerdown',event=>{
+    if(event.button!==0||drag)return;
+    const update=onStart(event);
+    if(!update)return;
+    handle.setPointerCapture(event.pointerId);
+    drag={id:event.pointerId,x:event.clientX,y:event.clientY,update};
+  });
+  handle.addEventListener('pointermove',event=>{
+    if(drag?.id!==event.pointerId)return;
+    const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+    if(drag.moved||Math.hypot(dx,dy)>=5){
+      drag.moved=true;
+      drag.update(dx,dy);
+    }
+  });
+  const finish=event=>{if(drag?.id===event.pointerId)drag=null;};
+  for(const name of ['pointerup','pointercancel','lostpointercapture'])handle.addEventListener(name,finish);
+}
+
+function bindPanelKeys(handle, move, reset) {
+  handle.addEventListener('keydown',event=>{
+    const directions={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+    const direction=directions[event.key];
+    if(!direction&&event.key!=='Home')return;
+    event.preventDefault();
+    event.stopPropagation();
+    if(direction){
+      const step=event.shiftKey?36:12;
+      move(direction[0]*step,direction[1]*step);
+    } else reset();
+  });
+}
+
+function setupControllerLayout() {
+  const panel=$('flightPanel'),grip=$('stickGrip'),dockButton=$('dockSticks');
+  let position=null;
+  const limits=()=>({
+    x:Math.max(8,document.documentElement.clientWidth-panel.offsetWidth-8),
+    y:Math.max(8,window.innerHeight-panel.offsetHeight-8)
+  });
+  const place=(x,y)=>{
+    panel.dataset.floating='';
+    panel.style.maxWidth=Math.max(0,document.documentElement.clientWidth-16)+'px';
+    const bounds=limits();
+    position={x:clamp(x,8,bounds.x),y:clamp(y,8,bounds.y)};
+    panel.style.translate=position.x+'px '+position.y+'px';
+    dockButton.hidden=false;
+  };
+  const dock=()=>{
+    position=null;
+    delete panel.dataset.floating;
+    panel.style.removeProperty('translate');
+    panel.style.removeProperty('max-width');
+    dockButton.hidden=true;
+    grip.focus({preventScroll:true});
+  };
+  bindPanelDrag(grip,()=>{
+    const rect=panel.getBoundingClientRect();
+    return (dx,dy)=>place(rect.left+dx,rect.top+dy);
+  });
+  bindPanelKeys(grip,(dx,dy)=>{
+    const rect=panel.getBoundingClientRect();
+    place(rect.left+dx,rect.top+dy);
+  },dock);
+  dockButton.onclick=dock;
+  const fit=()=>{if(position&&!panel.hidden)place(position.x,position.y);};
+  new ResizeObserver(fit).observe(panel);
+  window.addEventListener('resize',fit);
+}
+
+function setupAssistLayout() {
+  const stage=$('stage');
+  const cards=[
+    {panel:$('miniMapPanel'),body:$('miniMapBody'),grip:$('miniMapGrip'),kind:'mini',side:'left'},
+    {panel:$('visionPanel'),body:$('visionBody'),grip:$('visionGrip'),kind:'vision',side:'right'}
+  ];
+  function bounds(card) {
+    // Reserve room for the title and controls, independent of the image height.
+    const max=Math.max(80,Math.min(520,stage.clientWidth-16,Math.floor((stage.clientHeight-70)*16/9)));
+    return {min:Math.min(max,112),max};
+  }
+  function front(card) {
+    for(const entry of cards)entry.panel.toggleAttribute('data-front',entry===card);
+  }
+  function layout(card) {
+    const {panel,body}=card;
+    const expanded=panel.dataset.size==='large',closed=body.hidden;
+    const limit=bounds(card);
+    panel.style.width=!expanded&&!closed&&card.width?clamp(card.width,limit.min,limit.max)+'px':'';
+    const xMax=Math.max(0,stage.clientWidth-panel.offsetWidth-4);
+    const yMax=Math.max(0,stage.clientHeight-panel.offsetHeight-4);
+    if(card.position&&!expanded){
+      panel.style.left=clamp(card.position.x*stage.clientWidth,0,xMax)+'px';
+      panel.style.top=clamp(card.position.y*stage.clientHeight,0,yMax)+'px';
+      panel.style.right='auto';
+      panel.style.bottom='auto';
+    } else {
+      for(const name of ['left','right','top','bottom'])panel.style.removeProperty(name);
+    }
+    if(!expanded&&!closed){
+      card.minus.disabled=panel.offsetWidth<=limit.min+1;
+      card.plus.disabled=panel.offsetWidth>=limit.max-1;
+    }
+  }
+  const observer=new ResizeObserver(entries=>{
+    for(const {target} of entries){
+      if(target===stage){cards.forEach(layout);continue;}
+      for(const card of cards){
+        if(target===card.panel){layout(card);continue;}
+        if(target===card.body&&!target.hidden&&target.clientWidth&&target.clientHeight)flightAssist[card.kind]?.resize?.();
+      }
+    }
+  });
+  for(const card of cards){
+    const {panel,body,grip}=card;
+    card.minus=panel.querySelector('[data-inset-step="-1"]');
+    card.plus=panel.querySelector('[data-inset-step="1"]');
+    const put=(x,y)=>{
+      if(panel.dataset.size==='large')return;
+      const rect=stage.getBoundingClientRect();
+      if(!rect.width||!rect.height)return;
+      card.position={
+        x:clamp(x-rect.left,0,Math.max(0,rect.width-panel.offsetWidth-4))/rect.width,
+        y:clamp(y-rect.top,0,Math.max(0,rect.height-panel.offsetHeight-4))/rect.height
+      };
+      front(card);
+      layout(card);
+    };
+    const resize=(width,keepRight)=>{
+      if(body.hidden||panel.dataset.size==='large')return;
+      const limit=bounds(card);
+      const rect=panel.getBoundingClientRect();
+      card.width=clamp(Math.round(width),limit.min,limit.max);
+      front(card);
+      layout(card);
+      if(keepRight&&card.position)put(rect.right-panel.offsetWidth,rect.top);
+    };
+    const reset=()=>{
+      card.position=null;card.width=null;
+      layout(card);
+    };
+    bindPanelDrag(grip,()=>{
+      if(panel.dataset.size==='large')return;
+      const rect=panel.getBoundingClientRect();
+      return (dx,dy)=>put(rect.left+dx,rect.top+dy);
+    });
+    bindPanelKeys(grip,(dx,dy)=>{
+      const rect=panel.getBoundingClientRect();
+      put(rect.left+dx,rect.top+dy);
+    },reset);
+    grip.addEventListener('dblclick',reset);
+    const handle=panel.querySelector('.insetResize');
+    const step=()=>Math.max(24,Math.round(stage.clientWidth*.045));
+    bindPanelDrag(handle,()=>{
+      const width=panel.offsetWidth;
+      const direction=card.side==='right'?-1:1;
+      return dx=>resize(width+dx*direction,direction<0);
+    });
+    bindPanelKeys(handle,dx=>resize(panel.offsetWidth+dx*step(),card.side==='right'),reset);
+    card.minus.onclick=()=>resize(panel.offsetWidth-step(),card.side==='right');
+    card.plus.onclick=()=>resize(panel.offsetWidth+step(),card.side==='right');
+    panel.addEventListener('pointerdown',()=>front(card));
+    for(const target of [body,panel])observer.observe(target);
+    // Fullscreen and collapse change display and width immediately.
+    new MutationObserver(()=>layout(card)).observe(panel,{attributes:true,attributeFilter:['data-size','hidden']});
+    layout(card);
+  }
+  observer.observe(stage);
+}
+
 function setFlightPanel(visible) {
   $('flightPanel').hidden=!visible;
   $('flightControls').setAttribute('aria-expanded',String(visible));
   if (!visible) {mouseAxes.fill(0);keyState.clear();}
 }
 function updateSticks(axes) {
-  $('leftStick').firstElementChild.style.translate = (axes[0]*34)+'px '+(axes[1]*34)+'px';
-  $('rightStick').firstElementChild.style.translate = (axes[2]*34)+'px '+(axes[3]*34)+'px';
+  $('flightPanel').style.setProperty('--left-x',axes[0]);
+  $('flightPanel').style.setProperty('--left-y',axes[1]);
+  $('flightPanel').style.setProperty('--right-x',axes[2]);
+  $('flightPanel').style.setProperty('--right-y',axes[3]);
 }
 function virtualAxes() {
   return [
@@ -2761,7 +2997,7 @@ function installVirtualSticks() {
   $('virtualMotorStart').onclick=()=>{motorStart();};
   window.addEventListener('keydown', e=>{
     const key=e.key.toLowerCase();
-    if ($('flightPanel').hidden || document.querySelector('dialog[open]') || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+    if ($('flightPanel').hidden || document.querySelector('dialog[open]') || e.target.closest?.('input, select, textarea, .panelGrip, .insetResize')) return;
     if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) { e.preventDefault();keyState.add(key); }
   });
   window.addEventListener('keyup',e=>keyState.delete(e.key.toLowerCase()));
@@ -3086,7 +3322,7 @@ function createAssistMap(kind) {
   try {
     const map = new maplibregl.Map({
       container, style:mapStyle(), center:initialPoint, zoom:15, interactive:kind==='mini',
-      attributionControl:{compact:true}, pitchWithRotate:false, dragRotate:false, renderWorldCopies:false,
+      attributionControl:false, pitchWithRotate:false, dragRotate:false, renderWorldCopies:false,
       maxPitch:kind==='vision'?90:0, maxTileCacheSize:24, fadeDuration:0,
       canvasContextAttributes:{antialias:false, powerPreference:'low-power'}
     });
@@ -3298,6 +3534,7 @@ function setupFlightAssist() {
     $('visionBody').hidden=flightAssist.collapsed;
     $('visionToggle').setAttribute('aria-expanded',String(!flightAssist.collapsed));
     $('visionToggle').title=flightAssist.collapsed?'비전 어시스트 펼치기':'비전 어시스트 접기';
+    $('visionPanel').dataset.size=flightAssist.collapsed?'closed':'small';
     if(!flightAssist.collapsed){flightAssist.visionPose=null;requestAnimationFrame(updateFlightAssist);}
   };
   $('assistVisionEnabled').onchange=()=>{
@@ -4294,6 +4531,8 @@ function setupControls() {
   $('base').onchange=()=>{
     pauseMission('지도 전환 · 경로 일시정지');
     terrainOk=[false,false];
+    $('satelliteCredit').hidden=$('base').value==='street';
+    $('streetCredit').hidden=$('base').value!=='street';
     status('지도 유형 전환 중');
     maps.forEach(map=>map.setStyle(mapStyle(),{diff:false}));
     resetAssistMapStyles();
@@ -4359,6 +4598,8 @@ setupMedia();
 setupMission();
 setupFlight();
 setupFlightAssist();
+setupControllerLayout();
+setupAssistLayout();
 setupTutorial();
 setupMaps();
 applyPalette();
