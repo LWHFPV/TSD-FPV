@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TSD EO/IR V24.10.3 · Mavic 3T 수색 훈련</title>
+<title>TSD EO/IR V24.10.4 · Mavic 3T 수색 훈련</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css">
 <style>:root{color-scheme:dark;--ink:#f1f3f5;--muted:#aeb8c4;--panel:#1e242b;--line:#46515c;--blue:#77cce8;--overlay:#11171cdd;--pad:clamp(8px,1.5vw,18px)}
 *{box-sizing:border-box}
@@ -455,7 +455,7 @@ dialog::backdrop {background:#132440ab}
 </head>
 <body>
 <section id="admin" aria-label="시뮬레이션 설정">
- <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.3 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
+ <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.4 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
  <div id="adminBody">
   <div class="row">
    <label>시·도 <select id="province"></select></label>
@@ -731,6 +731,8 @@ const SAT = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/
 const initialPoint = [126.928686496763, 37.531246690812]; // 여의도한강공원 물빛광장
 let departurePoint = {lng:initialPoint[0],lat:initialPoint[1],zoom:13,pitch:90,bearing:0};
 let pendingDepartureView = departurePoint;
+let routePreviewLaunch = null;
+const browsedLaunchMaps = new WeakSet();
 const maps = [];
 let terrainOk = [false, false];
 let activeCamera = 'wide';
@@ -795,7 +797,15 @@ function setupMaps() {
         }
       }
     });
-    map.on('movestart', event => {if(event.originalEvent)pendingDepartureView=null;});
+    map.on('movestart', event => {
+      if (!event.originalEvent) return;
+      pendingDepartureView=null;
+      routePreviewLaunch=null;
+      if (flight.phase==='off') {
+        browsedLaunchMaps.add(map);
+        if (linked() && maps[1-i]) browsedLaunchMaps.add(maps[1-i]);
+      }
+    });
     map.on('move', () => {
       if (syncing) return;
       if (linked()) {
@@ -931,7 +941,16 @@ function cameraAt(map, position, tilt, yaw, zoom) {
   return {center: focus, pitch, bearing: yaw, zoom, elevation: position.alt-range*Math.cos(angle)};
 }
 
+function groundLaunchPoint(map=maps[selectedIndex()]) {
+  if (routePreviewLaunch) return routePreviewLaunch;
+  if (!map || pendingDepartureView) return departurePoint;
+  const point=(map.getCenterClampedToGround() || browsedLaunchMaps.has(map)) ? map.getCenter() : cameraOrigin(map);
+  return {lng:point.lng,lat:point.lat};
+}
+
 function showDepartureView({waitForElevation=false}={}) {
+  routePreviewLaunch=null;
+  maps.forEach(map=>browsedLaunchMaps.delete(map));
   const map=maps[selectedIndex()];
   const {lng,lat,zoom,pitch,bearing}=departurePoint;
   if(pitch<90){
@@ -1120,6 +1139,7 @@ function supervisorInspectTarget(id){
  const target=missionTargets.find(t=>t.id===id);
  if(!target)return;
  scanAim=null;
+ routePreviewLaunch=null;
  jumpBoth({center:[target.lng,target.lat],zoom:18.5,pitch:30,bearing:0});
  targetText('감독관 점검 #'+id+' · EO·IR 동시 이동');
 }
@@ -1755,8 +1775,8 @@ function setMissionPanel(visible) {
   $('missionOpen').setAttribute('aria-expanded',String(visible));
   if(!visible){cancelMissionPick();$('missionPreflight').hidden=true;$('missionConfirm').disabled=true;}
   if(visible&&flight.phase==='off'&&maps[selectedIndex()]?.getPitch()>65){
-    const map=maps[selectedIndex()], origin=cameraOrigin(map);
-    jumpBoth({center:[origin.lng,origin.lat],pitch:0,zoom:map.getZoom(),bearing:0});
+    const map=maps[selectedIndex()], point=groundLaunchPoint(map);
+    jumpBoth({center:[point.lng,point.lat],pitch:0,zoom:map.getZoom(),bearing:map.getBearing()});
   }
   maps.forEach(renderMissionNodes);
 }
@@ -1985,7 +2005,8 @@ function prepareMission(fit=true) {
     const scale=2*Math.max(...plan.points.map(point=>geoDistance(center,point)),20);
     const pixels=Math.max(70,Math.min(map.getCanvas().clientWidth,map.getCanvas().clientHeight)-80);
     const zoom=clamp(Math.log2(40075017*Math.cos(center.lat*degrees)*pixels/(512*(scale+80)*1.4)),10,18);
-    jumpBoth({center,zoom,pitch:0,bearing:0});
+    routePreviewLaunch=groundLaunchPoint(map);
+    jumpBoth({center,zoom,pitch:0,bearing:map.getBearing()});
   }
   maps.forEach(renderMissionRoute);
   updateMissionUI();
@@ -2006,7 +2027,8 @@ async function startMission() {
   if(flight.assisted){$('missionPlanState').value='현재 이륙·복귀·착륙이 끝난 뒤 시작하세요';return;}
   const map=maps[selectedIndex()];
   if(!map||!terrainOk[selectedIndex()]){ $('missionPlanState').value='3D 지형 연결 후 실행하세요';return; }
-  const plan=mission.plan, start=flight.point||(plan.pattern==='line'?plan.points[0]:plan.center), home=flight.home||start;
+  const plan=mission.plan, start=flight.point||groundLaunchPoint(map), home=flight.home||start;
+  if(!validCoordinates(start.lng,start.lat)){ $('missionPlanState').value='이륙 위치를 국내 지도 범위 안에서 선택하세요';return; }
   if([start,home].some(point=>geoDistance(point,plan.center)>1500)){$('missionPlanState').value='기체와 출발점이 경로 중심에서 1.5 km 이내여야 합니다';return;}
   const run={phase:'climb',home:{lng:home.lng,lat:home.lat},index:0,travelled:0,lastPose:0,tiles:null,leg:null,tilt:null};
   mission.run=run;
@@ -2039,6 +2061,9 @@ async function startMission() {
   $('missionPlanState').value='임무 실행 중';
   status('가상 기체가 수색 경로로 이동합니다');
   setMissionPanel(false);
+  routePreviewLaunch=null;
+  maps.forEach(map=>browsedLaunchMaps.delete(map));
+  recenterAssistMap();
   updateMissionUI();
 }
 function pauseMission(message='임무 일시정지 · 현재 위치 유지') {
@@ -2609,12 +2634,15 @@ function motorStart() {
   if (flight.phase!=='off'||flight.assisted||missionActive()||mission.state==='preparing') return false;
   const map = maps[selectedIndex()];
   if (!map || !terrainOk[selectedIndex()]) { status('DEM 로딩 후 시동할 수 있습니다'); return false; }
-  const c = departurePoint;
-  const elevation = map.queryTerrainElevation(c);
+  const point=groundLaunchPoint(map);
+  if (!validCoordinates(point.lng,point.lat)) { status('이륙 위치를 국내 지도 범위 안에서 선택하세요'); return false; }
+  const elevation = map.queryTerrainElevation(point);
   if (!Number.isFinite(elevation)) { status('출발점 지형 로딩 후 시동할 수 있습니다'); return false; }
-  const point={lng:c.lng,lat:c.lat};
-  Object.assign(flight,{phase:'idle',point,home:{...point},takeoffGround:elevation,ground:elevation,alt:elevation,yaw:map.getBearing(),stopHold:0});
-  status('모터 시동 · 스로틀을 올려 이륙');
+  Object.assign(flight,{phase:'idle',point,home:{lng:point.lng,lat:point.lat},takeoffGround:elevation,ground:elevation,alt:elevation,yaw:map.getBearing(),stopHold:0});
+  routePreviewLaunch=null;
+  maps.forEach(map=>browsedLaunchMaps.delete(map));
+  recenterAssistMap();
+  status('모터 시동 · 현재 위치에서 스로틀을 올려 이륙');
   updateFlightUI();
   return true;
 }
@@ -2623,7 +2651,8 @@ function aircraftCamera({tilt,zoom}={}) {
   if (!flight.point) return;
   const i=selectedIndex(), m=maps[i];
   if(!m)return;
-  const position={lng:flight.point.lng,lat:flight.point.lat,alt:flight.alt};
+  // Keep the virtual lens above the launch surface while altitude remains relative to the ground.
+  const position={lng:flight.point.lng,lat:flight.point.lat,alt:Math.max(flight.alt,flight.ground+2)};
   const pose=cameraAt(m,position,tilt??m.getPitch()-90,flight.yaw,zoom??m.getZoom());
   if(linked())jumpBoth(pose,false);
   else {
@@ -2634,7 +2663,7 @@ function aircraftCamera({tilt,zoom}={}) {
     const other=maps[1-i];
     if (isVisible(1-i)) {
       other.setCenterClampedToGround(false);
-      other.jumpTo(cameraAt(other,{lng:flight.point.lng,lat:flight.point.lat,alt:flight.alt},other.getPitch()-90,flight.yaw,other.getZoom()));
+      other.jumpTo(cameraAt(other,position,other.getPitch()-90,flight.yaw,other.getZoom()));
     }
   }
 }
@@ -3503,7 +3532,7 @@ function updateObstacleSectors() {
 
 function updateFlightAssist(now) {
   const map=maps[selectedIndex()];
-  const point=flight.point||departurePoint;
+  const point=flight.point||groundLaunchPoint(map);
   const yaw=flight.point?flight.yaw:(map?.getBearing()??0);
   updateMiniMap(point,yaw);
   updateVision(now,yaw);
