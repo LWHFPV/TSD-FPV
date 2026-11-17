@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TSD EO/IR V24.10.6 · Mavic 3T 수색 훈련</title>
+<title>TSD EO/IR V24.10.7 · Mavic 3T 수색 훈련</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css">
 <style>:root{color-scheme:dark;--ink:#f1f3f5;--muted:#aeb8c4;--panel:#1e242b;--line:#46515c;--blue:#77cce8;--overlay:#11171cdd;--pad:clamp(8px,1.5vw,18px)}
 *{box-sizing:border-box}
@@ -455,7 +455,7 @@ dialog::backdrop {background:#132440ab}
 </head>
 <body>
 <section id="admin" aria-label="시뮬레이션 설정">
- <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.6 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
+ <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.7 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
  <div id="adminBody">
   <div class="row">
    <label>시·도 <select id="province"></select></label>
@@ -645,6 +645,11 @@ dialog::backdrop {background:#132440ab}
  <div class="dialogHead"><h2 id="flightStatusTitle">비행 전 점검</h2><span class="spacer"></span><button id="flightStatusClose">닫기</button></div>
  <div class="dialogBody flightChecklist">
   <output id="flightChecklistReadout"></output>
+  <div class="row">
+   <label><input id="flightVoiceEnabled" type="checkbox" checked> 한국어 음성 안내</label>
+   <button id="flightVoiceTest" type="button">음성 듣기</button>
+   <output id="flightVoiceStatus" role="status"></output>
+  </div>
   <label>가상 RTH 고도 <input id="rthAltitude" type="number" min="20" max="120" step="1" value="30"> m (홈 기준)</label>
   <div class="row"><output id="homeReadout">홈포인트 미기록</output><button id="homeUpdate" type="button" disabled>현재 기체 위치를 홈으로</button></div>
   <fieldset class="assistSettings"><legend>비행 보조 · 시뮬레이션</legend>
@@ -749,6 +754,49 @@ let scanAim = null;
 let areaDrag = null;
 const status = message => { $('status').textContent = message; };
 const targetText = message => { $('targetStatus').textContent = message; $('targetStatus').hidden = false; };
+const flightVoiceKey='tsd-eoir-flight-voice';
+let flightVoiceEnabled=true;
+try {flightVoiceEnabled=localStorage.getItem(flightVoiceKey)!=='off';} catch {}
+
+function announceFlight(text,{interrupt=false,test=false}={}) {
+  if (!flightVoiceEnabled&&!test) return;
+  const speech=window.speechSynthesis;
+  if (!speech||typeof window.SpeechSynthesisUtterance!=='function') return;
+  const utterance=new window.SpeechSynthesisUtterance(text);
+  const voices=speech.getVoices().filter(voice=>/^ko(?:[-_]|$)/i.test(voice.lang));
+  const koreanVoice=voices.find(voice=>voice.localService)||voices[0];
+  utterance.lang='ko-KR';
+  utterance.rate=.96;
+  if (koreanVoice) utterance.voice=koreanVoice;
+  const feedback=$('flightVoiceStatus');
+  if (test) {
+    feedback.value='음성을 재생하는 중';
+    utterance.onend=()=>{feedback.value='한국어 음성 재생 완료';};
+  }
+  utterance.onerror=event=>{
+    if (event.error==='interrupted'||event.error==='canceled') return;
+    feedback.value=event.error==='not-allowed'?'음성 듣기 버튼을 눌러 재생을 시작하세요':
+      '한국어 음성 재생 실패 · 브라우저 또는 기기의 한국어 음성 설정을 확인하세요';
+  };
+  if (interrupt||test) speech.cancel();
+  speech.speak(utterance);
+}
+
+function setupFlightVoice() {
+  const toggle=$('flightVoiceEnabled'), test=$('flightVoiceTest'), feedback=$('flightVoiceStatus');
+  const available=Boolean(window.speechSynthesis&&typeof window.SpeechSynthesisUtterance==='function');
+  toggle.checked=flightVoiceEnabled;
+  toggle.disabled=test.disabled=!available;
+  if (!available) feedback.value='이 브라우저에서는 음성 안내를 사용할 수 없습니다';
+  toggle.onchange=()=>{
+    flightVoiceEnabled=toggle.checked;
+    try {localStorage.setItem(flightVoiceKey,flightVoiceEnabled?'on':'off');} catch {}
+    if (!flightVoiceEnabled) window.speechSynthesis?.cancel();
+    feedback.value=flightVoiceEnabled?'한국어 음성 안내 켜짐':'한국어 음성 안내 꺼짐';
+  };
+  test.onclick=()=>announceFlight('한국어 비행 음성 안내입니다.',{test:true});
+}
+
 const degrees = Math.PI / 180;
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 const selectedIndex = () => activeCamera === 'ir' ? 1 : 0;
@@ -2099,12 +2147,14 @@ async function startMission() {
     mission.run=null;mission.state='ready';
     $('missionPlanState').value='이륙 지점의 고도를 확인하지 못했습니다';updateMissionUI();return;
   }
+  const newHome=!flight.home;
   if(flight.phase!=='air')Object.assign(flight,{phase:'air',point:{lng:start.lng,lat:start.lat},home:run.home,takeoffGround:run.takeoffGround,ground,alt:ground,yaw:map.getBearing(),vs:0,speed:0});
   else run.phase='route';
   flight.ground=ground;
   mission.state='running';
   $('missionPlanState').value='임무 실행 중';
   status('가상 기체가 수색 경로로 이동합니다');
+  announceFlight(newHome?'홈 포인트가 기록되었습니다. 임무를 시작합니다.':'임무를 시작합니다.');
   setMissionPanel(false);
   routePreviewLaunch=null;
   maps.forEach(map=>browsedLaunchMaps.delete(map));
@@ -2116,6 +2166,7 @@ function pauseMission(message='임무 일시정지 · 현재 위치 유지') {
   mission.state='paused';
   flight.vs=0;flight.speed=0;
   status(message);
+  announceFlight('임무를 일시 정지합니다.');
   $('missionPlanState').value=message;
   updateMissionUI();
 }
@@ -2123,6 +2174,7 @@ function resumeMission() {
   if(mission.state!=='paused'||!terrainOk[selectedIndex()])return;
   mission.state='running';
   status('자동 임무 재개');
+  announceFlight('임무를 재개합니다.');
   $('missionPlanState').value='임무 실행 중';
   updateMissionUI();
 }
@@ -2132,6 +2184,7 @@ function finishMission(state, message) {
   attitudeVelocity={forward:0,right:0};
   $('missionPlanState').value=message;
   status(message);
+  announceFlight(state==='completed'?'임무가 완료되었습니다.':'임무를 종료합니다.');
   updateMissionAircraft();
   updateMissionUI();
 }
@@ -2688,6 +2741,7 @@ function motorStart() {
   maps.forEach(map=>browsedLaunchMaps.delete(map));
   recenterAssistMap();
   status('모터 시동 · 현재 위치에서 스로틀을 올려 이륙');
+  announceFlight('모터가 시동되었습니다. 홈 포인트가 기록되었습니다.');
   updateFlightUI();
   return true;
 }
@@ -2726,6 +2780,7 @@ function recenterAircraftView() {
 }
 async function assistFlight(mode, missionEnd=false) {
   if(mode==='return'&&(flight.assisted?.mode==='return'||flight.assisted?.home)){
+    announceFlight('홈 복귀를 취소합니다.',{interrupt:true});
     cancelAssistedFlight('홈 복귀 취소 · 제자리 대기');return;
   }
   if(mode==='takeoff'&&flight.phase==='off')motorStart();
@@ -2748,6 +2803,7 @@ async function assistFlight(mode, missionEnd=false) {
   if(mode==='takeoff'){
     flight.phase='air';job.height=12;
     status('자동 이륙 · 지면 위 12 m');
+    announceFlight('자동 이륙을 시작합니다.');
   } else if(mode==='return') {
     status('홈 복귀 경로의 지형을 확인하는 중');
     try {
@@ -2764,8 +2820,17 @@ async function assistFlight(mode, missionEnd=false) {
       if(!Number.isFinite(job.cruise))throw Error('RTH terrain');
       job.ready=true;
       status('RTH · 복귀 고도로 상승');
-    } catch {if(flight.assisted===job)cancelAssistedFlight('복귀 경로의 지형 확인 실패 · 제자리 대기');}
-  } else status('현재 위치에 착륙합니다');
+      announceFlight('홈 포인트로 복귀합니다.');
+    } catch {
+      if(flight.assisted===job){
+        announceFlight('복귀 경로의 지형을 확인할 수 없습니다.',{interrupt:true});
+        cancelAssistedFlight('복귀 경로의 지형 확인 실패 · 제자리 대기');
+      }
+    }
+  } else {
+    status('현재 위치에 착륙합니다');
+    announceFlight('현재 위치에 착륙합니다.');
+  }
   updateFlightUI();
 }
 function cancelAssistedFlight(message) {
@@ -2782,11 +2847,12 @@ function advanceAssistedFlight(dt,now,axes) {
   if(!job.ready||dt<=0||document.hidden)return;
   if(job.mode==='takeoff'){
     missionAltitude(flight.ground+job.height,dt,4);
-    if(Math.abs(flight.alt-flight.ground-job.height)<.01){flight.assisted=null;flight.vs=0;status('이륙 완료 · 현재 위치 대기');}
+    if(Math.abs(flight.alt-flight.ground-job.height)<.01){flight.assisted=null;flight.vs=0;status('이륙 완료 · 현재 위치 대기');announceFlight('이륙이 완료되었습니다.');}
   } else if(job.mode==='land') {
     missionAltitude(flight.ground,dt,3);
     if(flight.alt<=flight.ground+.01){
       flight.phase='idle';
+      announceFlight('착륙이 완료되었습니다.');
       cancelAssistedFlight(job.home?'홈포인트 착륙 완료':'현재 위치 착륙 완료');
     }
   } else {
@@ -2800,7 +2866,7 @@ function advanceAssistedFlight(dt,now,axes) {
       if(!job.travelling){job.travelling=true;status('RTH · 홈포인트로 이동');}
       flight.ground=ground;flight.point=point;flight.speed=remaining*ratio/dt;
       if(remaining>.03){flight.course=bearingTo(from,home);turnToward(flight.course,dt);}
-      if(ratio===1){job.mode='land';flight.speed=0;status('RTH · 홈포인트 도착, 착륙 중');}
+      if(ratio===1){job.mode='land';flight.speed=0;status('RTH · 홈포인트 도착, 착륙 중');announceFlight('홈 포인트에 도착했습니다. 착륙합니다.');}
     } else flight.speed=0;
   }
   if(now-lastFlightPaint>=65){lastFlightPaint=now;aircraftCamera();}
@@ -2819,12 +2885,14 @@ function flySticks(dt, now, axes, centeredThrottle) {
     if (!csc && throttle>.16) {
       flight.phase='air';
       status('수동 비행');
+      announceFlight('수동 이륙을 시작합니다.');
     } else {
       flight.stopHold=throttle<-.8 && !csc && centeredThrottle ? flight.stopHold+dt : 0;
       flight.stopCscHold=csc && !flight.csc ? flight.stopCscHold+dt : 0;
       if (flight.stopHold>=1 || flight.stopCscHold>=2) {
         resetFlight();
         status('모터 정지');
+        announceFlight('모터가 정지되었습니다.');
         if(csc){flight.csc=true;flight.cscHold=0;}
       }
     }
@@ -2857,6 +2925,7 @@ function flySticks(dt, now, axes, centeredThrottle) {
   flight.alt=clamp(flight.alt+flight.vs*dt,flight.ground,flight.ground+300);
   if (flight.alt<=flight.ground && flight.vs<0) {
     flight.phase='idle'; flight.vs=0; flight.speed=0; status('착륙 · 모터 회전 중');
+    announceFlight('착륙했습니다. 모터가 회전 중입니다.');
   }
   if (now-lastFlightPaint>=50 && (yaw || flight.vs || flight.speed || flight.phase==='idle')) {
     lastFlightPaint=now;
@@ -3134,6 +3203,7 @@ function setRcPad(pad) {
 function scanPads() {
   const pads=getPads(), select=$('rcDevice');
   const current=pads.find(pad=>pad.index===rc.index) || pads[0];
+  if (!current&&rc.index!==null) announceFlight('조종기 입력 연결이 끊겼습니다.',{interrupt:flight.phase==='air'});
   const signature=pads.map(pad=>pad.index+':'+pad.id).join('|');
   if (select.dataset.signature!==signature || !select.options.length) {
     select.dataset.signature=signature;
@@ -3323,7 +3393,9 @@ function setupFlight() {
   $('homeUpdate').onclick=()=>{
     if(!flight.point||$('homeUpdate').disabled)return;
     flight.home={lng:flight.point.lng,lat:flight.point.lat};
-    status('현재 기체 위치를 홈포인트로 기록');updateFlightUI();
+    status('현재 기체 위치를 홈포인트로 기록');
+    announceFlight('홈 포인트가 갱신되었습니다.');
+    updateFlightUI();
   };
   $('flightFunctionMode').onchange=()=>{attitudeVelocity={forward:0,right:0};updateFlightUI();};
   for(const button of document.querySelectorAll('[data-flight-mode]'))button.onclick=()=>setFlightMode(button.dataset.flightMode);
@@ -4722,6 +4794,7 @@ window.maplibregl?.addProtocol('tsd-satellite',loadSatelliteTile);
 setupControls();
 setupMedia();
 setupMission();
+setupFlightVoice();
 setupFlight();
 setupFlightAssist();
 setupControllerLayout();
