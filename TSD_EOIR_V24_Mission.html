@@ -265,11 +265,22 @@ dialog::backdrop {background:#132440ab}
 #missionProgressBar {display:block;width:100%;height:5px;margin-top:4px;accent-color:#7eb8ff}
 .pickingMission .maplibregl-canvas-container,.pickingMission canvas {cursor:crosshair}
 .missionAircraft,.insetMarker.aircraft {
-  width:44px;height:44px;background:transparent url("./tsd-10in-map.webp") center/contain no-repeat;
+  width:44px;height:44px;background:transparent;
   border:0;border-radius:0;box-shadow:none;pointer-events:none;
   filter:drop-shadow(0 0 1px #fff) drop-shadow(0 1px 2px #152332)
 }
-.insetMarker.aircraft {width:37px;height:37px}
+.insetMarker.aircraft {width:37px;height:37px;z-index:2}
+.tsdAircraftArt {display:block;width:100%;height:100%;object-fit:contain}
+.tsdAircraftArt[hidden] {display:none}
+.tsdAircraftFallback {display:grid;place-items:center;width:100%;height:100%;color:#fff;font:700 16px/1 system-ui;text-shadow:0 1px 3px #162637}
+.tsdAircraftFallback[hidden] {display:none}
+.insetMarker.aircraft::before {content:"";position:absolute;left:50%;top:-5px;translate:-50% 0;width:9px;height:7px;background:#fff;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.insetMarker.course {width:1px;height:1px;z-index:3}
+.insetMarker.course::before {content:"";position:absolute;left:-4px;bottom:22px;width:9px;height:17px;background:#63f7df;clip-path:polygon(50% 0,100% 42%,66% 42%,66% 100%,34% 100%,34% 42%,0 42%);filter:drop-shadow(0 0 1px #12303f)}
+#miniMapTravel {position:absolute;bottom:2px;left:3px;right:3px;z-index:4;display:flex;justify-content:center;gap:3px 8px;flex-wrap:wrap;color:#fff;pointer-events:none;font:700 10px/1.35 system-ui;text-shadow:0 1px 2px #000}
+#miniMapTravel span {background:#101a25e8;padding:2px 4px;border-radius:3px;white-space:nowrap}
+#miniMapCourse {color:#83ffe7}
+#miniMapBody[hidden] #miniMapTravel {display:none}
 @media(min-width:940px) {
  #pilot:has(#missionPanel:not([hidden])) {display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,31vw,440px)}
  #flightBar,#cameraStrip,.pilotBottom {grid-column:1/-1}
@@ -570,7 +581,7 @@ dialog::backdrop {background:#132440ab}
     <button type="button" data-inset-step="-1" aria-label="미니맵 창 줄이기">−</button>
     <button type="button" data-inset-step="1" aria-label="미니맵 창 키우기">+</button>
    </div>
-   <div id="miniMapBody"><div id="miniMapCanvas" aria-label="비행 위치 지도"></div><output id="miniMapStatus">지도 연결 중</output><button id="miniMapPreview" aria-label="미니맵 확대"></button></div>
+   <div id="miniMapBody"><div id="miniMapCanvas" aria-label="비행 위치 지도"></div><output id="miniMapStatus">지도 연결 중</output><div id="miniMapTravel" aria-label="기체 방향과 이동 방향"><span id="miniMapHeading">기수 000°</span><span id="miniMapCourse">시동 대기</span></div><button id="miniMapPreview" aria-label="미니맵 확대"></button></div>
    <div class="insetControls">
     <button id="miniMapToggle" aria-controls="miniMapBody" aria-expanded="true" title="지도 접기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2ZM9 3v16m6-14v16"/></svg></button>
     <button id="miniMapSize" aria-label="지도 최대화" title="지도 최대화" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></svg></button>
@@ -1936,6 +1947,19 @@ function renderMissionNodes(map) {
   map.once('render',refreshPositions);
   map.once('idle',refreshPositions);
 }
+function mountAircraftArt(element) {
+  const fallback=document.createElement('span');
+  fallback.className='tsdAircraftFallback';
+  fallback.textContent='▲';
+  const image=document.createElement('img');
+  image.className='tsdAircraftArt';
+  image.alt='';
+  image.hidden=true;
+  image.onload=()=>{image.hidden=false;fallback.hidden=true;};
+  image.src='./tsd-10in-map.webp';
+  element.append(fallback,image);
+}
+
 function updateMissionAircraft() {
   for(const map of maps){
     let marker=missionAircraftMarkers.get(map);
@@ -1946,6 +1970,7 @@ function updateMissionAircraft() {
       const element=document.createElement('div');
       element.className='missionAircraft';
       element.setAttribute('aria-hidden','true');
+      mountAircraftArt(element);
       marker=new maplibregl.Marker({element,rotationAlignment:'map'}).setLngLat(flight.point).addTo(map);
       missionAircraftMarkers.set(map,marker);
     }
@@ -3615,8 +3640,9 @@ function updateInsetMarker(name, point, yaw=0) {
   if(!markers[name]){
     const symbol=document.createElement('span');
     symbol.className='insetMarker '+name;
-    symbol.textContent={home:'H',pin:'◆',aircraft:''}[name];
-    symbol.title={home:'홈포인트',pin:'PinPoint',aircraft:'기체 위치'}[name];
+    symbol.textContent={home:'H',pin:'◆',aircraft:'',course:''}[name];
+    symbol.title={home:'홈포인트',pin:'PinPoint',aircraft:'기체 위치와 기수 방향',course:'실제 이동 방향'}[name];
+    if(name==='aircraft')mountAircraftArt(symbol);
     markers[name]=new maplibregl.Marker({element:symbol,rotationAlignment:'map'}).setLngLat(point).addTo(map);
   }
   const marker=markers[name], here=marker.getLngLat();
@@ -3626,8 +3652,12 @@ function updateInsetMarker(name, point, yaw=0) {
 
 function updateMiniMap(point, yaw) {
   if($('miniMapBody').hidden)return;
+  const moving=flight.phase==='air'&&flight.speed>=.2&&Number.isFinite(flight.course);
+  const azimuth=angle=>String(((Math.round(angle)%360)+360)%360).padStart(3,'0')+'°';
+  $('miniMapHeading').textContent='기수 '+azimuth(yaw);
+  $('miniMapCourse').textContent=moving?'진행 '+azimuth(flight.course):flight.phase==='off'?'시동 대기':'수평 이동 없음';
   const map=createAssistMap('mini');
-  if(!map)return;
+  if(!map||!point)return;
   const center=map.getCenter(), bearing=flightAssist.north?0:yaw;
   if((flightAssist.follow&&geoDistance(center,point)>.4)||Math.abs(headingDelta(map.getBearing(),bearing))>.1){
     map.jumpTo({center:flightAssist.follow?point:center,bearing});
@@ -3635,6 +3665,7 @@ function updateMiniMap(point, yaw) {
   updateInsetMarker('home',flight.home);
   updateInsetMarker('pin',observationPoint);
   updateInsetMarker('aircraft',point,yaw);
+  updateInsetMarker('course',moving?point:null,moving?flight.course:0);
   const plan=mission.plan, source=map.getSource(assistRouteId);
   if(source&&flightAssist.miniPlan!==plan){
     source.setData({type:'FeatureCollection',features:plan?[{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:plan.points.map(p=>[p.lng,p.lat])}}]:[]});
