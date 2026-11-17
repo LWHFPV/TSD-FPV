@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TSD EO/IR V24.10.8 · Mavic 3T 수색 훈련</title>
+<title>TSD EO/IR V24.10.9 · Mavic 3T 수색 훈련</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css">
 <style>:root{color-scheme:dark;--ink:#f1f3f5;--muted:#aeb8c4;--panel:#1e242b;--line:#46515c;--blue:#77cce8;--overlay:#11171cdd;--pad:clamp(8px,1.5vw,18px)}
 *{box-sizing:border-box}
@@ -181,6 +181,9 @@ input[type=search]::placeholder {color:var(--muted)}
 #pilot {background:#fff}
 #flightBar {background:linear-gradient(100deg,#141f49,#1b3872);border-color:#1d3976;color:#fff}
 #aircraftRecenter {background:#fff;border-color:#bccde4;color:#193664;font-weight:700}
+#flightVoiceToggle,#flightVoiceDialogToggle {background:#fff;border-color:#bccde4;color:#193664;font-weight:700;white-space:nowrap}
+#flightVoiceToggle:hover,#flightVoiceDialogToggle:hover {background:#e9f0fc}
+#flightVoiceToggle[aria-pressed=true],#flightVoiceDialogToggle[aria-pressed=true] {background:#d8f5e6;border-color:#7fc0a6;color:#115a41}
 #aircraftRecenter:hover,#aircraftRecenter:focus-visible {background:var(--selected);color:#1749aa}
 #flightMode {background:#ffffff1c;color:#fff}
 #flightMode.airborne {background:#d8f5e6;color:#115a41}
@@ -264,23 +267,7 @@ dialog::backdrop {background:#132440ab}
 #missionHud button {pointer-events:auto;min-height:26px;padding:2px 7px;color:var(--ink)}
 #missionProgressBar {display:block;width:100%;height:5px;margin-top:4px;accent-color:#7eb8ff}
 .pickingMission .maplibregl-canvas-container,.pickingMission canvas {cursor:crosshair}
-.missionAircraft,.insetMarker.aircraft {
-  width:44px;height:44px;background:transparent;
-  border:0;border-radius:0;box-shadow:none;pointer-events:none;
-  filter:drop-shadow(0 0 1px #fff) drop-shadow(0 1px 2px #152332)
-}
-.insetMarker.aircraft {width:37px;height:37px;z-index:2}
-.tsdAircraftArt {display:block;width:100%;height:100%;object-fit:contain}
-.tsdAircraftArt[hidden] {display:none}
-.tsdAircraftFallback {display:grid;place-items:center;width:100%;height:100%;color:#fff;font:700 16px/1 system-ui;text-shadow:0 1px 3px #162637}
-.tsdAircraftFallback[hidden] {display:none}
-.insetMarker.aircraft::before {content:"";position:absolute;left:50%;top:-5px;translate:-50% 0;width:9px;height:7px;background:#fff;clip-path:polygon(50% 0,100% 100%,0 100%)}
-.insetMarker.course {width:1px;height:1px;z-index:3}
-.insetMarker.course::before {content:"";position:absolute;left:-4px;bottom:22px;width:9px;height:17px;background:#63f7df;clip-path:polygon(50% 0,100% 42%,66% 42%,66% 100%,34% 100%,34% 42%,0 42%);filter:drop-shadow(0 0 1px #12303f)}
-#miniMapTravel {position:absolute;bottom:2px;left:3px;right:3px;z-index:4;display:flex;justify-content:center;gap:3px 8px;flex-wrap:wrap;color:#fff;pointer-events:none;font:700 10px/1.35 system-ui;text-shadow:0 1px 2px #000}
-#miniMapTravel span {background:#101a25e8;padding:2px 4px;border-radius:3px;white-space:nowrap}
-#miniMapCourse {color:#83ffe7}
-#miniMapBody[hidden] #miniMapTravel {display:none}
+.missionAircraft {width:15px;height:15px;background:#fff;clip-path:polygon(50% 0,100% 100%,50% 74%,0 100%);pointer-events:none}
 @media(min-width:940px) {
  #pilot:has(#missionPanel:not([hidden])) {display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,31vw,440px)}
  #flightBar,#cameraStrip,.pilotBottom {grid-column:1/-1}
@@ -367,7 +354,7 @@ dialog::backdrop {background:#132440ab}
 .visionSimulation {position:absolute;bottom:2px;left:4px;color:#f6f9ff;background:#14222ce0;font-size:9px;padding:0 2px;pointer-events:none}
 .insetMarker {display:grid;place-items:center;width:18px;height:18px;border-radius:50%;color:white;font:700 11px/1 ui-monospace,monospace;pointer-events:none;text-shadow:0 1px 2px #000}
 .insetMarker.home {background:#f6bc47;color:#292008;text-shadow:none}
-
+.insetMarker.aircraft {color:#a7eaff;font-size:16px}
 .insetMarker.pin {color:#6ac7ff}
 #navObstacleSectors {fill:none;stroke-width:4;stroke-linecap:round}
 #navSensorState {color:#f3dbaf;font-size:9px;text-shadow:0 1px 3px #000;white-space:nowrap}
@@ -471,7 +458,7 @@ dialog::backdrop {background:#132440ab}
 </head>
 <body>
 <section id="admin" aria-label="시뮬레이션 설정">
- <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.8 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
+ <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.9 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
  <div id="adminBody">
   <div class="row">
    <label>시·도 <select id="province"></select></label>
@@ -581,7 +568,7 @@ dialog::backdrop {background:#132440ab}
     <button type="button" data-inset-step="-1" aria-label="미니맵 창 줄이기">−</button>
     <button type="button" data-inset-step="1" aria-label="미니맵 창 키우기">+</button>
    </div>
-   <div id="miniMapBody"><div id="miniMapCanvas" aria-label="비행 위치 지도"></div><output id="miniMapStatus">지도 연결 중</output><div id="miniMapTravel" aria-label="기체 방향과 이동 방향"><span id="miniMapHeading">기수 000°</span><span id="miniMapCourse">시동 대기</span></div><button id="miniMapPreview" aria-label="미니맵 확대"></button></div>
+   <div id="miniMapBody"><div id="miniMapCanvas" aria-label="비행 위치 지도"></div><output id="miniMapStatus">지도 연결 중</output><button id="miniMapPreview" aria-label="미니맵 확대"></button></div>
    <div class="insetControls">
     <button id="miniMapToggle" aria-controls="miniMapBody" aria-expanded="true" title="지도 접기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2ZM9 3v16m6-14v16"/></svg></button>
     <button id="miniMapSize" aria-label="지도 최대화" title="지도 최대화" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></svg></button>
@@ -661,7 +648,10 @@ dialog::backdrop {background:#132440ab}
  <div class="dialogHead"><h2 id="flightStatusTitle">비행 전 점검</h2><span class="spacer"></span><button id="flightStatusClose">닫기</button></div>
  <div class="dialogBody flightChecklist">
   <output id="flightChecklistReadout"></output>
-  <output id="flightVoiceStatus" role="status"></output>
+  <div class="row">
+   <button id="flightVoiceDialogToggle" type="button" aria-pressed="false" title="한국어 비행 안내 활성화">음성 비활성화</button>
+   <output id="flightVoiceStatus" role="status">한국어 비행 음성 안내</output>
+  </div>
   <label>가상 RTH 고도 <input id="rthAltitude" type="number" min="20" max="120" step="1" value="30"> m (홈 기준)</label>
   <div class="row"><output id="homeReadout">홈포인트 미기록</output><button id="homeUpdate" type="button" disabled>현재 기체 위치를 홈으로</button></div>
   <fieldset class="assistSettings"><legend>비행 보조 · 시뮬레이션</legend>
@@ -798,12 +788,15 @@ let flightVoiceEnabled=false;
 let flightVoiceSequence=0;
 let flightVoiceDecoding=false;
 
+const flightVoiceButtons=[$('flightVoiceToggle'),$('flightVoiceDialogToggle')];
+
 function setFlightVoiceState(enabled, message) {
   flightVoiceEnabled=enabled;
-  const button=$('flightVoiceToggle');
-  button.textContent=enabled?'음성 활성화':'음성 비활성화';
-  button.setAttribute('aria-pressed',String(enabled));
-  button.title=message||(enabled?'한국어 비행 안내 비활성화':'한국어 비행 안내 활성화');
+  for (const button of flightVoiceButtons) {
+    button.textContent=enabled?'음성 활성화':'음성 비활성화';
+    button.setAttribute('aria-pressed',String(enabled));
+    button.title=message||(enabled?'한국어 비행 안내 비활성화':'한국어 비행 안내 활성화');
+  }
   $('flightVoiceStatus').value=message||(enabled?'한국어 음성 활성화':'한국어 음성 비활성화');
 }
 
@@ -859,20 +852,19 @@ function announceFlight(text,{interrupt=false}={}) {
 }
 
 function setupFlightVoice() {
-  const button=$('flightVoiceToggle');
   const AudioEngine=window.AudioContext||window.webkitAudioContext;
   if (!AudioEngine) {
-    button.disabled=true;
+    flightVoiceButtons.forEach(button=>{button.disabled=true;});
     setFlightVoiceState(false,'이 브라우저에서 음성을 재생할 수 없습니다');
     return;
   }
-  button.onclick=async()=>{
+  const toggleVoice=async()=>{
     if (flightVoiceEnabled) {
       stopFlightVoice();
       setFlightVoiceState(false);
       return;
     }
-    button.disabled=true;
+    flightVoiceButtons.forEach(button=>{button.disabled=true;});
     let timeout;
     try {
       flightVoiceContext??=new AudioEngine();
@@ -892,9 +884,10 @@ function setupFlightVoice() {
       setFlightVoiceState(false,'음성을 시작할 수 없습니다 · Chrome, Edge 또는 Safari에서 직접 열어주세요');
     } finally {
       clearTimeout(timeout);
-      button.disabled=false;
+      flightVoiceButtons.forEach(button=>{button.disabled=false;});
     }
   };
+  flightVoiceButtons.forEach(button=>{button.onclick=toggleVoice;});
 }
 
 const degrees = Math.PI / 180;
@@ -1947,19 +1940,6 @@ function renderMissionNodes(map) {
   map.once('render',refreshPositions);
   map.once('idle',refreshPositions);
 }
-function mountAircraftArt(element) {
-  const fallback=document.createElement('span');
-  fallback.className='tsdAircraftFallback';
-  fallback.textContent='▲';
-  const image=document.createElement('img');
-  image.className='tsdAircraftArt';
-  image.alt='';
-  image.hidden=true;
-  image.onload=()=>{image.hidden=false;fallback.hidden=true;};
-  image.src='./tsd-10in-map.webp';
-  element.append(fallback,image);
-}
-
 function updateMissionAircraft() {
   for(const map of maps){
     let marker=missionAircraftMarkers.get(map);
@@ -1970,7 +1950,6 @@ function updateMissionAircraft() {
       const element=document.createElement('div');
       element.className='missionAircraft';
       element.setAttribute('aria-hidden','true');
-      mountAircraftArt(element);
       marker=new maplibregl.Marker({element,rotationAlignment:'map'}).setLngLat(flight.point).addTo(map);
       missionAircraftMarkers.set(map,marker);
     }
@@ -3640,9 +3619,8 @@ function updateInsetMarker(name, point, yaw=0) {
   if(!markers[name]){
     const symbol=document.createElement('span');
     symbol.className='insetMarker '+name;
-    symbol.textContent={home:'H',pin:'◆',aircraft:'',course:''}[name];
-    symbol.title={home:'홈포인트',pin:'PinPoint',aircraft:'기체 위치와 기수 방향',course:'실제 이동 방향'}[name];
-    if(name==='aircraft')mountAircraftArt(symbol);
+    symbol.textContent={home:'H',pin:'◆',aircraft:'▲'}[name];
+    symbol.title={home:'홈포인트',pin:'PinPoint',aircraft:'기체 위치'}[name];
     markers[name]=new maplibregl.Marker({element:symbol,rotationAlignment:'map'}).setLngLat(point).addTo(map);
   }
   const marker=markers[name], here=marker.getLngLat();
@@ -3652,12 +3630,8 @@ function updateInsetMarker(name, point, yaw=0) {
 
 function updateMiniMap(point, yaw) {
   if($('miniMapBody').hidden)return;
-  const moving=flight.phase==='air'&&flight.speed>=.2&&Number.isFinite(flight.course);
-  const azimuth=angle=>String(((Math.round(angle)%360)+360)%360).padStart(3,'0')+'°';
-  $('miniMapHeading').textContent='기수 '+azimuth(yaw);
-  $('miniMapCourse').textContent=moving?'진행 '+azimuth(flight.course):flight.phase==='off'?'시동 대기':'수평 이동 없음';
   const map=createAssistMap('mini');
-  if(!map||!point)return;
+  if(!map)return;
   const center=map.getCenter(), bearing=flightAssist.north?0:yaw;
   if((flightAssist.follow&&geoDistance(center,point)>.4)||Math.abs(headingDelta(map.getBearing(),bearing))>.1){
     map.jumpTo({center:flightAssist.follow?point:center,bearing});
@@ -3665,7 +3639,6 @@ function updateMiniMap(point, yaw) {
   updateInsetMarker('home',flight.home);
   updateInsetMarker('pin',observationPoint);
   updateInsetMarker('aircraft',point,yaw);
-  updateInsetMarker('course',moving?point:null,moving?flight.course:0);
   const plan=mission.plan, source=map.getSource(assistRouteId);
   if(source&&flightAssist.miniPlan!==plan){
     source.setData({type:'FeatureCollection',features:plan?[{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:plan.points.map(p=>[p.lng,p.lat])}}]:[]});
