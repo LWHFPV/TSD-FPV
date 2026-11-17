@@ -27,10 +27,10 @@ canvas:active{cursor:grabbing}.hint{color:var(--muted);margin:0;padding:10px 15p
 #err{padding:19px;color:#f8c783} [hidden]{display:none!important}
 main{width:min(1670px,100%)} .workspace{display:grid;grid-template-columns:minmax(0,1fr) 315px}.workview{min-width:0}.inspector{border-left:1px solid var(--edge);padding:14px;min-width:0} .inspector h2{font-size:16px;margin:0 0 10px}
 .controls{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}.controls button{padding:6px 8px;font-size:13px}
-#partlist{height:clamp(230px,45vh,520px);overflow:auto;padding-right:4px}
+#partlist{height:clamp(230px,45vh,520px);overflow:auto;padding-right:4px;overflow-anchor:none;overscroll-behavior-y:contain;scrollbar-gutter:stable}
 #partlist h3{font-size:13px;margin:13px 0 5px;color:var(--muted)}
 .part{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px;margin:3px 0}.part button{text-align:left;font-size:12px;padding:4px 7px;min-height:29px}
-.part button:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.part .eye{min-width:32px}.part[data-hidden=true]{opacity:.48}
+.part button:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.part .eye{inline-size:48px;text-align:center}.part[data-hidden=true]{opacity:.48}
 #query{display:block;width:100%;margin:9px 0;background:#0d1d26;border:1px solid var(--edge);border-radius:6px;color:var(--ink);padding:7px;font:inherit;font-size:14px}
 #selection{display:block;min-height:2.8em;color:var(--accent);font-size:14px;line-height:1.45}
 #selection_status{color:var(--muted);display:block;font-size:12px;margin:3px 0}
@@ -86,7 +86,7 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #1a73
 </nav>
 <a class="header-contact" href="https://lwhfpv.github.io/TSD-FPV/contact.html">문의</a>
 </div></header>
-<section class="hero" aria-labelledby="viewer-title"><div class="tsd-wrap"><h1 id="viewer-title">10인치 True X 전체 조립</h1><p>FPV 프레임 · Rev W · 부품 선택과 분해 보기</p></div></section>
+<section class="hero" aria-labelledby="viewer-title"><div class="tsd-wrap"><h1 id="viewer-title">10인치 True X 전체 조립</h1><p>FPV 프레임 · Rev W · 분해도 수정 2</p></div></section>
 <main id="viewer">
 <section>
 <div class="toolbar">
@@ -198,6 +198,8 @@ const presets={
 let yaw,pitch,target,zoom,view="full",option="B",battery="lower",power="90",request=0;
 let chosen=null,only=false,scope="active",exploded=false;
 const hidden=new Set(), list=document.getElementById("partlist"),search=document.getElementById("query");
+let visibleListSignature="";
+const partRows=new Map();
 function select(sel,key,value){
  for(const b of document.querySelectorAll(sel)) b.setAttribute("aria-pressed",String(b.dataset[key]===value));
 }
@@ -268,53 +270,90 @@ function choose(k,fromCatalog=false){
  if(only)detailCamera();
  if(!fromCatalog&&view==="full")search.value="";
  updatePanel();
- if(!fromCatalog){for(const row of list.querySelectorAll("[data-key]")){if(row.dataset.key===k){row.scrollIntoView({block:"nearest"});break;}}}
+ if(!fromCatalog){
+  const row=partRows.get(k)?.row;
+  if(row){
+   const viewport=list.getBoundingClientRect(), bounds=row.getBoundingClientRect();
+   const top=viewport.top+list.clientTop;
+   const bottom=top+list.clientHeight;
+   if(bounds.top<top)list.scrollTop+=bounds.top-top;
+   else if(bounds.bottom>bottom)list.scrollTop+=bounds.bottom-bottom;
+  }
+ }
  schedule();
+}
+function updatePartVisibility(k){
+ const part=partRows.get(k);
+ if(!part)return;
+ const isHidden=hidden.has(k);
+ part.row.dataset.hidden=String(isHidden);
+ if(part.eye){
+  const action=isHidden?"표시":"숨김";
+  part.eye.textContent=action;
+  part.eye.title=title(k)+" "+action;
+  part.eye.setAttribute("aria-label",part.eye.title);
+ }
+}
+function keepPointerFocusInPlace(button){
+ button.addEventListener("pointerdown",event=>{
+  if(event.pointerType==="mouse"&&event.button===0){
+   event.preventDefault();
+   button.focus({preventScroll:true});
+  }
+ });
 }
 function updatePanel(){
  selection.textContent=chosen?title(chosen):"기체 또는 목록에서 부품을 선택하세요.";
- status.textContent=only?"선택한 부품만 표시":active().length+"개 · 현재 조립";
+ const current=active();
+ status.textContent=only?"선택한 부품만 표시":current.length+"개 · 현재 조립";
  isolate.disabled=!chosen;
  isolate.setAttribute("aria-pressed",String(only));
  explode.setAttribute("aria-pressed",String(exploded));
- const scroll=list.scrollTop;
- list.replaceChildren();
- const query=search.value.trim().toLowerCase(), grouped=new Map(), available=new Set(active());
- const keys=scope==="catalog"?meshKeys:active();
+ const query=search.value.trim().toLowerCase(), grouped=new Map(), available=new Set(current);
+ const keys=scope==="catalog"?meshKeys:current;
  for(const k of keys){
-  const category=group(k), text=title(k);
-  if(query&&!(text+" "+k).toLowerCase().includes(query))continue;
+  const category=group(k), name=title(k);
+  if(query&&!(name+" "+k).toLowerCase().includes(query))continue;
   if(!grouped.has(category))grouped.set(category,[]);
   grouped.get(category).push(k);
  }
- for(const [category,ks] of grouped){
-  const h=document.createElement("h3");h.textContent=category;list.append(h);
-  for(const k of ks){
-   const row=document.createElement("div");row.className="part";row.dataset.hidden=String(hidden.has(k));row.dataset.key=k;
-   const button=document.createElement("button");button.textContent=title(k);button.title=title(k);
-   button.setAttribute("aria-pressed",String(k===chosen));button.addEventListener("click",()=>choose(k,true));
-   row.append(button);
-   if(available.has(k)){
-    const eye=document.createElement("button");eye.className="eye";
-    const updateVisibility=()=>{
-      const isHidden=hidden.has(k);
-      row.dataset.hidden=String(isHidden);
-      eye.textContent=isHidden?"표시":"숨김";
-      eye.title=title(k)+" "+eye.textContent;
-    };
-    updateVisibility();
-    eye.addEventListener("click",()=>{
+ const signature=JSON.stringify([...grouped].map(([category,ks])=>[category,ks.map(k=>[k,available.has(k)])]));
+ if(signature!==visibleListSignature){
+  const scroll=list.scrollTop;
+  const fragment=document.createDocumentFragment();
+  partRows.clear();
+  for(const [category,ks] of grouped){
+   const heading=document.createElement("h3");heading.textContent=category;fragment.append(heading);
+   for(const k of ks){
+    const row=document.createElement("div");row.className="part";row.dataset.key=k;
+    const button=document.createElement("button");button.type="button";button.textContent=title(k);button.title=title(k);
+    keepPointerFocusInPlace(button);
+    button.addEventListener("click",()=>choose(k,true));
+    row.append(button);
+    let eye;
+    if(available.has(k)){
+     eye=document.createElement("button");eye.type="button";eye.className="eye";
+     keepPointerFocusInPlace(eye);
+     eye.addEventListener("click",()=>{
       if(hidden.has(k))hidden.delete(k);else hidden.add(k);
-      updateVisibility();
+      updatePartVisibility(k);
       schedule();
-    });
-    row.append(eye);
+     });
+     row.append(eye);
+    }
+    partRows.set(k,{row,button,eye});
+    fragment.append(row);
    }
-   list.append(row);
   }
+  if(!grouped.size){const message=document.createElement("p");message.textContent="검색 결과가 없습니다.";fragment.append(message);}
+  list.replaceChildren(fragment);
+  list.scrollTop=scroll;
+  visibleListSignature=signature;
  }
- list.scrollTop=scroll;
- if(!grouped.size){const p=document.createElement("p");p.textContent="검색 결과가 없습니다.";list.append(p);}
+ for(const [k,{button}] of partRows){
+  button.setAttribute("aria-pressed",String(k===chosen));
+  updatePartVisibility(k);
+ }
 }
 function offsetFor(k){
  if(!exploded||only)return [0,0,0];
