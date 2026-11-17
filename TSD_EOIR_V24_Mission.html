@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TSD EO/IR V24.10.4 · Mavic 3T 수색 훈련</title>
+<title>TSD EO/IR V24.10.6 · Mavic 3T 수색 훈련</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css">
 <style>:root{color-scheme:dark;--ink:#f1f3f5;--muted:#aeb8c4;--panel:#1e242b;--line:#46515c;--blue:#77cce8;--overlay:#11171cdd;--pad:clamp(8px,1.5vw,18px)}
 *{box-sizing:border-box}
@@ -455,7 +455,7 @@ dialog::backdrop {background:#132440ab}
 </head>
 <body>
 <section id="admin" aria-label="시뮬레이션 설정">
- <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.4 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
+ <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.6 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
  <div id="adminBody">
   <div class="row">
    <label>시·도 <select id="province"></select></label>
@@ -727,7 +727,9 @@ dialog::backdrop {background:#132440ab}
 <script>const $ = id => document.getElementById(id);
 const DEM = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
 const displayDemMaxZoom = 14;
-const SAT = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const satelliteTileProtocol='tsd-satellite://tiles/';
+const satelliteTileService='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/';
+const SAT=satelliteTileProtocol+'{z}/{y}/{x}';
 const initialPoint = [126.928686496763, 37.531246690812]; // 여의도한강공원 물빛광장
 let departurePoint = {lng:initialPoint[0],lat:initialPoint[1],zoom:13,pitch:90,bearing:0};
 let pendingDepartureView = departurePoint;
@@ -753,17 +755,60 @@ const selectedIndex = () => activeCamera === 'ir' ? 1 : 0;
 const linked = () => $('lock').checked;
 const isVisible = i => !(i ? $('irWrap') : $('eoWrap')).hidden;
 
-function mapStyle() {
+function isUnavailableSatelliteImage(data) {
+  if (data.byteLength!==2521) return false;
+  // Esri serves this particular placeholder as a successful JPEG; identify the verified response bytes.
+  let hash=2166136261;
+  for (const byte of new Uint8Array(data)) hash=Math.imul(hash^byte,16777619);
+  return (hash>>>0)===0x92d9118f;
+}
+
+async function loadSatelliteTile(request, abortController) {
+  const url=satelliteTileService+request.url.slice(satelliteTileProtocol.length);
+  const response=await fetch(url,{signal:abortController.signal,headers:request.headers});
+  if (!response.ok) throw Object.assign(new Error('위성 타일 응답 '+response.status),{status:response.status});
+  const data=await response.arrayBuffer();
+  if (response.headers.get('blank-tile')==='true' || isUnavailableSatelliteImage(data)) {
+    // A 404 lets MapLibre request a parent instead of painting the placeholder over the overview.
+    throw Object.assign(new Error('위성 타일 없음'),{status:404});
+  }
+  return {data,cacheControl:response.headers.get('cache-control')||undefined,expires:response.headers.get('expires')||undefined};
+}
+
+function mapStyle({cameraView=false}={}) {
   if ($('base').value === 'street') return 'https://tiles.openfreemap.org/styles/liberty';
-  return {
-    version: 8,
-    sources: { imagery: {type: 'raster', tiles: [SAT], tileSize: 256, maxzoom: 19, attribution: 'Tiles © Esri and its imagery providers'} },
-    layers: [{id: 'imagery', type: 'raster', source: 'imagery', paint: {'raster-resampling':'linear','raster-fade-duration': 140}}]
+  const imagery={type:'raster',tiles:[SAT],tileSize:256,maxzoom:19,attribution:'Tiles © Esri and its imagery providers'};
+  const style={
+    version:8,
+    sources:{imagery},
+    layers:[{id:'imagery',type:'raster',source:'imagery',paint:{'raster-resampling':'linear','raster-fade-duration':140}}]
   };
+  if (cameraView) {
+    // Keep coarse satellite imagery underneath detailed tiles during camera movement.
+    style.sources['imagery-overview']={...imagery,maxzoom:12};
+    style.layers.unshift({id:'imagery-overview',type:'raster',source:'imagery-overview',minzoom:11,
+      paint:{'raster-resampling':'linear','raster-fade-duration':0}});
+  }
+  return style;
+}
+
+function configureCameraTileDetail(map) {
+  map.setSourceTileLodParams(10, 2.8);
+  for (const id of Object.keys(map.getStyle().sources)) {
+    const source=map.getSource(id);
+    const calculate=source.calculateTileZoom;
+    // The simulated gimbal reaches the exact horizon. Keep the LOD input defined there.
+    source.calculateTileZoom=(zoom,groundDistance,verticalDistance,centerDistance,fov)=>{
+      if (!(centerDistance>0)) return zoom;
+      const safeVerticalDistance=Math.max(verticalDistance,centerDistance*.0087);
+      return calculate(zoom,groundDistance,safeVerticalDistance,centerDistance,fov);
+    };
+  }
 }
 
 function attachTerrain(map, index) {
   if (!map.getSource('dem')) map.addSource('dem', {type: 'raster-dem', tiles: [DEM], tileSize: 256, encoding: 'terrarium', maxzoom: displayDemMaxZoom, attribution: 'Elevation: Mapzen/AWS Terrain Tiles'});
+  configureCameraTileDetail(map);
   if (!map.getTerrain()) map.setTerrain({source: 'dem', exaggeration: 1});
   map.setSky({'sky-color':'#80a9c8','horizon-color':'#c7d9e6','fog-color':'#c7d9e6','sky-horizon-blend':.65,'horizon-fog-blend':.55,'fog-ground-blend':.5});
   ensure3DTargets(map, index);
@@ -774,8 +819,8 @@ function setupMaps() {
   if (!window.maplibregl) { status('MapLibre 연결 실패 · 인터넷 연결을 확인하세요'); return; }
   try { for (let i = 0; i < 2; i++) {
     const map = new maplibregl.Map({
-      container: i ? 'ir' : 'eo', style: mapStyle(), center: initialPoint, zoom: departurePoint.zoom,
-      pitch: 0, bearing: 0, maxPitch: 125, maxZoom: 21, maxTileCacheSize: 72,
+      container: i ? 'ir' : 'eo', style: mapStyle({cameraView:true}), center: initialPoint, zoom: departurePoint.zoom,
+      pitch: 0, bearing: 0, maxPitch: 125, maxZoom: 21, maxTileCacheSize: 72, renderWorldCopies:false,
       canvasContextAttributes: {antialias: false, preserveDrawingBuffer: false}
     });
     maps.push(map);
@@ -4614,7 +4659,7 @@ function setupControls() {
     $('satelliteCredit').hidden=$('base').value==='street';
     $('streetCredit').hidden=$('base').value!=='street';
     status('지도 유형 전환 중');
-    maps.forEach(map=>map.setStyle(mapStyle(),{diff:false}));
+    maps.forEach(map=>map.setStyle(mapStyle({cameraView:true}),{diff:false}));
     resetAssistMapStyles();
   };
   $('lock').onchange=()=>{if(linked())mirror(selectedIndex());targetAudit();};
@@ -4673,6 +4718,7 @@ function setupControls() {
   $('missionClear').onclick=()=>{clearMarkers(scanPins);clearObservation();scanAim=null;$('targetStatus').hidden=true;};
 }
 
+window.maplibregl?.addProtocol('tsd-satellite',loadSatelliteTile);
 setupControls();
 setupMedia();
 setupMission();
