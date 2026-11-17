@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TSD EO/IR V24.10.2 · Mavic 3T 수색 훈련</title>
+<title>TSD EO/IR V24.10.3 · Mavic 3T 수색 훈련</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css">
 <style>:root{color-scheme:dark;--ink:#f1f3f5;--muted:#aeb8c4;--panel:#1e242b;--line:#46515c;--blue:#77cce8;--overlay:#11171cdd;--pad:clamp(8px,1.5vw,18px)}
 *{box-sizing:border-box}
@@ -21,7 +21,6 @@ label,.row{display:flex;align-items:center;gap:7px}
 .row{flex-wrap:wrap}
 output{font-variant-numeric:tabular-nums}
 [hidden]{display:none!important}
-.definitions{position:absolute;width:0;height:0;pointer-events:none}
 .spacer{flex:1}
 #admin{background:#202832;border-bottom:2px solid #b89251;padding:7px var(--pad)}
 .adminHead{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
@@ -50,6 +49,7 @@ output{font-variant-numeric:tabular-nums}
 .map{position:absolute;inset:0;background:linear-gradient(#596e82,#87939e)}
 .maplibregl-canvas{outline:none}
 #ir canvas.maplibregl-canvas{filter:var(--ir-filter,grayscale(1))}
+#irPaletteFrame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .measuring{cursor:crosshair}
 .maplibregl-ctrl-attrib{font-size:10px}
 .feed,.reticle,.scanBox{position:absolute;z-index:2}
@@ -454,13 +454,8 @@ dialog::backdrop {background:#132440ab}
 </style>
 </head>
 <body>
-<svg class="definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
- <filter id="ironDisplay" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/><feComponentTransfer>
-  <feFuncR type="table" tableValues="0.03 0.22 0.60 0.96 1"/><feFuncG type="table" tableValues="0.01 0.04 0.13 0.51 0.97"/><feFuncB type="table" tableValues="0.07 0.29 0.22 0.10 0.81"/>
- </feComponentTransfer></filter>
-</defs></svg>
 <section id="admin" aria-label="시뮬레이션 설정">
- <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.2 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
+ <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.10.3 · Mavic 3T</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
  <div id="adminBody">
   <div class="row">
    <label>시·도 <select id="province"></select></label>
@@ -492,7 +487,7 @@ dialog::backdrop {background:#132440ab}
   <button id="sbs" aria-pressed="false" title="EO·IR 분할 보기">SBS</button>
   <label><input type="checkbox" id="lock" checked> 줌·시점 연동</label>
   <button id="sync" title="EO 시점을 IR에 즉시 적용">EO → IR</button>
-  <label>IR 팔레트 <select id="palette"><option value="white">White Hot</option><option value="black">Black Hot</option><option value="iron">Iron Red</option></select></label>
+  <label>IR 팔레트 <select id="palette"></select></label>
   <label>IR 게인 <select id="gain"><option value="high">High</option><option value="low">Low</option></select></label>
   <button id="measure" aria-pressed="false">IR 측정</button>
   <button id="flightControls" aria-expanded="false">가상 스틱</button>
@@ -672,7 +667,7 @@ dialog::backdrop {background:#132440ab}
   <label>보정 화면 <select id="reviewSensor"></select></label>
   <label>밝기 <input type="range" id="reviewBrightness" min="45" max="170" value="100"><output id="brightnessValue">100%</output></label>
   <label>대비 <input type="range" id="reviewContrast" min="35" max="240" value="100"><output id="contrastValue">100%</output></label>
-  <label>팔레트 <select id="reviewPalette"><option value="white">White Hot</option><option value="black">Black Hot</option><option value="iron">Iron Red</option></select></label>
+  <label>팔레트 <select id="reviewPalette"></select></label>
   <button id="reviewReset">촬영 당시 보기</button>
  </div>
  <div class="row reviewTools"><button id="reviewZoomIn">확대</button><button id="reviewZoomOut">축소</button><button id="reviewZoomReset">1:1</button><button id="reviewMeasure" aria-pressed="false">IR 지점·영역</button><button id="reviewDownload">원본 파일 저장</button><button id="reviewExport">현재 화면 PNG 저장</button><output id="reviewReading" aria-live="polite"></output></div>
@@ -829,7 +824,11 @@ function setupMaps() {
       if (!split) return;
       selectCamera(i ? 'ir' : activeCamera === 'zoom' ? 'zoom' : 'wide');
     }, {capture: true});
-    map.on('render', () => {captureLiveFrame(i);if(i===1)captureMeasurement();});
+    map.on('render', () => {
+      if (i === 1) renderLivePalette(map.getCanvas());
+      captureLiveFrame(i);
+      if (i === 1) captureMeasurement();
+    });
   }} catch (error) {
     maps.splice(0).forEach(map => map.remove());
     terrainOk = [false, false];
@@ -3594,23 +3593,80 @@ let reviewFrames = [];
 let reviewAnimation = 0;
 let reviewScale = 1;
 let reviewMeasure = false;
-const palettes = {white:'White Hot',black:'Black Hot',iron:'Iron Red'};
-const colorStops = [[8,3,18],[56,10,74],[153,33,56],[245,130,26],[255,247,207]];
+// Color stops approximate DJI's reference palettes for the simulator.
+const palettes = {
+  white: {label:'White Hot', stops:[[0,0,0],[255,255,255]]},
+  black: {label:'Black Hot', stops:[[255,255,255],[0,0,0]]},
+  tint: {label:'Tint', stops:[[0,0,0],[64,64,64],[128,128,128],[200,200,200],[255,255,255],[255,25,25],[255,0,0]]},
+  iron: {label:'Iron Red', stops:[[8,3,18],[56,10,74],[153,33,56],[245,130,26],[255,247,207]]},
+  hotIron: {label:'Hot Iron', stops:[[3,5,18],[12,42,74],[24,104,154],[92,141,153],[224,51,32],[255,0,0]]},
+  arctic: {label:'Arctic', stops:[[0,8,35],[12,38,115],[0,113,211],[35,191,225],[148,236,191],[255,213,79],[235,81,62],[255,247,234]]},
+  medical: {label:'Medical', stops:[[14,4,39],[70,18,113],[112,43,165],[106,125,222],[109,221,189],[253,225,101],[237,86,76],[255,244,235]]},
+  fulgurite: {label:'Fulgurite', stops:[[27,0,0],[102,0,1],[182,11,6],[247,62,0],[255,145,12],[255,221,65],[255,255,255]]},
+  rainbow1: {label:'Rainbow 1', stops:[[15,4,36],[57,12,111],[37,40,171],[14,99,217],[9,164,220],[21,209,163],[146,231,86],[255,197,55],[243,52,77]]},
+  rainbow2: {label:'Rainbow 2', stops:[[11,0,32],[60,16,130],[24,87,207],[20,188,145],[245,225,52],[255,126,16],[224,25,48]]}
+};
 const colorTables = {};
-for (const key of Object.keys(palettes)) {
-  colorTables[key] = Array.from({length:256},(_,n)=>{
-    if(key==='white')return [n,n,n];
-    if(key==='black')return [255-n,255-n,255-n];
-    const pos=n/255*4, index=Math.min(3,Math.floor(pos)), fraction=pos-index;
-    return colorStops[index].map((c,i)=>Math.round(c+(colorStops[index+1][i]-c)*fraction));
-  });
+for (const [key,{stops}] of Object.entries(palettes)) {
+  const table = new Uint8Array(256*3);
+  for (let n=0;n<256;n++) {
+    const position=n/255*(stops.length-1);
+    const index=Math.min(stops.length-2,Math.floor(position));
+    const fraction=position-index;
+    for (let channel=0;channel<3;channel++) {
+      const low=stops[index][channel], high=stops[index+1][channel];
+      table[n*3+channel]=Math.round(low+(high-low)*fraction);
+    }
+  }
+  colorTables[key]=table;
+}
+for (const id of ['palette','reviewPalette']) {
+  for (const [key,{label}] of Object.entries(palettes)) $(id).add(new Option(label,key));
+}
+
+const irPaletteFrame = document.createElement('canvas');
+irPaletteFrame.id='irPaletteFrame';
+irPaletteFrame.hidden=true;
+irPaletteFrame.setAttribute('aria-hidden','true');
+const irPaletteContext=irPaletteFrame.getContext('2d',{willReadFrequently:true});
+const monochromeFilters={white:'grayscale(1)',black:'grayscale(1) invert(1)'};
+
+function colorizeIR(data,table,brightness=1,contrast=1) {
+  for (let i=0;i<data.length;i+=4) {
+    const luminance=data[i]*.2126+data[i+1]*.7152+data[i+2]*.0722;
+    const index=3*clamp(Math.round((luminance*brightness-128)*contrast+128),0,255);
+    data[i]=table[index];
+    data[i+1]=table[index+1];
+    data[i+2]=table[index+2];
+  }
 }
 
 function applyPalette() {
   const palette=$('palette').value;
-  $('irWrap').style.setProperty('--ir-filter',{white:'grayscale(1)',black:'grayscale(1) invert(1)',iron:'url(#ironDisplay)'}[palette]);
-  $('irBadge').textContent='IR · '+palettes[palette].toUpperCase();
+  $('irWrap').style.setProperty('--ir-filter',monochromeFilters[palette]||monochromeFilters.white);
+  $('irBadge').textContent='IR · '+palettes[palette].label.toUpperCase();
+  irPaletteFrame.hidden=true;
+  if (!monochromeFilters[palette]) maps[1]?.triggerRepaint();
+}
 
+function renderLivePalette(source) {
+  const palette=$('palette').value;
+  if (!irPaletteContext || monochromeFilters[palette] || !isVisible(1) || !source.width || !source.height) return;
+  // Read the WebGL buffer during MapLibre's render event, before the browser clears it.
+  const bounds=source.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) return;
+  const scale=Math.min(1,960/Math.max(bounds.width,bounds.height));
+  const width=Math.max(1,Math.round(bounds.width*scale));
+  const height=Math.max(1,Math.round(bounds.height*scale));
+  if (irPaletteFrame.width!==width) irPaletteFrame.width=width;
+  if (irPaletteFrame.height!==height) irPaletteFrame.height=height;
+  irPaletteContext.clearRect(0,0,width,height);
+  irPaletteContext.drawImage(source,0,0,width,height);
+  const pixels=irPaletteContext.getImageData(0,0,width,height);
+  colorizeIR(pixels.data,colorTables[palette]);
+  irPaletteContext.putImageData(pixels,0,0);
+  if (!irPaletteFrame.isConnected) source.after(irPaletteFrame);
+  irPaletteFrame.hidden=false;
 }
 
 function captureIndices() {
@@ -3886,12 +3942,7 @@ function renderReview(f) {
     f.ctx.filter='none';
   } else {
     const data=f.raw.getImageData(0,0,width,height);
-    const table=colorTables[f.palette];
-    for(let i=0;i<data.data.length;i+=4) {
-      const normalized=clamp(Math.round((data.data[i]*f.brightness/100-128)*f.contrast/100+128),0,255);
-      const [r,g,b]=table[normalized];
-      data.data[i]=r;data.data[i+1]=g;data.data[i+2]=b;
-    }
+    colorizeIR(data.data,colorTables[f.palette],f.brightness/100,f.contrast/100);
     f.ctx.putImageData(data,0,0);
   }
 }
@@ -4128,7 +4179,7 @@ const tutorialLessons = [
       '줌·시점 연동을 켜면 조작한 쪽의 시점이 반대편에 반영됩니다. EO → IR은 EO 시점을 IR에 즉시 적용하며 연동도 켭니다.',
       '하단 짐벌 피치 슬라이더로 −90°~+35°를 조절합니다. 0° 수평과 −90° 직하는 단축 버튼이며, 왼쪽 정면·직하 전환도 같은 각도를 오갑니다.',
       '우측 +/−로 배율을 바꿉니다. 오른쪽 줌 다이얼 입력이 확인된 RC 2에서도 줌을 조작할 수 있습니다.',
-      'IR 팔레트 White Hot·Black Hot·Iron Red로 표시 방식을 바꾸고 IR 게인 High·Low로 모의 온도 환산 범위를 바꿉니다.'
+      'IR 팔레트 10가지로 표시 방식을 바꾸고 IR 게인 High·Low로 모의 온도 환산 범위를 바꿉니다.'
     ],
     result:'센서 이름과 줌 배율, 짐벌 각도, 열화상 색상이 표시됩니다.'
   },
