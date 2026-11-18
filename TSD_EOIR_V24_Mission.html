@@ -500,6 +500,62 @@ dialog::backdrop {background:#132440ab}
 #pilotNotesBody {position:absolute;z-index:9;right:0;bottom:calc(100% + 4px);width:min(460px,92vw);max-height:min(55dvh,360px);overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 4px 16px #14253835}
 #pilotNotesBody footer {padding:4px 8px 6px;font-size:11px}
 #pilotNotesBody #mapCredits {padding:6px 8px 2px}
+@container (min-width:780px) {
+ #stage .rail {top:56px;bottom:calc(var(--inset-width) * .5625 + 88px);gap:5px}
+ #stage .rightRail {grid-template-columns:max-content max-content;grid-template-rows:repeat(3,max-content)}
+ #stage .rightRail > button {grid-column:2}
+ #stage .rightRail .zoomRail {grid-area:1 / 1 / 4;align-self:center}
+ #stage .leftRail {display:flex;flex-flow:column wrap;align-content:flex-start;align-items:flex-start;justify-content:safe center}
+ #stage .rail button {min-width:clamp(52px,5.05cqw,74px);min-height:clamp(43px,4.3cqw,64px);padding:4px 8px;font-size:clamp(15px,1.5cqw,21px)}
+ #stage .rail button svg {width:clamp(27px,2.55cqw,36px);height:clamp(27px,2.55cqw,36px)}
+ #stage #gimbalModeToggle {font-size:clamp(12px,1.2cqw,17px)}
+ #stage #shutter {width:clamp(62px,6.1cqw,90px);height:clamp(62px,6.1cqw,90px);padding:8px;border-width:3px}
+ #stage .zoomRail {padding:3px;gap:2px}
+ #stage .zoomRail button {min-height:clamp(34px,3.6cqw,54px)}
+ #zoomLabel {font-size:clamp(14px,1.45cqw,21px)}
+ #stage .feed {top:6px;min-height:44px;padding-inline:10px;font-size:clamp(16px,1.6cqw,24px)}
+ #stage #liveCoordinates {top:7px;max-width:32%;padding:4px 7px;font-size:clamp(14px,1.45cqw,22px)}
+ #stage:has(#eoWrap:not([hidden]) + #irWrap:not([hidden])) #liveCoordinates {top:53px;max-width:54%}
+ #stage:has(#eoWrap:not([hidden]) + #irWrap:not([hidden])) .leftRail {top:91px}
+ #stage .reticle {width:40px;height:40px}
+ #stage .reticle::before {height:2px}
+ #stage .reticle::after {width:2px}
+ #navigationDisplay {gap:clamp(8px,1cqw,14px);font-size:clamp(14px,1.45cqw,22px);--nav-size:clamp(150px,15cqw,224px)}
+ .navReadings {padding:5px 8px}
+ .navReadings output {font-size:clamp(17px,1.65cqw,26px)}
+ .navReadings span,.navReadings small,#navSensorState,#navTilt,#navVertical {font-size:clamp(12px,1.2cqw,17px)}
+ #stage :is(#targetStatus,#measureReadout) {--nav-size:clamp(150px,15cqw,224px)}
+ #stage #targetStatus {bottom:calc(var(--nav-size) + 86px)}
+ #stage #measureReadout {bottom:calc(var(--nav-size) + 121px)}
+ .pilotInset .panelTitle button,.pilotInset .insetControls button {min-height:32px;font-size:14px}
+ .pilotInset .panelTitle [data-inset-step] {width:30px;min-width:30px;font-size:21px}
+ .pilotInset .insetControls svg {width:21px;height:21px}
+ .visionDirections button {min-width:24px;min-height:23px;font-size:15px}
+ #visionHeading {min-height:23px;font-size:12px}
+ .visionDirections [data-vision="0"] {top:27px}
+}
+@media(max-height:760px) {
+ @container (min-width:780px) {
+  #stage .rail {top:55px;bottom:calc(var(--inset-width) * .5625 + 88px)}
+  #stage .rail button {min-height:42px}
+  #stage #shutter {width:62px;height:62px}
+  #stage .zoomRail button {min-height:32px}
+  #navigationDisplay,#stage :is(#targetStatus,#measureReadout) {--nav-size:clamp(116px,21dvh,156px)}
+ }
+}
+@container (min-width:780px) {
+ #stage[data-compact-hud] .rail {top:52px;bottom:5px}
+ #stage[data-compact-hud] .leftRail {flex-flow:column nowrap}
+ #stage[data-compact-hud] .rail button {min-width:50px;min-height:34px}
+ #stage[data-compact-hud] .rail button svg {width:24px;height:24px}
+ #stage[data-compact-hud] #shutter {width:48px;height:48px}
+ #stage[data-compact-hud] .zoomRail button {min-height:29px}
+ #stage[data-compact-hud] :is(#miniMapPanel,#visionPanel):not([data-size=large]) {--inset-width:130px}
+ #stage[data-compact-hud] #miniMapPanel:not([data-size=large]) {left:calc(68px + 4cqw)}
+ #stage[data-compact-hud] #visionPanel {right:calc(108px + 4cqw)}
+ #stage[data-compact-hud] #navigationDisplay {--nav-size:110px}
+ #stage[data-compact-hud]:has(#eoWrap:not([hidden]) + #irWrap:not([hidden])) .leftRail {top:85px}
+}
 </style>
 <style>
 #touchLinkOpen {background:#d9ebff;color:#163f8c;border-color:#a5c1e6;font-weight:700;white-space:nowrap}
@@ -1280,7 +1336,7 @@ function configureCameraTileDetail(map) {
   map.setSourceTileLodParams(10, 2.8);
   const imagery=map.getSource('imagery');
   const normalImageryLod=imagery?.calculateTileZoom;
-  if(imagery)map.setSourceTileLodParams(8.5, 4.5, 'imagery');
+  if(imagery)map.setSourceTileLodParams(8.5, 5.2, 'imagery');
   for (const id of Object.keys(map.getStyle().sources)) {
     const source=map.getSource(id);
     const calculate=source.calculateTileZoom;
@@ -1295,8 +1351,8 @@ function configureCameraTileDetail(map) {
       if(!Number.isFinite(detail))return normal;
       // Spend the tile budget around the camera aim; keep the far horizon coarse.
       const relativeDistance=Math.hypot(groundDistance,safeHeight)/centerDistance;
-      const extraLevels=1.35*clamp((4-relativeDistance)/2,0,1);
-      return Math.max(normal,Math.min(detail,normal+extraLevels,zoom+1.5));
+      const extraLevels=1.65*clamp((5-relativeDistance)/3,0,1);
+      return Math.max(normal,Math.min(detail,normal+extraLevels,zoom+1.75));
     };
   }
 }
@@ -1315,11 +1371,11 @@ function setupMaps() {
   try { for (let i = 0; i < 2; i++) {
     const map = new maplibregl.Map({
       container: i ? 'ir' : 'eo', style: mapStyle({cameraView:true}), center: initialPoint, zoom: 18,
-      pitch: 0, bearing: 0, maxPitch: 125, maxZoom: 21, maxTileCacheSize: 72, renderWorldCopies:false,
+      pitch: 0, bearing: 0, maxPitch: 125, maxZoom: 21, maxTileCacheSize: 72, renderWorldCopies:false, trackResize:false,
       canvasContextAttributes: {antialias: false, preserveDrawingBuffer: false}
     });
     maps.push(map);
-    map.setVerticalFieldOfView(lensVerticalFov(i));
+    map.setVerticalFieldOfView(sensorViewportFov(i));
     installSensorWheel(map,i);
     installZoomReference(map,i);
     map.on('style.load', () => attachTerrain(map, i));
@@ -1450,6 +1506,13 @@ function resizeSensorViews(anchor,index) {
   finally { syncing=wasSyncing; }
   if(!indices.length)return;
   const affected=linked()?indices:[index];
+  restoreResizedCamera(anchor,index,affected,true);
+  indices.forEach(i=>maps[i].triggerRepaint());
+}
+
+function restoreResizedCamera(anchor,index,affected,allowNadirRecovery) {
+  const wasSyncing=syncing;
+  const previousFields=affected.map(i=>maps[i].getVerticalFieldOfView());
   syncing=true;
   try {
     affected.forEach(i=>{
@@ -1462,13 +1525,18 @@ function resizeSensorViews(anchor,index) {
   if(pendingDepartureView){finishDepartureView();return;}
   if(!anchor)return;
   // Restore the original eye before publishing any frame from a resized sensor.
-  if(!renderCameraAnchor(anchor,affected)&&anchor.origin){
+  if(renderCameraAnchor(anchor,affected)||!anchor.origin)return;
+  if(allowNadirRecovery){
     const {origin,pose}=anchor;
     const ground=directGround(maps[index],origin);
     const range=Math.max(2,Number.isFinite(ground)?origin.alt-ground:anchor.range);
     applySensorView(origin,-90,pose.bearing,map=>zoomForCameraRange(map,range,origin.lat),affected);
+    return;
   }
-  indices.forEach(i=>maps[i].triggerRepaint());
+  syncing=true;
+  try {affected.forEach((i,item)=>maps[i].setVerticalFieldOfView(previousFields[item]));}
+  finally {syncing=wasSyncing;}
+  renderCameraAnchor(anchor,affected);
 }
 
 function updateCameraUI(i=selectedIndex()) {
@@ -1744,13 +1812,22 @@ function lensVerticalFov(index) {
   return 2*Math.atan(Math.tan(diagonal*degrees/2)/Math.hypot(1,aspect))/degrees;
 }
 
+function sensorViewportFov(index) {
+  const map=maps[index], base=lensVerticalFov(index);
+  const {width,height}=map?.transform??{};
+  if(!(width>0&&height>0))return base;
+  const nativeAspect=lensProfiles[sensorProfile(index)].aspect;
+  const crop=Math.max(1,width/(height*nativeAspect));
+  return 2*Math.atan(Math.tan(base*degrees/2)/crop)/degrees;
+}
+
 function magnificationFactor(index) {
   const profile=sensorProfile(index);
   return lensZoom[profile]/lensProfiles[profile].start;
 }
 
 function sensorProjectionFov(index,currentField,currentZoom) {
-  const baseTangent=Math.tan(lensVerticalFov(index)*degrees/2);
+  const baseTangent=Math.tan(sensorViewportFov(index)*degrees/2);
   const currentTangent=Math.tan(currentField*degrees/2);
   const baseZoom=currentZoom+Math.log2(currentTangent/baseTangent);
   // Preserve camera range and cap optical zoom before MapLibre's limits; crop only the remainder.
@@ -1787,7 +1864,7 @@ function changeEoLens(next) {
 }
 
 function sensorCrop(index) {
-  const base=lensVerticalFov(index);
+  const base=sensorViewportFov(index);
   const actual=maps[index]?.getVerticalFieldOfView()??base;
   const optical=Math.tan(base*degrees/2)/Math.tan(actual*degrees/2);
   return Math.max(1,magnificationFactor(index)/optical);
@@ -4237,27 +4314,48 @@ function bindPanelKeys(handle, move, reset) {
   });
 }
 
+function resizeStageSensors() {
+  const indices=visibleSensorIndices();
+  const resized=indices.filter(i=>{
+    const map=maps[i], frame=map.getContainer();
+    return map.transform.width!==frame.clientWidth||map.transform.height!==frame.clientHeight;
+  });
+  if(!resized.length)return;
+  const selected=selectedIndex();
+  const anchors=linked()
+    ? [{index:selected, affected:indices, anchor:captureCameraAnchor(maps[selected])}]
+    : resized.map(index=>({index,affected:[index],anchor:captureCameraAnchor(maps[index])}));
+  viewRevision++;
+  pendingSensorFrame=null;
+  if(syncFrame){cancelAnimationFrame(syncFrame);syncFrame=0;}
+  const wasSyncing=syncing;
+  syncing=true;
+  try {resized.forEach(index=>maps[index].resize());}
+  finally {syncing=wasSyncing;}
+  anchors.forEach(({anchor,index,affected})=>restoreResizedCamera(anchor,index,affected,false));
+  updateCameraUI();
+  indices.forEach(i=>maps[i].triggerRepaint());
+}
+
 function setupStageHeight() {
-  const pilot=$('pilot'),stage=$('stage'),bottom=pilot.querySelector('.pilotBottom');
-  let queued=0,previousHeight=0;
-  const schedule=()=>{
-    if(queued)return;
-    queued=requestAnimationFrame(()=>{
-      queued=0;
-      const top=stage.getBoundingClientRect().top+window.scrollY;
-      const height=Math.max(220,Math.floor(window.innerHeight-top-bottom.offsetHeight));
-      if(height===previousHeight)return;
+  const pilot=$('pilot'), stage=$('stage'), bottom=pilot.querySelector('.pilotBottom');
+  let queued=0, previousHeight=0;
+  const fit=()=>{
+    queued=0;
+    const top=stage.getBoundingClientRect().top+window.scrollY;
+    const height=Math.max(220,Math.floor(window.innerHeight-top-bottom.offsetHeight));
+    if(height!==previousHeight){
       previousHeight=height;
-      const index=selectedIndex();
-      const anchor=captureCameraAnchor(maps[index]);
+      stage.toggleAttribute('data-compact-hud',height<470);
       pilot.style.setProperty('--flight-view-height',height+'px');
-      if(maps.length===2)resizeSensorViews(anchor,index);
-    });
+    }
+    if(maps.length===2)resizeStageSensors();
   };
+  const schedule=()=>{if(!queued)queued=requestAnimationFrame(fit);};
   const observer=new ResizeObserver(schedule);
-  for(const row of [$('admin'),$('flightBar'),$('cameraStrip'),bottom])observer.observe(row);
+  for(const row of [$('admin'),$('flightBar'),$('cameraStrip'),bottom,stage])observer.observe(row);
   window.addEventListener('resize',schedule);
-  schedule();
+  fit();
 }
 
 function setupControllerLayout() {
@@ -6412,8 +6510,8 @@ setupFlightAssist();
 setupControllerLayout();
 setupAssistLayout();
 setupTutorial();
-setupMaps();
 setupStageHeight();
+setupMaps();
 applyPalette();
 selectCamera(activeCamera);
 showDepartureView();
@@ -6524,7 +6622,53 @@ function createViewRelay(eoir, isActive) {
 const hostStorageKey = "tsd-eoir-direct-session:" + relayOrigin;
 const token = /^[a-f0-9]{32}$/;
 const timeoutMs = 990;
-const pollMs = 115;
+const pollMs = 80;
+const directFreshMs = 420;
+
+// The direct control channel uses LAN ICE candidates and falls back to HTTPS input.
+const directChannelLabel = "tsd-flight-control";
+
+function directInputPeer() {
+  return new RTCPeerConnection({ iceServers: [] });
+}
+
+async function directDescription(peer, description) {
+  await peer.setLocalDescription(description);
+  if (peer.iceGatheringState !== "complete") {
+    await new Promise(resolve => {
+      const done = () => {
+        clearTimeout(timer);
+        peer.removeEventListener("icegatheringstatechange", check);
+        resolve();
+      };
+      const check = () => { if (peer.iceGatheringState === "complete") done(); };
+      const timer = setTimeout(done, 1000);
+      peer.addEventListener("icegatheringstatechange", check);
+      check();
+    });
+  }
+  return peer.localDescription?.sdp;
+}
+
+const readDirectPacket = (() => {
+const eoirCommands = ["wide", "zoom", "ir", "split", "level", "poi", "mark", "look", "scan", "media", "playback", "recenter", "route", "takeoff", "returnHome",
+  "lock", "sync", "palette", "gain", "horizon", "nadir", "reviewPlay", "reviewOlder", "reviewNewer", "reset", "flightMode"];
+function validatePacket(value) {
+  if (!value || typeof value !== "object") return null;
+  const { axes, arm, stop, stopHeld, mode, gimbal, zoom, capture, cameraRevision = 0, commands = {}, sequence } = value;
+  const inRange = (x, lo, hi) => typeof x === "number" && Number.isFinite(x) && x >= lo && x <= hi;
+  const counter = (x) => Number.isSafeInteger(x) && inRange(x, 0, 1_000_000);
+  if (!Array.isArray(axes) || axes.length !== 4 || axes.some((x) => !inRange(x, -1, 1))
+    || typeof arm !== "boolean" || typeof stopHeld !== "boolean"
+    || !counter(stop) || !counter(capture) || ![0, 1, 2].includes(mode)
+    || !inRange(gimbal, -90, 35) || !inRange(zoom, 1, 56) || !counter(cameraRevision)
+    || (sequence !== undefined && (!Number.isSafeInteger(sequence) || sequence < 1))) return null;
+  if (!commands || typeof commands !== "object" || Array.isArray(commands)
+    || Object.entries(commands).some(([command, count]) => !eoirCommands.includes(command) || !counter(count))) return null;
+  return { axes, arm, stop, stopHeld, mode, gimbal, zoom, capture, cameraRevision, commands, sequence };
+}
+  return validatePacket;
+})();
 const defaultChannels = [1, 2, 3, 4, 5, 7, 8];
 
 const toEoirAxes = (axes, reverse) => {
@@ -6567,7 +6711,7 @@ function storeSession(session) {
 
 async function api(action, data = {}) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 4000);
+  const timer = setTimeout(() => controller.abort(), action === "poll" ? 1500 : 4000);
   try {
     const result = await fetch(relayOrigin + "/api/link", {
       method: "POST",
@@ -6617,6 +6761,63 @@ function setupLink() {
   let suspendedPilot = null;
   let handledReset = null;
   let handledMode = null;
+  let directLink = null;
+  let lastSequence = 0;
+  let sequenceSender = null;
+  let configuring = false;
+  const supportsDirect = typeof RTCPeerConnection !== "undefined" && window.isSecureContext;
+  const directLive = (now = performance.now()) => directLink?.receiveUntil > now;
+
+  function closeDirect() {
+    const previous = directLink;
+    directLink = null;
+    previous?.peer.close();
+  }
+
+  function followDirect(current, data) {
+    const offer = data.directOffer;
+    if (!data.packet || !data.sender || data.age >= 1800 || !offer) {
+      closeDirect();
+      return;
+    }
+    if (directLink?.negotiation === offer.negotiation && directLink.sender === data.sender) return;
+    closeDirect();
+    try {
+      const peer = directInputPeer();
+      const connection = { peer, negotiation: offer.negotiation, sender: data.sender, receiveUntil: 0 };
+      directLink = connection;
+      const active = () => directLink === connection && session === current;
+      peer.ondatachannel = ({ channel }) => {
+        if (!active() || channel.label !== directChannelLabel) { channel.close(); return; }
+        channel.onmessage = ({ data: value }) => {
+          if (!active() || typeof value !== "string" || value.length > 4096) return;
+          let packet;
+          try { packet = readDirectPacket(JSON.parse(value)); } catch { return; }
+          if (!packet?.sequence) return;
+          const now = performance.now();
+          if (sequenceSender === connection.sender && packet.sequence <= lastSequence) return;
+          connection.receiveUntil = now + directFreshMs;
+          applyPacket({ packet, sender: connection.sender, age: 0 }, now, directFreshMs);
+          updateStatus(now);
+        };
+        channel.onclose = () => {
+          if (active()) connection.receiveUntil = 0;
+        };
+      };
+      peer.onconnectionstatechange = () => {
+        if (!active() || !["failed", "closed"].includes(peer.connectionState)) return;
+        connection.receiveUntil = 0;
+        peer.close();
+      };
+      void (async () => {
+        await peer.setRemoteDescription({ type: "offer", sdp: offer.sdp });
+        const sdp = await directDescription(peer, await peer.createAnswer());
+        if (!active() || !sdp) return;
+        await api("direct", { stage: "answer", id: current.id, key: current.hostKey, hostDocument: hostPageId(),
+          sender: connection.sender, negotiation: connection.negotiation, sdp });
+      })().catch(() => { if (active()) connection.peer.close(); });
+    } catch { closeDirect(); }
+  }
   let refreshCamera = false;
   let error = "";
   let steps = { gimbal: 0, zoom: 0 };
@@ -6640,6 +6841,9 @@ function setupLink() {
   }
 
   function resetLocal() {
+    closeDirect();
+    lastSequence = 0;
+    sequenceSender = null;
     pollGeneration++;
     clearTimeout(timer);
     last = null;
@@ -6660,16 +6864,22 @@ function setupLink() {
     updateStatus();
   }
 
-  function applyPacket(data, started) {
+  function applyPacket(data, started, freshness = timeoutMs) {
     if (!data.packet || !data.sender || data.age == null) {
       last = null;
       receivedUntil = 0;
       return;
     }
-    const until = started + timeoutMs - data.age;
+    const until = started + freshness - data.age;
     if (until <= performance.now()) return;
     const packet = data.packet;
-    const previous = receivedUntil >= started && last?.sender === data.sender ? last.packet : null;
+    if (packet.sequence) {
+      if (sequenceSender === data.sender && packet.sequence <= lastSequence) return;
+      sequenceSender = data.sender;
+      lastSequence = packet.sequence;
+    }
+    const previous = last?.sender === data.sender && (receivedUntil >= started || (packet.sequence && started - receivedUntil < 1000))
+      ? last.packet : null;
     if (previous?.cameraRevision === session.camera.revision && packet.cameraRevision === session.camera.revision && !eoir.reviewView()) {
       steps.gimbal += packet.gimbal - previous.gimbal;
       steps.zoom += Math.log2(packet.zoom / previous.zoom);
@@ -6703,20 +6913,24 @@ function setupLink() {
     const isCurrent = () => session === current && pollGeneration === generation;
     const started = performance.now();
     try {
-      const data = await api("poll", { id: current.id, key: current.hostKey, resume, hostDocument: hostPageId() });
+      const data = await api("poll", { id: current.id, key: current.hostKey, resume, hostDocument: hostPageId(), direct: supportsDirect });
       if (!isCurrent()) return;
       error = "";
+      if (supportsDirect) followDirect(current, data);
+      if (!directLive() || data.sender !== directLink.sender) applyPacket(data, started);
       const camera = eoir.camera();
-      if ((refreshCamera && eoir.ready()) || camera.minZoom !== current.camera.minZoom || camera.maxZoom !== current.camera.maxZoom) {
+      if (!configuring && ((refreshCamera && eoir.ready()) || camera.minZoom !== current.camera.minZoom || camera.maxZoom !== current.camera.maxZoom)) {
+        configuring = true;
         const updated = { ...camera, revision: current.camera.revision + 1 };
-        await api("configure", { id: current.id, key: current.hostKey, config: { ...channels, camera: updated } });
-        if (!isCurrent()) return;
-        refreshCamera = false;
-        current.camera = updated;
-        steps = { gimbal: 0, zoom: 0 };
-        storeSession(current);
+        void api("configure", { id: current.id, key: current.hostKey, config: { ...channels, camera: updated } })
+          .then(() => {
+            if (!isCurrent()) return;
+            refreshCamera = false;
+            current.camera = updated;
+            steps = { gimbal: 0, zoom: 0 };
+            storeSession(current);
+          }).catch(() => {}).finally(() => { configuring = false; });
       }
-      applyPacket(data, started);
     } catch (failure) {
       if (!isCurrent()) return;
       if (failure.status === 404 || failure.status === 401) {
@@ -6731,7 +6945,8 @@ function setupLink() {
     }
     updateStatus();
     if (isCurrent()) {
-      timer = setTimeout(() => void poll(current), Math.max(0, pollMs - (performance.now() - started)));
+      const nextPoll = directLive() ? 260 : pollMs;
+      timer = setTimeout(() => void poll(current), Math.max(0, nextPoll - (performance.now() - started)));
     }
   }
 
@@ -6797,16 +7012,16 @@ function setupLink() {
     const current = session;
     if (!current || end.disabled) return;
     end.disabled = true;
+    resetLocal();
+    updateStatus();
     try {
       await api("disconnect", { id: current.id, key: current.hostKey });
-      if (session !== current) return;
-      resetLocal();
       error = "";
-      void poll(current);
     } catch (failure) {
       error = failure.message;
     } finally {
       end.disabled = false;
+      if (session === current) void poll(current);
       updateStatus();
     }
   });
