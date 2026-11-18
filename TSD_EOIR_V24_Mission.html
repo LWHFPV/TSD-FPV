@@ -482,6 +482,24 @@ dialog::backdrop {background:#132440ab}
 #leftStick i {translate:calc(var(--left-x,0) * var(--stick-travel)) calc(var(--left-y,0) * var(--stick-travel))}
 #rightStick i {translate:calc(var(--right-x,0) * var(--stick-travel)) calc(var(--right-y,0) * var(--stick-travel))}
 @media(max-height:485px){.flightPanel[data-floating]{--stick-travel:25px}}
+#flightModeQuick {display:inline-flex;align-items:center;gap:2px}
+#flightModeQuick button {min-height:26px;padding:2px 6px;white-space:nowrap;color:#f6f9ff;background:#203a6a;border-color:#7c97bf}
+#flightModeQuick button[aria-pressed=true] {color:#123d91;background:#e5efff;border-color:#b9d1f5}
+#pilot > .pilotBottom {position:relative;min-height:34px;padding:2px var(--pad);gap:3px 8px}
+#flightPanelDock {padding:0;background:transparent;border:0;margin-inline:auto}
+#flightPanelDock .flightPanel:not([data-floating]) {display:flex;align-items:center;gap:6px;width:auto;padding:1px 5px;--stick-travel:11px}
+#flightPanelDock .flightPanel:not([data-floating]) .sticks {gap:5px;margin:0}
+#flightPanelDock .flightPanel:not([data-floating]) .stick {width:34px;height:34px}
+#flightPanelDock .flightPanel:not([data-floating]) .stick i {width:10px;height:10px}
+#flightPanelDock .flightPanel:not([data-floating]) .sticks small {display:none}
+#flightPanelDock .flightPanel:not([data-floating]) .csc {gap:3px}
+#flightPanelDock .flightPanel:not([data-floating]) button,
+#missionClear,#pilotNotes summary {min-height:24px;padding:1px 4px;font-size:11px;white-space:nowrap}
+#pilotNotes {position:relative;margin-inline-start:auto;color:#3b506a}
+#pilotNotes summary {line-height:22px;cursor:pointer}
+#pilotNotesBody {position:absolute;z-index:9;right:0;bottom:calc(100% + 4px);width:min(460px,92vw);max-height:min(55dvh,360px);overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 4px 16px #14253835}
+#pilotNotesBody footer {padding:4px 8px 6px;font-size:11px}
+#pilotNotesBody #mapCredits {padding:6px 8px 2px}
 </style>
 <style>
 #touchLinkOpen {background:#d9ebff;color:#163f8c;border-color:#a5c1e6;font-weight:700;white-space:nowrap}
@@ -537,6 +555,11 @@ dialog::backdrop {background:#132440ab}
 <main id="pilot">
  <div id="flightBar" class="row">
   <button id="flightStatusOpen" aria-haspopup="dialog" title="비행 상태 · 비행 전 점검"><b id="flightMode">N · 지형 확인 중</b></button><span id="status" role="status">온라인 위성영상 및 고도 연결 중</span>
+  <div id="flightModeQuick" role="group" aria-label="비행 모드">
+   <button type="button" data-flight-mode="F" aria-pressed="false" title="기능 모드">F 기능</button>
+   <button type="button" data-flight-mode="N" aria-pressed="true" title="노멀 모드">N 노멀</button>
+   <button type="button" data-flight-mode="S" aria-pressed="false" title="스포츠 모드">S 스포츠</button>
+  </div>
   <span class="spacer"></span><button id="flightVoiceToggle" type="button" aria-pressed="false" title="한국어 비행 안내 활성화">음성 비활성화</button><button id="coordinateOpen" type="button" aria-expanded="false" aria-controls="coordinatePanel">좌표·단위</button><span id="cameraTelemetry">짐벌 —</span><output id="cameraRecovery" role="status" hidden></output><span id="mediaIndicator" hidden></span><button id="aircraftRecenter" type="button" title="카메라 화면을 현재 기체 또는 출발지 위치로 돌리기">기체 위치로</button><button id="targetAreaOpen" type="button" hidden title="실종자 등 표적을 배치한 구역을 지도에서 확인">표적 구역</button><button id="cameraSettings" aria-expanded="true" aria-controls="cameraStrip" aria-label="카메라 설정"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg><span>카메라 설정</span></button>
   <button id="flightReset" type="button" title="같은 출발지에서 비행을 다시 준비">비행 초기화</button>
   <button id="touchLinkOpen" type="button" aria-haspopup="dialog">휴대폰 연동</button><output id="touchLinkStatus" aria-live="polite">조종기 미연결</output>
@@ -689,31 +712,36 @@ dialog::backdrop {background:#132440ab}
   <output id="targetStatus" role="status" hidden></output>
   <div id="flash" aria-hidden="true"></div>
  </section>
- <div id="flightPanelDock">
-  <div id="flightPanel" class="flightPanel" hidden>
-   <div class="panelTitle">
-    <button id="stickGrip" class="panelGrip" type="button" aria-label="가상 조종기 Mode 2 이동" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Home" title="드래그 또는 방향키로 이동 · Home은 하단으로">⠿ 가상 조종기 · Mode 2</button>
-    <button id="dockSticks" type="button" title="하단에 고정" hidden>하단</button>
-    <button id="closeSticks" type="button" aria-label="가상 스틱 닫기">×</button>
-   </div>
-   <div class="sticks">
-    <div><div class="stick" id="leftStick" tabindex="0" aria-label="왼쪽 스틱, 스로틀과 기수"><i></i></div><small>스로틀 · 기수</small></div>
-    <div><div class="stick" id="rightStick" tabindex="0" aria-label="오른쪽 스틱, 전후좌우"><i></i></div><small>전후 · 좌우</small></div>
-   </div>
-   <div class="row csc"><button id="directControl" type="button" aria-pressed="false" title="선택 지점에서 시동 없이 가상 스틱으로 조종">즉시 조종</button><button id="virtualMotorStart" type="button" disabled>모터 시동</button></div>
-  </div>
- </div>
  <div class="pilotBottom">
   <div class="row flightReadings"><output id="flightTelemetry">H 0.0 m　V.S. 0.0 m/s　H.S. 0.0 m/s</output></div>
+  <div id="flightPanelDock">
+   <div id="flightPanel" class="flightPanel" hidden>
+    <div class="panelTitle">
+     <button id="stickGrip" class="panelGrip" type="button" aria-label="가상 조종기 Mode 2 이동" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Home" title="드래그 또는 방향키로 이동 · Home은 하단으로">⠿ 가상 조종기 · Mode 2</button>
+     <button id="dockSticks" type="button" title="하단에 고정" hidden>하단</button>
+     <button id="closeSticks" type="button" aria-label="가상 스틱 닫기">×</button>
+    </div>
+    <div class="sticks">
+     <div><div class="stick" id="leftStick" tabindex="0" aria-label="왼쪽 스틱, 스로틀과 기수"><i></i></div><small>스로틀 · 기수</small></div>
+     <div><div class="stick" id="rightStick" tabindex="0" aria-label="오른쪽 스틱, 전후좌우"><i></i></div><small>전후 · 좌우</small></div>
+    </div>
+    <div class="row csc"><button id="directControl" type="button" aria-pressed="false" title="선택 지점에서 시동 없이 가상 스틱으로 조종">즉시 조종</button><button id="virtualMotorStart" type="button" disabled>모터 시동</button></div>
+   </div>
+  </div>
   <button id="missionClear">표식 지우기</button>
+  <details id="pilotNotes">
+   <summary>지도 출처·조작 안내</summary>
+   <div id="pilotNotesBody">
+    <div id="mapCredits"><span id="onlineCredit">지도 <span id="satelliteCredit">© Esri 및 영상 제공자</span><span id="streetCredit" hidden>© <a href="https://openfreemap.org/">OpenFreeMap</a> · <a href="https://www.openstreetmap.org/copyright">OpenStreetMap 기여자</a></span> · 지형 Mapzen/AWS Terrain Tiles</span><span id="placeDbCredit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">장소 DB © OpenStreetMap 기여자 · ODbL 1.0</a></span></div>
+    <footer>
+     <p>마우스 클릭으로 지점을 선택합니다. 지도 탐색 중에는 휠로 지도를 확대합니다. 비행 영상에서는 휠 또는 +/−를 눌러 카메라 배율을 조절합니다. IR 측정을 켜면 클릭으로 한 점을, 드래그로 영역을 측정합니다.</p>
+     <p>가상 조종기와 보조창은 제목을 드래그해 옮깁니다. 보조창은 −/+ 또는 ↔ 드래그로 크기를 조절합니다. 키보드 W/S는 상승·하강, A/D는 기수 회전, 방향키는 전후좌우 이동입니다. Q/E는 짐벌 하강·상승, Z/C는 줌 축소·확대입니다.</p>
+     <p>가상 비행 및 모의 열화상 영상입니다. 온라인 지도와 주소 검색에는 인터넷 연결이 필요합니다. 세부 지역은 기존 2026년 2월 법정동 목록을 사용하며, 광역 분류에는 전남광주통합특별시를 반영했습니다. <a href="https://github.com/swuhalee/korea-regions-with-coords">출처 · 행정안전부 / 브이월드, 공공누리 제1유형</a></p>
+    </footer>
+   </div>
+  </details>
  </div>
- <div id="mapCredits"><span id="onlineCredit">지도 <span id="satelliteCredit">© Esri 및 영상 제공자</span><span id="streetCredit" hidden>© <a href="https://openfreemap.org/">OpenFreeMap</a> · <a href="https://www.openstreetmap.org/copyright">OpenStreetMap 기여자</a></span> · 지형 Mapzen/AWS Terrain Tiles</span><span id="placeDbCredit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">장소 DB © OpenStreetMap 기여자 · ODbL 1.0</a></span></div>
 </main>
-<footer>
- <p>마우스 클릭으로 지점을 선택합니다. 지도 탐색 중에는 휠로 지도를 확대합니다. 비행 영상에서는 휠 또는 +/−를 눌러 카메라 배율을 조절합니다. IR 측정을 켜면 클릭으로 한 점을, 드래그로 영역을 측정합니다.</p>
- <p>가상 조종기와 보조창은 제목을 드래그해 옮깁니다. 보조창은 −/+ 또는 ↔ 드래그로 크기를 조절합니다. 키보드 W/S는 상승·하강, A/D는 기수 회전, 방향키는 전후좌우 이동입니다. Q/E는 짐벌 하강·상승, Z/C는 줌 축소·확대입니다.</p>
- <p>가상 비행 및 모의 열화상 영상입니다. 온라인 지도와 주소 검색에는 인터넷 연결이 필요합니다. 세부 지역은 기존 2026년 2월 법정동 목록을 사용하며, 광역 분류에는 전남광주통합특별시를 반영했습니다. <a href="https://github.com/swuhalee/korea-regions-with-coords">출처 · 행정안전부 / 브이월드, 공공누리 제1유형</a></p>
-</footer>
 
 <dialog id="touchPasswordDialog" aria-labelledby="touchPasswordTitle">
  <div class="touchHead"><h2 id="touchPasswordTitle">운영자 비밀번호</h2><button id="touchPasswordClose" type="button" aria-label="비밀번호 창 닫기">×</button></div>
@@ -4209,6 +4237,29 @@ function bindPanelKeys(handle, move, reset) {
   });
 }
 
+function setupStageHeight() {
+  const pilot=$('pilot'),stage=$('stage'),bottom=pilot.querySelector('.pilotBottom');
+  let queued=0,previousHeight=0;
+  const schedule=()=>{
+    if(queued)return;
+    queued=requestAnimationFrame(()=>{
+      queued=0;
+      const top=stage.getBoundingClientRect().top+window.scrollY;
+      const height=Math.max(220,Math.floor(window.innerHeight-top-bottom.offsetHeight));
+      if(height===previousHeight)return;
+      previousHeight=height;
+      const index=selectedIndex();
+      const anchor=captureCameraAnchor(maps[index]);
+      pilot.style.setProperty('--flight-view-height',height+'px');
+      if(maps.length===2)resizeSensorViews(anchor,index);
+    });
+  };
+  const observer=new ResizeObserver(schedule);
+  for(const row of [$('admin'),$('flightBar'),$('cameraStrip'),bottom])observer.observe(row);
+  window.addEventListener('resize',schedule);
+  schedule();
+}
+
 function setupControllerLayout() {
   const panel=$('flightPanel'),grip=$('stickGrip'),dockButton=$('dockSticks');
   let position=null;
@@ -5846,7 +5897,7 @@ const tutorialDrills = [
   ['flightTakeoff','','지상에서 위쪽 화살표(자동 이륙)를 누르면 약 12 m로 상승합니다. 다음 수업에서 비행 중 RTH를 연습할 수 있습니다.',()=> flight.phase==='air']
  ],[
   ['flightStatusOpen','','영상 상단의 비행 상태를 눌러 비행 전 점검을 여세요.',()=> $('flightStatusDialog').open],
-  ['[data-flight-mode="S"]','flight','S · 스포츠를 누른 뒤 N · 일반으로 돌아오세요. 비행 점검 창의 모드 표시가 바뀝니다.',()=> modeSwitch==='S'],
+  ['#flightStatusDialog [data-flight-mode="S"]','flight','S · 스포츠를 누른 뒤 N · 일반으로 돌아오세요. 비행 점검 창의 모드 표시가 바뀝니다.',()=> modeSwitch==='S'],
   ['flightFunctionMode','flight','F · 기능을 누르고 펼침 목록에서 T · 저속과 A · 자세를 번갈아 고른 뒤 N · 일반으로 돌아오세요.'],
   ['homeReadout','flight','시동 후 홈포인트에 위도와 경도가 표시되는지 확인하세요. 홈을 바꾸려는 경우에만 현재 기체 위치를 홈으로를 누릅니다.',()=> Boolean(flight.home)],
   ['rthAltitude','flight','가상 RTH 고도에 30 m를 입력하세요. 실습을 이어가려면 비행 전 점검을 닫습니다.',()=> Number($('rthAltitude').value)===30],
@@ -5949,7 +6000,7 @@ function setupTutorial() {
     const host=liveDialog||document.body;
     if(coach.parentElement!==host)host.append(coach);
     const [selector,,,isDone]=currentDrill;
-    const element=selector.startsWith('[')?document.querySelector(selector):$(selector);
+    const element=selector.startsWith('[')||selector.startsWith('#')?document.querySelector(selector):$(selector);
     const shown=element?.getClientRects().length && (!liveDialog||liveDialog.contains(element));
     const outlined=shown?element:null;
     if(highlight!==outlined){
@@ -6307,7 +6358,7 @@ window.tsdEoirControls = {
     const text=id => $(id).value || $(id).textContent.trim();
     const takeoff=$('flightTakeoff'), returnHome=$('flightReturn');
     const player=review && reviewFrames[0]?.video;
-    return {sensor:activeCamera, split:review?reviewFrames.length===2:split, locked:linked(), palette:$('palette').selectedOptions[0]?.textContent || 'IR',
+    return {sensor:activeCamera, mode:['F','N','S'].indexOf(modeSwitch), split:review?reviewFrames.length===2:split, locked:linked(), palette:$('palette').selectedOptions[0]?.textContent || 'IR',
       highGain:$('gain').value==='high', video:mediaMode==='video', recording:Boolean(recording),
       takeoff:!takeoff.disabled&&!takeoff.hidden, returnHome:!returnHome.disabled&&!returnHome.hidden,
       heading:text('navHeading'), speed:[text('navSpeed'),text('navSpeedUnit')].join(' '),
@@ -6362,6 +6413,7 @@ setupControllerLayout();
 setupAssistLayout();
 setupTutorial();
 setupMaps();
+setupStageHeight();
 applyPalette();
 selectCamera(activeCamera);
 showDepartureView();
@@ -6445,8 +6497,13 @@ function createViewRelay(eoir, isActive) {
         composite.height = height;
         indices.forEach((id, column) => {
           const frame = views[id].canvas;
-          output.drawImage(frame, column * paneWidth, 0, paneWidth, height);
+          const scale = Math.max(paneWidth / frame.width, height / frame.height);
+          const cropWidth = paneWidth / scale;
+          const cropHeight = height / scale;
+          output.drawImage(frame, (frame.width - cropWidth) / 2, (frame.height - cropHeight) / 2,
+            cropWidth, cropHeight, column * paneWidth, 0, paneWidth, height);
         });
+        state.imageRatio = width / height;
         const image = composite.toDataURL("image/jpeg", .72);
         sending = true;
         void fetch(relayOrigin + "/api/eoir-view", {
@@ -6559,6 +6616,7 @@ function setupLink() {
   let seen = false;
   let suspendedPilot = null;
   let handledReset = null;
+  let handledMode = null;
   let refreshCamera = false;
   let error = "";
   let steps = { gimbal: 0, zoom: 0 };
@@ -6628,10 +6686,13 @@ function setupLink() {
       return;
     }
     if (previous && packet.capture > previous.capture && eoir.ready()) eoir.photo();
-    if (previous && previous.mode !== packet.mode) eoir.mode(packet.mode);
+    const modeCount = packet.commands?.flightMode ?? 0;
+    const modeRequested = modeCount > (handledMode?.sender === data.sender ? handledMode.count : 0);
+    handledMode = { sender: data.sender, count: modeCount };
+    if (modeRequested || (previous && previous.mode !== packet.mode)) eoir.mode(packet.mode);
     if (previous && eoir.ready()) {
       for (const [command, count] of Object.entries(packet.commands ?? {})) {
-        if (command !== "reset" && count > (previous.commands?.[command] ?? 0)) eoir.action(command);
+        if (command !== "reset" && command !== "flightMode" && count > (previous.commands?.[command] ?? 0)) eoir.action(command);
       }
     }
   }
