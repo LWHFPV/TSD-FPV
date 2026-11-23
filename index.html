@@ -150,6 +150,7 @@
     </div>
   </footer>
 </div>
+
 <dialog id="downloadGate"
   style="background:#172636;color:white;border:1px solid #62bad8;border-radius:12px;padding:25px;max-width:360px">
   <form id="gateForm">
@@ -251,14 +252,10 @@
 
 <script>
 /*
- * TSD 홈페이지 5회 클릭 잠금
- * 기존 Cloudflare 인증 연동 유지
- *
- * 변경 사항:
- * - 인증 성공 상태를 sessionStorage에 저장
- * - 동일 탭에서 페이지 이동 후 복귀해도 잠금 해제 유지
- * - 뒤로가기/앞으로가기 시 상태 복원
- * - 서버 측 Access 인증과 UI 잠금은 별개
+ * TSD 홈페이지 5회 클릭 잠금 (PC/모바일)
+ * PC: 기존 인증 팝업, 모바일: 같은 탭에서 인증 후 복귀
+ * 성공한 경우 같은 탭의 페이지 이동/새로고침에서도 해제 유지
+ * 비공개 자료에 대한 실제 보안은 Cloudflare Access 정책이 담당
  */
 (function () {
   'use strict';
@@ -267,14 +264,10 @@
   const title = document.getElementById('tsd-unlock-title');
   if (!site || !title) return;
 
-  const privateOrigin =
-    'https://tsd-fpv-private.flydragon103.workers.dev';
-
-  const unlockSessionKey = 'tsd-home-unlocked-v1';
-
-  const lockedAreas = site.querySelectorAll(
-    'header, main, footer, .skip-link'
-  );
+  const privateOrigin = 'https://tsd-fpv-private.flydragon103.workers.dev';
+  const unlockKey = 'tsd-home-unlocked-v1';
+  const mobilePendingKey = 'tsd-mobile-pending-v1';
+  const lockedAreas = site.querySelectorAll('header, main, footer, .skip-link');
 
   let locked = true;
   let clicks = 0;
@@ -282,35 +275,20 @@
   let popup = null;
   let pendingNonce = '';
 
-  // 같은 탭의 기존 잠금 해제 상태 확인
-  function hasSessionUnlock() {
-    try {
-      return sessionStorage.getItem(unlockSessionKey) === '1';
-    } catch (_) {
-      return false;
-    }
+  function hasUnlock() {
+    try { return sessionStorage.getItem(unlockKey) === '1'; }
+    catch (_) { return false; }
   }
 
-  // Cloudflare 인증 성공 후 잠금 해제 상태 저장
-  function rememberSessionUnlock() {
-    try {
-      sessionStorage.setItem(unlockSessionKey, '1');
-    } catch (_) {
-      // 저장이 제한된 브라우저에서도 현재 화면은 해제 가능
-    }
+  function rememberUnlock() {
+    try { sessionStorage.setItem(unlockKey, '1'); }
+    catch (_) { /* 브라우저 저장 제한 시 현재 페이지만 해제 */ }
   }
 
-  // 화면 잠금 또는 잠금 해제
   function setLocked(value) {
     locked = value;
-
-    document.documentElement.dataset.tsdHomeState =
-      value ? 'locked' : 'unlocked';
-
-    lockedAreas.forEach(function (area) {
-      area.inert = value;
-    });
-
+    document.documentElement.dataset.tsdHomeState = value ? 'locked' : 'unlocked';
+    lockedAreas.forEach(function (area) { area.inert = value; });
     if (value) {
       title.setAttribute('role', 'button');
       title.setAttribute('tabindex', '0');
@@ -321,7 +299,28 @@
     }
   }
 
-  // 5회 클릭 완료 후 기존 인증 절차 시작
+  function consumeMobileReturn() {
+    if (!location.hash.startsWith('#tsd_mobile_auth=')) return;
+
+    const returned = new URLSearchParams(location.hash.slice(1)).get('tsd_mobile_auth');
+    let pending = null;
+    try {
+      pending = JSON.parse(sessionStorage.getItem(mobilePendingKey) || 'null');
+      sessionStorage.removeItem(mobilePendingKey);
+    } catch (_) {}
+
+    if (returned && pending && pending.nonce === returned &&
+        pending.path === location.pathname &&
+        Number.isFinite(pending.createdAt) &&
+        Date.now() >= pending.createdAt &&
+        Date.now() - pending.createdAt <= 15 * 60 * 1000) {
+      rememberUnlock();
+    }
+
+    // 주소 표시줄에서 일회용 복귀값 제거
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
   function startAuthentication() {
     pendingNonce = crypto.randomUUID();
 
@@ -329,37 +328,45 @@
     auth.searchParams.set('from', location.origin);
     auth.searchParams.set('nonce', pendingNonce);
 
-    popup = window.open(
-      auth.href,
-      'tsdAccessLogin',
-      'width=560,height=720,resizable=yes,scrollbars=yes'
-    );
+    const isMobile =
+      matchMedia('(pointer: coarse)').matches ||
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+    if (isMobile) {
+      // 새 탭/팝업 대신 같은 탭에서 인증
+      try {
+        sessionStorage.setItem(mobilePendingKey, JSON.stringify({
+          nonce: pendingNonce,
+          path: location.pathname,
+          createdAt: Date.now()
+        }));
+      } catch (_) {
+        alert('브라우저에서 인증 상태를 저장할 수 없습니다. Chrome 또는 Safari로 접속해 주세요.');
+        return;
+      }
+      auth.searchParams.set('mobile', '1');
+      auth.searchParams.set('return_to', location.origin + location.pathname);
+      location.assign(auth.href);
+      return;
+    }
+
+    // PC 기존 인증창은 유지
+    popup = window.open(auth.href, 'tsdAccessLogin',
+      'width=560,height=720,resizable=yes,scrollbars=yes');
     if (!popup) {
       pendingNonce = '';
-      alert(
-        '인증 창이 차단되었습니다. ' +
-        '이 사이트에서 팝업을 허용해 주세요.'
-      );
+      alert('인증 팝업이 차단되었습니다. 이 사이트의 팝업을 허용해 주세요.');
     }
   }
 
-  // 제목을 3초 이내 연속 5회 클릭
   function countClick() {
     if (!locked) return;
-
     const now = performance.now();
-
-    if (
-      clicks === 0 ||
-      now - firstClickAt > 3000
-    ) {
+    if (clicks === 0 || now - firstClickAt > 3000) {
       clicks = 0;
       firstClickAt = now;
     }
-
     clicks += 1;
-
     if (clicks >= 5) {
       clicks = 0;
       firstClickAt = 0;
@@ -367,57 +374,40 @@
     }
   }
 
-  // PC 및 모바일 클릭
+  // touch-action: manipulation(CSS)과 기본 click을 사용하여 이중 집계 방지
   title.addEventListener('click', countClick);
-
-  // 키보드 접근성 유지
   title.addEventListener('keydown', function (event) {
-    if (
-      event.key === 'Enter' ||
-      event.key === ' '
-    ) {
+    if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       countClick();
     }
   });
 
-  // 기존 Cloudflare 인증 성공 메시지 확인
   window.addEventListener('message', function (event) {
-    if (
-      !locked ||
-      !pendingNonce ||
-      event.origin !== privateOrigin ||
-      event.source !== popup ||
-      !event.data ||
-      event.data.type !== 'TSD_ACCESS_AUTH_OK_V1' ||
-      event.data.nonce !== pendingNonce
-    ) {
-      return;
-    }
+    if (!locked || !pendingNonce || event.origin !== privateOrigin ||
+        event.source !== popup || !event.data ||
+        event.data.type !== 'TSD_ACCESS_AUTH_OK_V1' ||
+        event.data.nonce !== pendingNonce) return;
 
     pendingNonce = '';
     popup = null;
-
-    // 여기서부터 이번 수정의 핵심
-    rememberSessionUnlock();
+    rememberUnlock();
     setLocked(false);
   });
 
-  // 뒤로가기/앞으로가기 복귀 시 잠금 상태 복원
+  // BFCache 뒤로가기 등에서도 같은 탭의 해제 상태 복원
   window.addEventListener('pageshow', function (event) {
     if (!event.persisted) return;
-
     clicks = 0;
     firstClickAt = 0;
     pendingNonce = '';
     popup = null;
-
-    setLocked(!hasSessionUnlock());
+    consumeMobileReturn();
+    setLocked(!hasUnlock());
   });
 
-  // 첫 접속 또는 다른 페이지에서 돌아온 경우
-  setLocked(!hasSessionUnlock());
-
+  consumeMobileReturn();
+  setLocked(!hasUnlock());
 })();
 </script>
 </body>
