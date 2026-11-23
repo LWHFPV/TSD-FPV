@@ -1,13 +1,11 @@
+
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-tsd-home-state="locked">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="TSD Aero Systems FPV 자료실. FPV 크리에이터, 브랜드·쇼핑몰, 설정·운용 프로그램을 한곳에서 확인하세요.">
 <title>TSD 기술 연구소 | TSD Aero Systems</title>
-<script>
-if (location.hash === "#technology") location.replace("./simulator.html" + location.search + location.hash);
-</script>
 <style>
   #tsd-fpv-preview {
     --tsd-ink: #172844;
@@ -33,6 +31,8 @@ if (location.hash === "#technology") location.replace("./simulator.html" + locat
   #tsd-fpv-preview nav a:hover, #tsd-fpv-preview .tsd-contact:hover { color: var(--tsd-blue); }
   #tsd-fpv-preview .tsd-hero { padding: 34px 0 37px; text-align: center; color: #fff; background: linear-gradient(108deg, #132440 5%, #15336b 63%, #1b4897); }
   #tsd-fpv-preview h1 { margin: 0; font-size: clamp(30px, 5vw, 46px); line-height: 1.16; letter-spacing: -.055em; font-weight: 710; }
+  #tsd-unlock-title { user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  #tsd-unlock-title:focus-visible { outline: 2px solid #fff; outline-offset: 7px; }
   #tsd-fpv-preview .tsd-content { padding-block: 21px 28px; }
   #tsd-fpv-preview h2 { margin: 0 0 12px; font-size: 23px; line-height: 1.25; letter-spacing: -.035em; font-weight: 650; }
   #tsd-fpv-preview .tsd-links { display: grid; grid-template-columns: 1fr 1fr 1.18fr; gap: 12px; align-items: start; }
@@ -74,8 +74,8 @@ if (location.hash === "#technology") location.replace("./simulator.html" + locat
 </head>
 <body>
 <div id="tsd-fpv-preview">
-  <a class="skip-link" href="#main">본문 바로가기</a>
-  <header>
+  <a class="skip-link" href="#main" inert>본문 바로가기</a>
+  <header inert>
     <div class="tsd-inner tsd-bar">
       <a class="tsd-brand" href="./index.html" aria-current="page"><span class="tsd-mark" aria-hidden="true">TSD</span>TSD Aero Systems</a>
       <nav aria-label="주 메뉴">
@@ -88,10 +88,10 @@ if (location.hash === "#technology") location.replace("./simulator.html" + locat
   </header>
   <div class="tsd-hero">
     <div class="tsd-inner">
-      <h1>TSD 기술 연구소</h1>
+      <h1 id="tsd-unlock-title" role="button" tabindex="0">TSD 기술 연구소</h1>
     </div>
   </div>
-  <main class="tsd-inner tsd-content" id="main">
+  <main class="tsd-inner tsd-content" id="main" inert>
     <section aria-labelledby="tsd-preview-resource-title">
       <h2 id="tsd-preview-resource-title">FPV 자료실</h2>
       <div class="tsd-links">
@@ -143,7 +143,7 @@ if (location.hash === "#technology") location.replace("./simulator.html" + locat
       </div>
     </section>
   </main>
-  <footer>
+  <footer inert>
     <div class="tsd-inner tsd-foot">
       <span>© 2026 TSD Aero Systems</span>
       <button id="protectedDownload" type="button">페이지 다운로드</button>
@@ -240,7 +240,7 @@ if (location.hash === "#technology") location.replace("./simulator.html" + locat
   });
 
   document.addEventListener('copy',e=>{
-    if(gate.open)return;
+    if(gate.open || document.documentElement.dataset.tsdHomeState!=='unlocked')return;
     const text=window.getSelection()?.toString();
     if(!text)return;
     e.preventDefault();
@@ -250,5 +250,94 @@ if (location.hash === "#technology") location.replace("./simulator.html" + locat
 </script>
 
 
+<script>
+/* TSD 홈페이지 5회 클릭 잠금: UI 제어용. 비공개 파일 접근은 서버 측 Access로 별도 보호. */
+(function () {
+  'use strict';
+  const site = document.getElementById('tsd-fpv-preview');
+  const title = document.getElementById('tsd-unlock-title');
+  if (!site || !title) return;
+
+  const privateOrigin = 'https://tsd-fpv-private.flydragon103.workers.dev';
+  const lockedAreas = site.querySelectorAll('header, main, footer, .skip-link');
+  let locked = true;
+  let clicks = 0;
+  let firstClickAt = 0;
+  let popup = null;
+  let pendingNonce = '';
+
+  function setLocked(value) {
+    locked = value;
+    document.documentElement.dataset.tsdHomeState = value ? 'locked' : 'unlocked';
+    lockedAreas.forEach(function (area) { area.inert = value; });
+    if (value) {
+      title.setAttribute('role', 'button');
+      title.setAttribute('tabindex', '0');
+    } else {
+      title.removeAttribute('role');
+      title.removeAttribute('tabindex');
+      title.blur();
+    }
+  }
+
+  function startAuthentication() {
+    pendingNonce = crypto.randomUUID();
+    const auth = new URL(privateOrigin + '/unlock');
+    auth.searchParams.set('from', location.origin);
+    auth.searchParams.set('nonce', pendingNonce);
+    popup = window.open(auth.href, 'tsdAccessLogin',
+      'width=560,height=720,resizable=yes,scrollbars=yes');
+    if (!popup) {
+      pendingNonce = '';
+      alert('인증 창이 차단되었습니다. 이 사이트에서 팝업을 허용해 주세요.');
+    }
+  }
+
+  function countClick() {
+    if (!locked) return;
+    const now = performance.now();
+    if (clicks === 0 || now - firstClickAt > 3000) {
+      clicks = 0;
+      firstClickAt = now;
+    }
+    clicks += 1;
+    if (clicks >= 5) {
+      clicks = 0;
+      firstClickAt = 0;
+      startAuthentication();
+    }
+  }
+
+  title.addEventListener('click', countClick);
+  title.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      countClick();
+    }
+  });
+
+  window.addEventListener('message', function (event) {
+    if (!locked || !pendingNonce || event.origin !== privateOrigin ||
+        event.source !== popup || !event.data ||
+        event.data.type !== 'TSD_ACCESS_AUTH_OK_V1' ||
+        event.data.nonce !== pendingNonce) return;
+
+    pendingNonce = '';
+    popup = null;
+    setLocked(false);
+  });
+
+  window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) return;
+    clicks = 0;
+    firstClickAt = 0;
+    pendingNonce = '';
+    popup = null;
+    setLocked(true);
+  });
+
+  setLocked(true);
+})();
+</script>
 </body>
 </html>
