@@ -29,6 +29,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Validate Cloudflare diagnostic script syntax (read-only)
+        run: node --check audit/cloudflare-tsd-fpv-preview-recovery.mjs
       - name: Validate TSD10 4 assembly variants
         run: node audit/tsd10-revs9-asset-check.cjs
       - uses: actions/upload-artifact@v4
