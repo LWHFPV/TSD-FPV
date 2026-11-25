@@ -7407,10 +7407,11 @@ function paintLatencyStamp(ctx,width,height,epochMs){
   return true;
 }
 const snapshotInterval = relayLowPower ? 320 : 180;
+const fastSnapshotInterval = relayLowPower ? 240 : 120;
 // Capture completion is independent of the send cadence; allow slow moving-map draws.
 const captureDeadlineMs = 420;
 // Host-side budgets; measured receiver latency still requires a phone test.
-const qrDiagnostics = { mode: "idle", frames: 0, expiredCaptures: 0, snapshots: 0, snapshotFailures: 0, lastPublishMs: null, encodedFrames: null, oversizeFrames: 0, resizedSnapshots: 0, lastFrameAt: null, lastPublishAt: null, captureRequests: 0, inputPackets: 0, lastInputAt: null, renderCallbacks: [0,0], lastRenderAt: [null,null], skippedBusy: 0, captureWhileBusy:0, replacedLatest:0, staleLatest:0, latestAgeMs:null, repaintRetries:0, lastCaptureMs: null, pressureFrames: 0, adaptiveSnapshots: 0, jpegEncodeMs: null, jpegBytes: null, jpegWidth: null, jpegHeight: null, directSent: null, directLost: null, directRttMs: null, forceJpeg: relayForceJpeg, rawAxes: null, effectiveAxes: null, arm: null, inputGate: "waiting", rejectedSequence: 0, rejectedInvalid: 0, lastInputPath: "-" };
+const qrDiagnostics = { mode: "idle", frames: 0, expiredCaptures: 0, snapshots: 0, snapshotFailures: 0, lastPublishMs: null, encodedFrames: null, oversizeFrames: 0, resizedSnapshots: 0, lastFrameAt: null, lastPublishAt: null, captureRequests: 0, inputPackets: 0, lastInputAt: null, renderCallbacks: [0,0], lastRenderAt: [null,null], skippedBusy: 0, captureWhileBusy:0, replacedLatest:0, staleLatest:0, latestAgeMs:null, repaintRetries:0, revisionResets:0, jpegFastMode:false, jpegBase64Ms:null, jpegPostMs:null, lastCaptureMs: null, pressureFrames: 0, adaptiveSnapshots: 0, jpegEncodeMs: null, jpegBytes: null, jpegWidth: null, jpegHeight: null, directSent: null, directLost: null, directRttMs: null, forceJpeg: relayForceJpeg, rawAxes: null, effectiveAxes: null, arm: null, inputGate: "waiting", rejectedSequence: 0, rejectedInvalid: 0, lastInputPath: "-" };
 window.tsdEoirRelayDiagnostics = qrDiagnostics;
 function bounded(task, ms) {
   let timer;
@@ -7453,12 +7454,20 @@ function createViewRelay(eoir, isActive, directMedia) {
   // Only adapt the JPEG fallback after measured compression/publish pressure.
   // One slot, no queue; recover normal quality after a sustained clean run.
   let jpegPressure = 0, cleanSnapshots = 0;
+  let fastSamples = 0, fastFallback = false, activeRevision = null;
+  const jpegInterval = () => fastFallback ? fastSnapshotInterval : snapshotInterval;
+  function resetRevision(revision) {
+    activeRevision=revision; pending=null; latest=null; next=0;
+    publishGeneration++; publishController?.abort(); publishController=null;
+    sending=false; lastSnapshot=-Infinity;
+    fastSamples=0; fastFallback=false;
+  }
 
   let latest = null;
   function publishLatest(media) {
     try {
         const now = performance.now();
-        if (!latest || sending || now - lastSnapshot < (media?.flowUntil > now ? (relayLowPower ? 600 : 450) : snapshotInterval)) return;
+        if (!latest || sending || now - lastSnapshot < (media?.flowUntil > now ? (relayLowPower ? 600 : 450) : jpegInterval())) return;
         const {session, revision, state, width, height, indices, at} = latest;
         latest = null;
         if (!isActive(session) || revision !== eoir.viewRevision?.() || now - at > captureDeadlineMs) { qrDiagnostics.staleLatest++; return; }
@@ -7468,8 +7477,8 @@ function createViewRelay(eoir, isActive, directMedia) {
         if(adaptive) qrDiagnostics.adaptiveSnapshots++;
         qrDiagnostics.jpegWidth=snapshotLimits.width; qrDiagnostics.jpegHeight=snapshotLimits.height;
         let pressured = false;
-        snapshot.width = snapshotLimits.width;
-        snapshot.height = snapshotLimits.height;
+        if(snapshot.width !== snapshotLimits.width) snapshot.width = snapshotLimits.width;
+        if(snapshot.height !== snapshotLimits.height) snapshot.height = snapshotLimits.height;
         snapshotContext.imageSmoothingQuality = "high";
         snapshotContext.drawImage(composite, 0, 0, snapshot.width, snapshot.height);
         const snapshotState = { ...state, imageRatio: snapshot.width / snapshot.height };
@@ -7508,6 +7517,8 @@ function createViewRelay(eoir, isActive, directMedia) {
           }), 180);
         }).then(image => {
           if (!image || !current()) return;
+          qrDiagnostics.jpegBase64Ms=Math.max(0,Math.round(performance.now()-now)-qrDiagnostics.jpegEncodeMs);
+          const postStarted=performance.now();
           const controller = new AbortController();
           publishController = controller;
           return bounded(() => fetch(relayOrigin + "/api/eoir-view", {
@@ -7515,14 +7526,19 @@ function createViewRelay(eoir, isActive, directMedia) {
             headers: { "Content-Type": "text/plain;charset=UTF-8" },
             body: JSON.stringify({ action: "publish", id: session.id, key: session.hostKey, image, state: snapshotState }),
             signal: controller.signal,
-          }), 1200).finally(() => controller.abort());
+          }), 1200).finally(() => {if(current()) qrDiagnostics.jpegPostMs=Math.round(performance.now()-postStarted);controller.abort();});
         }).then(response => {
           if (!current()) return;
-          if (response?.ok) { qrDiagnostics.snapshots++; qrDiagnostics.lastPublishMs = Math.round(performance.now()-now); qrDiagnostics.lastPublishAt=performance.now(); }
+          if (response?.ok) { qrDiagnostics.snapshots++; qrDiagnostics.lastPublishMs = Math.round(performance.now()-now); qrDiagnostics.lastPublishAt=performance.now();
+            if(!pressured && qrDiagnostics.lastPublishMs < fastSnapshotInterval*.8) { if(++fastSamples>=4) fastFallback=true; }
+            else { fastSamples=0; fastFallback=false; }
+          }
           else if (response) {pressured=true;qrDiagnostics.snapshotFailures++;}
         }).catch(() => { if (current()) {pressured=true;qrDiagnostics.snapshotFailures++;} }).finally(() => {
           if (generation === publishGeneration) {
             if(current()) {
+              if(pressured){fastSamples=0;fastFallback=false;}
+              qrDiagnostics.jpegFastMode=fastFallback;
               if(pressured || performance.now()-now > (relayLowPower ? 700 : 500)) {
                 jpegPressure=Math.min(4,jpegPressure+1);cleanSnapshots=0;
               } else if(++cleanSnapshots>=6) {jpegPressure=Math.max(0,jpegPressure-1);cleanSnapshots=0;}
@@ -7554,6 +7570,7 @@ function createViewRelay(eoir, isActive, directMedia) {
       pending = null;
       latest = null;
       next = 0;
+      activeRevision=null; fastSamples=0; fastFallback=false; qrDiagnostics.jpegFastMode=false;
       lastSnapshot = -Infinity;
       jpegPressure = 0; cleanSnapshots = 0; qrDiagnostics.pressureFrames = 0;
       output.fillStyle = "#17232d";
@@ -7562,6 +7579,8 @@ function createViewRelay(eoir, isActive, directMedia) {
     },
     request(session, now) {
       if (!session || !isActive(session)) { pending = null; latest = null; qrDiagnostics.mode = "idle"; return; }
+      const revision = eoir.viewRevision?.();
+      if(activeRevision !== revision){ if(activeRevision!==null)qrDiagnostics.revisionResets++;resetRevision(revision);qrDiagnostics.jpegFastMode=false; }
       const media = directMedia();
       if (now + 1 < next) { publishLatest(media); return; }
       qrDiagnostics.mode = media ? (media.flowUntil > now ? "direct-video" : "direct-probing") : "jpeg-relay";
@@ -7581,7 +7600,7 @@ function createViewRelay(eoir, isActive, directMedia) {
       }
       if (pending) qrDiagnostics.expiredCaptures++;
       pending = null;
-      next = media && next > now - streamInterval ? next + streamInterval : now + (media ? streamInterval : snapshotInterval);
+      next = media && next > now - streamInterval ? next + streamInterval : now + (media ? streamInterval : jpegInterval());
       const review = eoir.reviewView?.();
       const indices = review ? review.map(frame => frame.index) : eoir.viewIndices();
       if (!indices.length) return;
@@ -8188,5 +8207,56 @@ if (typeof document !== "undefined") setupLink();
 
 })();
 </script>
+
+<style id="tsdAuditStyle">#tsdAuditOpen{position:fixed;right:10px;top:10px;z-index:10000;background:#102e48;color:#fff;border:1px solid #8eb3ca;padding:7px 10px;border-radius:7px;font:600 12px system-ui}#tsdAuditPanel{position:fixed;right:10px;top:52px;width:min(360px,calc(100vw - 20px));max-height:calc(100dvh - 65px);overflow:auto;background:#112639;color:#e7f2f9;border:1px solid #7699ae;border-radius:9px;padding:12px;box-sizing:border-box;z-index:10001;font:13px/1.45 system-ui;box-shadow:0 8px 26px #0006}#tsdAuditPanel[hidden]{display:none}#tsdAuditPanel h2{font-size:15px;margin:0 0 8px}#tsdAuditPanel dl{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:9px 0}#tsdAuditPanel dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}#tsdAuditPanel button{padding:5px 8px;margin:3px;color:#112639;background:#dceaf2;border:0;border-radius:4px}#tsdAuditPanel small{display:block;color:#b8cbd9}</style>
+<button id="tsdAuditOpen" type="button" aria-expanded="false">시험본 · 진단</button><section id="tsdAuditPanel" aria-label="배포 전 진단" hidden><h2>배포 전 진단 · Rev.7h 기반</h2><small>PC 송신 측 측정값입니다. 휴대폰 출력 FPS와 종단 지연은 별도 측정이 필요합니다.</small><dl id="tsdAuditValues"></dl><button id="tsdAuditReset" type="button">측정 초기화</button><button id="tsdAuditExport" type="button">진단 JSON 저장</button><button id="tsdAuditClose" type="button">닫기</button><small>기존 카메라, QR 연동, 조종 및 영상 처리 코드는 그대로 보존합니다. 이 화면은 교육 평가 점수를 자동 산출하지 않습니다.</small></section>
+<script id="tsdAuditScript">(()=>{'use strict';const by=id=>document.getElementById(id),panel=by('tsdAuditPanel'),open=by('tsdAuditOpen'),values=by('tsdAuditValues');let last=null,rows=[],timer=null;const fmt=(v,s='')=>Number.isFinite(v)?v.toFixed(1)+s:'미측정';function sample(){const d=window.tsdEoirRelayDiagnostics,p=window.tsdPerformance;if(!d)return;const now=performance.now(),prev=last,dt=prev?(now-prev.now)/1000:0,rate=(v,k)=>prev&&dt>0&&Number.isFinite(v)&&Number.isFinite(prev[k])&&v>=prev[k]?(v-prev[k])/dt:null;const active=d.mode!=='idle';const rec={time:new Date().toISOString(),mode:d.mode,palette:by('palette')?.selectedOptions[0]?.textContent||'',compositeFps:active?rate(d.frames,'frames'):null,jpegFps:active?rate(d.snapshots,'snapshots'):null,encodedFps:active?rate(d.encodedFrames,'encodedFrames'):null,captureMs:active?d.lastCaptureMs:null,encodeMs:active?d.jpegEncodeMs:null,postMs:active?d.jpegPostMs:null,base64Ms:active?d.jpegBase64Ms:null,jpegBytes:active?d.jpegBytes:null,expired:d.expiredCaptures,failures:d.snapshotFailures,transport:d.lastInputPath,inputGate:d.inputGate};last={now,frames:d.frames,snapshots:d.snapshots,encodedFrames:d.encodedFrames};rows.push(rec);if(rows.length>600)rows.shift();const items=[['전송 경로',rec.mode],['팔레트',rec.palette],['합성 FPS',fmt(rec.compositeFps)],['JPEG 송신 FPS',fmt(rec.jpegFps)],['WebRTC 인코딩 FPS',fmt(rec.encodedFps)],['캡처',fmt(rec.captureMs,' ms')],['JPEG 압축',fmt(rec.encodeMs,' ms')],['Base64',fmt(rec.base64Ms,' ms')],['서버 요청',fmt(rec.postMs,' ms')],['JPEG 용량',fmt(Number.isFinite(rec.jpegBytes)?rec.jpegBytes/1024:null,' KiB')],['만료 / 실패',`${rec.expired??0} / ${rec.failures??0}`],['조종 경로',rec.transport||'미연결'],['모바일 출력 FPS','미측정'],['종단 영상 지연','미측정']];values.replaceChildren(...items.flatMap(([k,v])=>{const a=document.createElement('dt'),b=document.createElement('dd');a.textContent=k;b.textContent=v;return[a,b]}))}function toggle(show){panel.hidden=!show;open.setAttribute('aria-expanded',String(show));clearInterval(timer);timer=null;if(show){sample();timer=setInterval(sample,1000)}}open.addEventListener('click',()=>toggle(panel.hidden));by('tsdAuditClose').addEventListener('click',()=>toggle(false));by('tsdAuditReset').addEventListener('click',()=>{last=null;rows=[];sample()});by('tsdAuditExport').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({scope:'host-only',version:'Rev7h-audit',samples:rows},null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='TSD-EOIR-host-diagnostics.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});})();</script>
+
+<style id="tsdLayoutPreviewStyle">
+#flightBar #tsdLayoutOpen,#flightBar #flightReset{background:#f6f9ff;color:#173c70;border-color:#a7c6e7;font-weight:600;white-space:nowrap}
+#flightBar #tsdLayoutOpen[aria-pressed=true]{background:#dbeafe;color:#123b76;border-color:#a7c6f5}
+#tsdLayoutTools{position:fixed;z-index:80;left:12px;top:12px;width:min(340px,calc(100vw - 24px));padding:12px;background:#f7fbff;color:#18334f;border:1px solid #90abc5;border-radius:12px;box-shadow:0 8px 24px #102e4744;font:13px/1.4 system-ui;}
+#tsdLayoutTools[hidden],#tsdMoveGrip[hidden]{display:none!important}
+#tsdLayoutTools .layoutRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}#tsdLayoutTools select{max-width:100%;flex:1;min-width:120px}#tsdLayoutTools output{display:block;margin-top:7px;color:#425c78;font-size:11px}
+#tsdMoveGrip{position:absolute;z-index:30;pointer-events:auto;touch-action:none;cursor:grab;background:#1e466e;color:white;border:1px solid #c0d9f5;border-radius:5px;min-height:28px;padding:3px 8px;font:600 12px system-ui;white-space:nowrap;box-shadow:0 2px 8px #0006}
+#stage [data-tsd-layout-moved]{left:var(--tsd-left)!important;top:var(--tsd-top)!important;right:auto!important;bottom:auto!important;transform:none!important;max-width:100%}
+#stage .rail[data-tsd-layout-moved]{height:var(--tsd-height);max-height:calc(100% - 4px)!important;align-content:start;overflow:auto}
+#stage [data-tsd-layout-selected]{outline:2px dashed #92cfff;outline-offset:2px}
+#flightPanel{background:#eff5fa;border:1px solid #9db5cb;box-shadow:0 2px 8px #1b385522;color:#203a53}
+#flightPanel[data-floating]{width:min(355px,calc(100vw - 16px));border-radius:16px;padding:10px 12px 12px;background:linear-gradient(160deg,#f9fbfd,#e6eef5);box-shadow:0 8px 28px #14253850}
+#flightPanel[data-floating] .panelTitle{border-bottom:1px solid #b9cad9;padding-bottom:5px}#flightPanel[data-floating] .sticks{margin:12px 0;gap:12px}
+#flightPanel[data-floating] .stick{background:radial-gradient(circle,#d8e5ee 0 19%,#f8fbfe 20% 39%,#e4edf5 40% 59%,#bfcfdd 60% 61%,#e6eef4 62%);border:2px solid #8ca5ba;box-shadow:inset 0 2px 6px #47617b35}
+#flightPanel[data-floating] .stick i{background:#244a6b;border:1px solid #c6d9ea;box-shadow:0 2px 5px #17395455,0 0 0 2px #9db9d0}
+#flightPanel[data-floating] .sticks small{display:block;color:#34526c;font-weight:600;margin-top:4px}
+#flightPanel[data-floating] .csc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}#flightPanel[data-floating] .csc button{min-height:39px;font-size:12px;padding:5px 3px;white-space:normal;border-radius:8px}
+#missionResumeQuick:not(:disabled){background:#1a6a58;color:white;border-color:#155b4c}#virtualMotorStart:not(:disabled){background:#254f79;color:white;border-color:#254f79}#flightPanel button:disabled{opacity:.50}
+#flightPanel[data-floating] #tsdControllerHint{display:block;color:#405e77;font:11px/1.35 system-ui;margin-top:7px;text-align:center}#tsdControllerHint{display:none}
+@media(max-width:650px){#flightPanelDock .flightPanel:not([data-floating]){flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 18px)}#flightPanelDock .flightPanel:not([data-floating]) .stick{width:48px;height:48px}#flightPanelDock .flightPanel:not([data-floating]){--stick-travel:17px}#flightPanelDock .flightPanel:not([data-floating]) .csc button{min-height:34px;padding:3px 6px}#tsdLayoutTools{top:52px}}
+</style>
+<script id="tsdLayoutPreviewScript">(()=>{'use strict';
+const $=id=>document.getElementById(id),stage=$('stage'),bar=$('flightBar'),panel=$('flightPanel');
+const key='tsd-eoir-layout-preview-v1';const specs=[['coords','좌표 배너','#liveCoordinates'],['left','좌측 카메라 메뉴','.leftRail'],['right','우측 촬영·줌 메뉴','.rightRail'],['nav','항법·고도·속도 표시','#navigationDisplay'],['mission','임무 진행 배너','#missionHud'],['target','관찰 결과 배너','#targetStatus'],['measure','IR 측정 결과','#measureReadout']];
+let positions={};try{const val=JSON.parse(localStorage.getItem(key)||'{}');for(const [id] of specs){const p=val?.[id];if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=0&&p.x<=1&&p.y>=0&&p.y<=1)positions[id]={x:p.x,y:p.y};}}catch{}
+const save=()=>{try{localStorage.setItem(key,JSON.stringify(positions));return true;}catch{return false;}};
+const b=document.createElement('button');b.id='tsdLayoutOpen';b.type='button';b.textContent='화면 배치';b.setAttribute('aria-pressed','false');bar.insertBefore(b,$('touchLinkOpen'));
+const tools=document.createElement('section');tools.id='tsdLayoutTools';tools.hidden=true;tools.setAttribute('aria-label','화면 배치 편집');tools.innerHTML='<strong>화면 배치 편집</strong><div class="layoutRow"><label for="tsdLayoutSelect">이동 대상</label><select id="tsdLayoutSelect"></select></div><div class="layoutRow"><button id="tsdLayoutOne" type="button">선택 위치 초기화</button><button id="tsdLayoutAll" type="button">전체 기본값</button><button id="tsdLayoutClose" type="button">완료</button></div><output id="tsdLayoutStatus">이동 손잡이를 드래그하세요. 방향키로도 이동할 수 있습니다.</output>';document.body.append(tools);
+const select=$('tsdLayoutSelect'),status=$('tsdLayoutStatus');for(const [id,label] of specs){const opt=new Option(label,id);select.add(opt);}
+const handle=document.createElement('button');handle.id='tsdMoveGrip';handle.type='button';handle.hidden=true;handle.className='panelGrip';handle.setAttribute('aria-keyshortcuts','ArrowUp ArrowDown ArrowLeft ArrowRight Home');stage.append(handle);
+const target=id=>{const spec=specs.find(x=>x[0]===id);return spec?stage.querySelector(spec[2]):null;};
+const visible=e=>e&&!e.hidden&&e.getClientRects().length&&getComputedStyle(e).display!=='none'&&e.offsetWidth>0&&e.offsetHeight>0;
+const clamp=(x,max)=>Math.max(0,Math.min(max,x));
+function restore(id){const e=target(id);if(!e)return;delete e.dataset.tsdLayoutMoved;for(const p of ['--tsd-left','--tsd-top','--tsd-height'])e.style.removeProperty(p);}
+function place(id){const e=target(id),p=positions[id];if(!p||!visible(e)||!stage.clientWidth||!stage.clientHeight)return;if(e.classList.contains('rail')&&!e.hasAttribute('data-tsd-layout-moved'))e.style.setProperty('--tsd-height',Math.min(e.offsetHeight,stage.clientHeight-4)+'px');e.dataset.tsdLayoutMoved='';const x=p.x*Math.max(0,stage.clientWidth-e.offsetWidth-2),y=p.y*Math.max(0,stage.clientHeight-e.offsetHeight-2);e.style.setProperty('--tsd-left',Math.round(x)+'px');e.style.setProperty('--tsd-top',Math.round(y)+'px');}
+function refresh(){for(const [id] of specs){if(positions[id])place(id);const e=target(id);if(e)e.toggleAttribute('data-tsd-layout-selected',!tools.hidden&&id===select.value&&visible(e));}const e=target(select.value);if(tools.hidden||!visible(e)){handle.hidden=true;if(!tools.hidden)status.value='선택한 배너가 현재 숨겨져 있습니다. 해당 기능을 열면 이동할 수 있습니다.';return;}const box=e.getBoundingClientRect(),st=stage.getBoundingClientRect();handle.textContent='⠿ '+specs.find(x=>x[0]===select.value)[1]+' 이동';handle.hidden=false;handle.style.left=clamp(box.left-st.left,Math.max(0,stage.clientWidth-handle.offsetWidth-2))+'px';handle.style.top=clamp(box.top-st.top-29,Math.max(0,stage.clientHeight-handle.offsetHeight-2))+'px';}
+let queued=false;const schedule=()=>{if(!queued){queued=true;requestAnimationFrame(()=>{queued=false;refresh();});}};
+function move(id,x,y){const e=target(id);if(!visible(e))return;const st=stage.getBoundingClientRect();const mx=Math.max(0,stage.clientWidth-e.offsetWidth-2),my=Math.max(0,stage.clientHeight-e.offsetHeight-2);positions[id]={x:mx?clamp(x-st.left,mx)/mx:0,y:my?clamp(y-st.top,my)/my:0};place(id);refresh();status.value='위치 조정 중';}
+let drag=null;handle.onpointerdown=e=>{if(e.button!==0)return;const t=target(select.value);if(!visible(t))return;e.preventDefault();e.stopPropagation();const r=t.getBoundingClientRect();drag={id:e.pointerId,target:select.value,x:e.clientX,y:e.clientY,left:r.left,top:r.top};handle.setPointerCapture(e.pointerId);};handle.onpointermove=e=>{if(drag?.id===e.pointerId){e.preventDefault();move(drag.target,drag.left+e.clientX-drag.x,drag.top+e.clientY-drag.y);}};function end(e){if(drag?.id!==e.pointerId)return;drag=null;status.value=save()?'위치 저장됨':'저장소 사용 불가 · 현재 화면만 적용';}for(const n of ['pointerup','pointercancel','lostpointercapture'])handle.addEventListener(n,end);
+handle.onkeydown=e=>{const d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!d&&e.key!=='Home')return;e.preventDefault();e.stopPropagation();if(!d){delete positions[select.value];restore(select.value);}else{const t=target(select.value);if(!visible(t))return;const r=t.getBoundingClientRect(),step=e.shiftKey?32:10;move(select.value,r.left+d[0]*step,r.top+d[1]*step);}save();refresh();};
+function setEdit(on){tools.hidden=!on;b.setAttribute('aria-pressed',String(on));if(on)status.value='이동 대상을 선택한 후 손잡이를 드래그하세요.';refresh();}b.onclick=()=>setEdit(tools.hidden);$('tsdLayoutClose').onclick=()=>setEdit(false);select.onchange=()=>{status.value='이동 손잡이를 드래그하세요.';refresh();};$('tsdLayoutOne').onclick=()=>{delete positions[select.value];restore(select.value);save();refresh();};$('tsdLayoutAll').onclick=()=>{positions={};for(const [id] of specs)restore(id);save();refresh();};
+const ro=new ResizeObserver(schedule);ro.observe(stage);for(const [id] of specs){const e=target(id);if(e){ro.observe(e);new MutationObserver(schedule).observe(e,{attributes:true,attributeFilter:['hidden']});}}window.addEventListener('resize',schedule);schedule();
+const resume=document.createElement('button');resume.type='button';resume.id='missionResumeQuick';resume.textContent='임무 재개';resume.disabled=true;resume.title='일시정지된 가상 임무만 재개';panel.querySelector('.csc').append(resume);
+const missionStop=$('missionStop');function sync(){resume.disabled=missionStop.disabled||missionStop.hidden||missionStop.textContent.trim()!=='재개';}resume.onclick=()=>{sync();if(!resume.disabled)missionStop.click();};new MutationObserver(sync).observe(missionStop,{attributes:true,attributeFilter:['disabled','hidden'],childList:true,characterData:true,subtree:true});sync();
+const hint=document.createElement('div');hint.id='tsdControllerHint';hint.textContent='가상 기체 전용 · 임무 재개는 일시정지 상태에서만 가능';panel.append(hint);
+})();</script>
 </body>
 </html>
