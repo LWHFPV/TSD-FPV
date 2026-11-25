@@ -96,11 +96,17 @@ for(const combo of combos){
   if(count!==1)problem(combo,'rear RF antenna bracket must have one BOM item per assembly; found '+count);
   else commonBOMCount++;
   const g=v.gpsParts;
-  if(g.length===2){
-    const distance=Math.hypot(...g[0].center.map((x,k)=>x-g[1].center[k]));
+  const tray=g.find(p=>/받침|tray|장착판|mount|브래킷|plate/i.test(p.name));
+  if(tray&&g.length>=2){
+    const candidates=g.filter(p=>p!==tray);
+    const body=candidates.find(p=>/본체|안착|하우징|module|모듈/i.test(p.name))||
+      candidates.sort((a,b)=>Math.hypot(...a.center.map((x,k)=>x-tray.center[k]))-
+        Math.hypot(...b.center.map((x,k)=>x-tray.center[k])))[0];
+    const distance=Math.hypot(...body.center.map((x,k)=>x-tray.center[k]));
     v.gpsCenterGapMm=+distance.toFixed(3);
+    v.gpsCheckedPair={body:body.name,tray:tray.name,centerGapMm:v.gpsCenterGapMm};
     if(distance>30)problem(combo,'GPS body/tray center separation exceeds 30mm: '+distance.toFixed(2)+'mm','warning');
-  }else problem(combo,'expected two separated GPS model/tray parts; found '+g.length,'warning');
+  }else problem(combo,'GPS body/tray pairing unavailable; '+g.length+' GPS components','warning');
 }
 audit.commonBOMValidated=commonBOMCount===4;
 for(const connector of ['XT60','XT90']){
@@ -138,7 +144,7 @@ console.log('ASSEMBLY_CONTRACTS',JSON.stringify({commonBOMValidated:audit.common
     upperDecks:audit.variants[c].frameNames.filter(n=>/상판|top.?deck|upper.?plate/i.test(n)).length,
     lowerDecks:audit.variants[c].frameNames.filter(n=>/하판|lower.?frame|bottom.?plate/i.test(n)).length,
     rearBracket:audit.variants[c].commonRearBracketBOM,
-    gpsCenterGapMm:audit.variants[c].gpsCenterGapMm
+    gpsCenterGapMm:audit.variants[c].gpsCenterGapMm,gpsCheckedPair:audit.variants[c].gpsCheckedPair,gpsParts:audit.variants[c].gpsParts
   }]))}));
 console.log('AUDIT_WARNINGS',JSON.stringify(audit.warnings));
 console.log('AUDIT_ERRORS',JSON.stringify(audit.errors));
