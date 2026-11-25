@@ -44,9 +44,9 @@ body>details{max-width:var(--tsd-width);margin:15px auto;padding:13px var(--tsd-
 <li>실제 펌웨어·공력·필터의 정밀 복제가 아닙니다. 가상 조종사의 자세 목표와 고도 회복 보조가 있으며, 기체 위치는 추력과 중력으로 계산합니다.</li>
 </ul></details>
 <script id="r26-storage-bridge">
-(()=>{const key='tsd-education-r29:'+location.pathname;
-window.addEventListener('message',e=>{const f=document.getElementById('r26-lab-frame'),d=e.data;if(!f||e.source!==f.contentWindow||e.origin!=='null'||d?.channel!=='tsd-pid-r29')return;
-const reply=(kind,ok,raw=null)=>{e.source.postMessage({channel:'tsd-pid-r29',kind,ok,raw},'*');};
+(()=>{const key='tsd-education-r30:'+location.pathname;
+window.addEventListener('message',e=>{const f=document.getElementById('r26-lab-frame'),d=e.data;if(!f||e.source!==f.contentWindow||e.origin!=='null'||d?.channel!=='tsd-pid-r30')return;
+const reply=(kind,ok,raw=null)=>{e.source.postMessage({channel:'tsd-pid-r30',kind,ok,raw},'*');};
 if(d.kind==='load'){try{const raw=localStorage.getItem(key);reply('load-result',true,raw&&raw.length<=16384?raw:null);}catch{reply('load-result',false);}}
 if(d.kind==='save'){try{if(typeof d.raw!=='string'||d.raw.length>16384)throw Error('invalid');const v=JSON.parse(d.raw);if(!v||typeof v!=='object'||Array.isArray(v)||!v.hw||!v.pids)throw Error('invalid');localStorage.setItem(key,d.raw);reply('save-result',true);}catch{reply('save-result',false);}}
 });})();
@@ -2042,7 +2042,7 @@ html,body{margin:0!important;background:#0b1420!important;color:#e5effa!importan
 })();
 &lt;/script&gt;
 &lt;div id=&quot;fpv-lab&quot;&gt;
-&lt;div class=&quot;r23-title&quot;&gt;&lt;div&gt;&lt;h2&gt;&lt;span class=&quot;brand&quot;&gt;TSD / FLIGHT LAB&lt;/span&gt;&lt;br/&gt;FPV 비행장 · PID 반응 &lt;small style=&quot;font-size:12px;font-weight:500;opacity:.7&quot;&gt;Betaflight 2026.6.2 교육용 범위 프로필&lt;/small&gt;&lt;/h2&gt;&lt;/div&gt;&lt;div class=&quot;r23-audio&quot;&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;button aria-pressed=&quot;false&quot; class=&quot;btn&quot; id=&quot;audioToggle&quot;&gt;비행 소리 켜기&lt;/button&gt;&lt;label class=&quot;form-label&quot;&gt;음량 &lt;span id=&quot;volumeVal&quot;&gt;15%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;volume&quot; max=&quot;50&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;15&quot;/&gt;&lt;/label&gt;&lt;span aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;audioStatus&quot;&gt;아밍음 · 이륙·턴·회복의 부하에 연동&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;r23-title&quot;&gt;&lt;div&gt;&lt;h2&gt;&lt;span class=&quot;brand&quot;&gt;TSD / FLIGHT LAB&lt;/span&gt;&lt;br/&gt;FPV 비행장 · PID 반응 &lt;small style=&quot;font-size:12px;font-weight:500;opacity:.7&quot;&gt;Betaflight PID 교육용 기준 · R30&lt;/small&gt;&lt;/h2&gt;&lt;/div&gt;&lt;div class=&quot;r23-audio&quot;&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;button aria-pressed=&quot;false&quot; class=&quot;btn&quot; id=&quot;audioToggle&quot;&gt;비행 소리 켜기&lt;/button&gt;&lt;label class=&quot;form-label&quot;&gt;음량 &lt;span id=&quot;volumeVal&quot;&gt;15%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;volume&quot; max=&quot;50&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;15&quot;/&gt;&lt;/label&gt;&lt;span aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;audioStatus&quot;&gt;아밍음 · 이륙·턴·회복의 부하에 연동&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;div class=&quot;text-small text-muted&quot;&gt;교육용 근사 모델 · 실제 기체의 비행용 튜닝값을 보증하지 않습니다.&lt;/div&gt;
 &lt;style&gt;
 #fpv-lab{max-width:1800px;gap:5px}
@@ -2070,7 +2070,7 @@ html,body{margin:0!important;background:#0b1420!important;color:#e5effa!importan
 #fpv-lab #settings table{font-size:11px}
 #fpv-lab .bf-sliders{gap:3px}
 @media(max-width:1050px){#tsd-columns{grid-template-columns:1fr}#tsd-right .viz-row:has([id^=&quot;test-&quot;]){grid-template-columns:repeat(2,1fr)}}
-&lt;/style&gt;&lt;details class=&quot;r29-profile&quot;&gt;&lt;summary&gt;&lt;b&gt;표준 교육 기체 · TSD10&lt;/b&gt; &lt;span&gt;6S · 10인치 · 37% 기준&lt;/span&gt; &lt;small&gt;제원 / 안내&lt;/small&gt;&lt;/summary&gt;&lt;p&gt;V3115 900KV · 440mm True X · 10×5×3 · 6S 5200mAh · 카메라 35°. 총중량 2,100g(건조 1,400g + 배터리 700g), 프롭 18.1g/개, 120C는 기존 교육 시험의 가정값입니다. 개선 물리 모델과 37% 완충 정적 평형 가상 보정을 고정 적용합니다. 실기체 성능·안전고도·최적 PID를 보증하지 않습니다.&lt;/p&gt;&lt;/details&gt;&lt;div class=&quot;r15-panel&quot; id=&quot;r15-panel-experiment&quot;&gt;&lt;div id=&quot;tsd-columns&quot;&gt;&lt;div id=&quot;tsd-left&quot;&gt;&lt;div class=&quot;views&quot;&gt;&lt;section&gt;&lt;h3&gt;A · 추적 카메라&lt;/h3&gt;&lt;canvas aria-label=&quot;가상 비행장에서 이동하며 기동하는 드론의 외부 시점&quot; id=&quot;droneA&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleA&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;section&gt;&lt;div class=&quot;r23-camera-head&quot;&gt;&lt;h3&gt;B · FPV 카메라&lt;/h3&gt;&lt;select aria-label=&quot;FPV 카메라 시점&quot; id=&quot;r23-camera&quot;&gt;&lt;option value=&quot;forward&quot;&gt;정면 보기&lt;/option&gt;&lt;option value=&quot;mount&quot;&gt;35° 장착 시점&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;canvas aria-label=&quot;비행 위치와 기체 자세를 함께 반영하는 FPV 카메라&quot; id=&quot;droneB&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleB&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;/div&gt;&lt;section class=&quot;tsd-attitude&quot;&gt;&lt;div class=&quot;tsd-att-head&quot;&gt;&lt;strong&gt;3D 자세 모니터&lt;/strong&gt;&lt;span class=&quot;text-small&quot;&gt;30초 동기화&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-grid&quot;&gt;&lt;canvas aria-label=&quot;3D FPV 쿼드콥터 자세&quot; id=&quot;attQuad&quot;&gt;&lt;/canvas&gt;&lt;canvas aria-label=&quot;롤 경사각 눈금과 포인터가 있는 인공 수평계&quot; id=&quot;attHorizon&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-numbers tabular-nums&quot; id=&quot;attNumbers&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;div id=&quot;r24-pid-inline&quot;&gt;&lt;section id=&quot;bfPanel&quot;&gt;
+&lt;/style&gt;&lt;details class=&quot;r29-profile&quot;&gt;&lt;summary&gt;&lt;b&gt;표준 교육 기체 · TSD10&lt;/b&gt; &lt;span&gt;6S · 10인치 · 37% 기준&lt;/span&gt; &lt;small&gt;제원 / 안내&lt;/small&gt;&lt;/summary&gt;&lt;p&gt;V3115 900KV · 440mm True X · 10×5×3 · 6S 5200mAh · 카메라 35°. 총중량 2,100g(건조 1,400g + 배터리 700g), 프롭 18.1g/개, 120C는 기존 교육 시험의 가정값입니다. Rev.R30 · 기준 PID가 안정된 비행을 보여주도록 보정한 교육용 각속도 모델입니다. 각속도는 정규화된 가상 구동기로 계산하고 모터 출력·추력·배터리는 시각화용 근사 모델로 구분합니다. 외란·잡음 기본 0, 호버 기준 37%. 실기체 성능·안전고도·최적 PID를 보증하지 않습니다.&lt;/p&gt;&lt;/details&gt;&lt;div class=&quot;r15-panel&quot; id=&quot;r15-panel-experiment&quot;&gt;&lt;div id=&quot;tsd-columns&quot;&gt;&lt;div id=&quot;tsd-left&quot;&gt;&lt;div class=&quot;views&quot;&gt;&lt;section&gt;&lt;h3&gt;A · 추적 카메라&lt;/h3&gt;&lt;canvas aria-label=&quot;가상 비행장에서 이동하며 기동하는 드론의 외부 시점&quot; id=&quot;droneA&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleA&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;section&gt;&lt;div class=&quot;r23-camera-head&quot;&gt;&lt;h3&gt;B · FPV 카메라&lt;/h3&gt;&lt;select aria-label=&quot;FPV 카메라 시점&quot; id=&quot;r23-camera&quot;&gt;&lt;option value=&quot;forward&quot;&gt;정면 보기&lt;/option&gt;&lt;option value=&quot;mount&quot;&gt;35° 장착 시점&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;canvas aria-label=&quot;비행 위치와 기체 자세를 함께 반영하는 FPV 카메라&quot; id=&quot;droneB&quot; role=&quot;img&quot;&gt;&lt;/canvas&gt;&lt;div class=&quot;tabular-nums&quot; id=&quot;angleB&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;/div&gt;&lt;section class=&quot;tsd-attitude&quot;&gt;&lt;div class=&quot;tsd-att-head&quot;&gt;&lt;strong&gt;3D 자세 모니터&lt;/strong&gt;&lt;span class=&quot;text-small&quot;&gt;30초 동기화&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-grid&quot;&gt;&lt;canvas aria-label=&quot;3D FPV 쿼드콥터 자세&quot; id=&quot;attQuad&quot;&gt;&lt;/canvas&gt;&lt;canvas aria-label=&quot;롤 경사각 눈금과 포인터가 있는 인공 수평계&quot; id=&quot;attHorizon&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;&lt;div class=&quot;tsd-att-numbers tabular-nums&quot; id=&quot;attNumbers&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;div id=&quot;r24-pid-inline&quot;&gt;&lt;section id=&quot;bfPanel&quot;&gt;
 &lt;div class=&quot;r15-card-head&quot;&gt;&lt;h3&gt;PID 튜닝&lt;/h3&gt;&lt;details class=&quot;r15-help&quot;&gt;&lt;summary aria-label=&quot;PID 입력 범위 및 모드 안내&quot; title=&quot;PID 입력 범위 및 모드 안내&quot;&gt;?&lt;/summary&gt;&lt;div class=&quot;r15-help-body&quot;&gt;&lt;strong&gt;PID 입력 범위 및 모드 안내&lt;/strong&gt;&lt;div class=&quot;text-small&quot;&gt;OFF는 수동 입력값 복원 · RP/RPY는 슬라이더 설정 유지 · RP의 Yaw는 수동값 유지&lt;/div&gt;&lt;div class=&quot;text-small&quot; style=&quot;padding:10px;border:1px solid var(--border);border-radius:8px;margin:8px 0&quot;&gt;&lt;strong&gt;교육용 기준점&lt;/strong&gt; · Roll 45/80/30/40/120 · Pitch 47/84/34/46/125 · Yaw 45/80/0/0/120&lt;br/&gt;고정 비교 조건: 기준 호버 스로틀 37%, 외란 5(상대 단위), 자이로 잡음 0.5(상대 단위), 같은 기동·같은 시작 상태. 기준값은 비교 출발점입니다. 실제 기체 최적값이 아닙니다. 모든 기동에서 지속적인 외란과 제어 반응을 계산합니다.&lt;/div&gt;&lt;div class=&quot;text-small text-muted&quot;&gt;빨강: 입력 범위 위반 · 주황: 교육용 모델에서 불안정 가능성. 실제 비행 가능 여부를 판정하지 않습니다. P/I/D/D 최대 0–250 · FF 직접 입력 0–2000은 교육용 확장 범위입니다. Betaflight 2026.6.2 펌웨어 및 슬라이더 FF 상한은 1000입니다.&lt;/div&gt;&lt;div class=&quot;text-small text-muted&quot;&gt;D 최소는 기본 감쇠입니다. 기본 D가 0이면 D 최대와 관계없이 D항은 꺼집니다. 기본 D보다 D 최대가 클 때 목표 각속도 변화 및 필터링된 자이로 변화에 따른 교육용 동적 감쇠가 적용됩니다. 실제 펌웨어의 Dmax 필터·TPA 연산은 별도입니다. FF는 기동 시작·변화·정지의 목표 각속도 변화에 반영됩니다. 슬라이더는 Betaflight 2026.6.2 정수 백분율·단정밀도 환산 모델입니다. 비행 반응은 별도의 교육용 근사 모델이며 펌웨어 PID 출력과 동일하지 않습니다.&lt;/div&gt;&lt;/div&gt;&lt;/details&gt;&lt;/div&gt;
 &lt;div class=&quot;viz-controls&quot;&gt;&lt;label class=&quot;form-label&quot;&gt;모드&lt;select class=&quot;form-select&quot; id=&quot;tuningMode&quot;&gt;&lt;option value=&quot;OFF&quot;&gt;OFF · 숫자 직접 입력&lt;/option&gt;&lt;option value=&quot;RP&quot;&gt;RP · 롤 / 피치 슬라이더&lt;/option&gt;&lt;option value=&quot;RPY&quot;&gt;RPY · 롤 / 피치 / 요 슬라이더&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;button class=&quot;btn&quot; id=&quot;pidReset&quot;&gt;기준 PID 복원&lt;/button&gt;&lt;/div&gt;
 &lt;div class=&quot;bf-sliders&quot; id=&quot;bfSliders&quot;&gt;&lt;/div&gt;
@@ -2408,19 +2408,26 @@ const FlightEngine = (() =&gt; {
   const hover=physics&amp;&amp;s.physicsHover===true&amp;&amp;s.test==='throttle';
   const geo=physics?geometry(s.hw,wheelbase):null;
   let quaternion=[1,0,0,0];
-  const dt=.001,hw=selectedHardware(s),gs=axes.map(k=&gt;gains(s,k)),mix=[[1,-1,-1],[-1,-1,1],[-1,1,-1],[1,1,1]];
-  let angle=[0,0,0],rate=[0,0,0],integ=[0,0,0],filtered=[0,0,0],prevGyro=[0,0,0],prevTarget=[0,0,0],prevPilotRate=[0,0,0],dFilt=[0,0,0],dBoost=[0,0,0],motor=[0,0,0,0];
+  const dt=.001,hw={...selectedHardware(s),lag:.022},gs=axes.map(k=&gt;gains(s,k)),mix=[[1,-1,-1],[-1,-1,1],[-1,1,-1],[1,1,1]];
+  let angle=[0,0,0],rate=[0,0,0],integ=[0,0,0],filtered=[0,0,0],prevGyro=[0,0,0],prevTarget=[0,0,0],prevPilotRate=[0,0,0],ffSmooth=[0,0,0],dFilt=[0,0,0],dBoost=[0,0,0],motor=[0,0,0,0];
+  // R30: normalized educational angular actuator, independent of estimated motor torque.
+  // Motors and power remain illustrative; this is not a real TSD10 performance predictor.
+  // R30: normalized educational angular actuator, independent of estimated motor torque.
+  // Motors and power remain illustrative; this is not a real TSD10 performance predictor.
+  // R30: normalized educational angular actuator, independent of estimated motor torque.
+  // Motors and power remain illustrative; this is not a real TSD10 performance predictor.
+  let actuator=[0,0,0];
   const dyn=dynamicSettings(s);let prevCollective=null,agEnvelope=0;const relaxLpf=[0,0,0];
   const initialHeight=6;
   let pos=[0,0,s.test==='takeoff'?-.16:-initialHeight],vel=[s.test==='takeoff'||hover?0:6,0,0],crash=false,airborne=s.test!=='takeoff',used=0;
-  const delay=Array.from({length:7},()=&gt;[0,0,0]),logs=[];let dIdx=0;
+  const delay=Array.from({length:1},()=&gt;[0,0,0]),logs=[];let dIdx=0;
   let maneuverStart=s.test==='takeoff'?0:null,entryPosition=null,splitStart=null,altIntegral=0,depleted=false;
   // R27: scripted pilot preparation before slow inverted maneuvers. Not a physical state override.
   const slowInversion=['roll','flip'].includes(s.test)&amp;&amp;maneuverDuration(s)&gt;1;
   const prepHeight=slowInversion?initialHeight+.5*9.81*(maneuverDuration(s)+(s.punchDuration??.5))**2:22;
   const needsPreparation=s.test.startsWith('split-')||slowInversion;
-  if(hover)motor.fill(s.throttle/100);
-  logs.push({t:0,maneuverStart,rotationStart:s.test==='takeoff'?0:null,recoveryTime:null,heightTarget:s.test==='takeoff'?0:initialHeight,entryPosition,stickThrottle:throttle(s,0,maneuverStart??Infinity),phase:'초기 상태',angles:[...angle],rates:[...rate],gyro:[0,0,0],targets:[0,0,0],reference:reference(s,0,maneuverStart??Infinity),pos:[...pos],velocity:[...vel],motors:[...motor],terms:gs.map(()=&gt;({P:0,I:0,D:0,FF:0,sum:0})),effectiveD:gs.map(g=&gt;g.D),disturbance:[0,0,0],wash:0,crash:false,depleted:false,throttle:hover?s.throttle/100:0,used:0,saturated:[false,false,false]});
+  if(s.test!=='takeoff')motor.fill(s.throttle/100);
+  logs.push({t:0,maneuverStart,rotationStart:s.test==='takeoff'?0:null,recoveryTime:null,heightTarget:s.test==='takeoff'?0:initialHeight,entryPosition,stickThrottle:throttle(s,0,maneuverStart??Infinity),phase:'초기 상태',angles:[...angle],rates:[...rate],gyro:[0,0,0],targets:[0,0,0],reference:reference(s,0,maneuverStart??Infinity),pos:[...pos],velocity:[...vel],motors:[...motor],terms:gs.map(()=&gt;({P:0,I:0,D:0,FF:0,sum:0})),effectiveD:gs.map(g=&gt;g.D),disturbance:[0,0,0],wash:0,crash:false,depleted:false,throttle:s.test!=='takeoff'?s.throttle/100:0,used:0,saturated:[false,false,false]});
   for(let n=1;n&lt;=seconds/dt;n++){
    const t=n*dt;
    if(maneuverStart===null&amp;&amp;!crash&amp;&amp;pos[0]&gt;=20){maneuverStart=t;entryPosition=[...pos];}
@@ -2464,20 +2471,20 @@ const FlightEngine = (() =&gt; {
     const d=g.D&gt;0&amp;&amp;g.Dmax&gt;g.D?g.D+(g.Dmax-g.D)*dBoost[k]:g.D;effectiveD.push(d);
     // R09: educational FF follows scripted pilot rate changes, not attitude feedback.
     const pilotRate=clamp(physics?qPilot[k]:referenceRate,-30,30);
-    const ffAcceleration=clamp((pilotRate-prevPilotRate[k])/dt,-500,500);prevPilotRate[k]=pilotRate;
+    const ffAcceleration=clamp((pilotRate-ffSmooth[k])/.018,-500,500);ffSmooth[k]+=(pilotRate-ffSmooth[k])*dt/.018;prevPilotRate[k]=pilotRate;
     relaxLpf[k]+=(target-relaxLpf[k])*(1-Math.exp(-2*Math.PI*15*dt));
     // RP incremental relaxation: reduce new I accumulation, allow unwind.
     if(dyn.relax&amp;&amp;k&lt;2&amp;&amp;err*integ[k]&gt;=0)relaxFactors[k]=clamp(1-Math.abs(target-relaxLpf[k])/Math.PI,0,1);
-    const P=g.P*.006*err,I=g.I*.003*integ[k],D=-d*.00030*dFilt[k]*tpaFactor,FF=g.FF*.000018*ffAcceleration;
+    const P=g.P*(k===2?.023:.03)*err,I=g.I*.003*integ[k],D=-d*.00009*dFilt[k]*tpaFactor,FF=g.FF*.00002*ffAcceleration;
     const command=P+I+D+FF;
     terms.push({P,I,D,FF,sum:command});
    }
-   const raw=mix.map(m=&gt;thr+m.reduce((v,sign,k)=&gt;v+sign*terms[k].sum,0)), allocation=physics?allocateThrust(thr,terms,mix,hw,geo,s.hw,crash||depleted):null,out=physics?allocation.out:raw.map(v=&gt;crash||depleted||thr===0?0:clamp(v,0,1));
+   const raw=mix.map(m=&gt;thr+m.reduce((v,sign,k)=&gt;v+sign*terms[k].sum,0)), allocation=physics?allocateThrust(thr,terms.map(t=&gt;({...t,sum:t.sum*.025})),mix,hw,geo,s.hw,crash||depleted):null,out=physics?allocation.out:raw.map(v=&gt;crash||depleted||thr===0?0:clamp(v,0,1));
    // R07: axis-specific conditional integration using the mixer clipping residual.
    // The current I term uses the previous state; the update applies on the next tick.
    for(let k=0;k&lt;3;k++){
     const err=tar[k]-filtered[k];
-    const residual=physics?allocation.residual[k]:mix.reduce((sum,m,i)=&gt;sum+m[k]*(out[i]-raw[i]),0)/4;
+    const residual=physics?clamp(terms[k].sum,-15,15)-terms[k].sum:mix.reduce((sum,m,i)=&gt;sum+m[k]*(out[i]-raw[i]),0)/4;
     if(crash||depleted||thr===0||gs[k].I===0)integ[k]=0;
     else if(Math.abs(residual)&lt;=1e-12||err*residual&gt;=0)integ[k]=clamp(integ[k]+err*dt*agFactor*relaxFactors[k],-1.5,1.5);
    }
@@ -2498,7 +2505,7 @@ const FlightEngine = (() =&gt; {
     const propwash=wash*.012*(Math.sin(tau*8.2*t+k)+.6*Math.sin(tau*13.7*t+k*1.4));
     const imbalance=avg*.0005*s.noise*Math.sin(tau*120*t+k);
     disturbance[k]=gust+propwash+imbalance;
-    if(!crash){const acc=(torques[k]+disturbance[k]-.0018*rate[k]-cross[k])/(physics?geo.inertiaAxes[k]:hw.inertia*(k===2?1.4:1));rate[k]=clamp(rate[k]+acc*dt,-100,100);if(!physics)angle[k]+=rate[k]*dt;}
+    if(!crash){actuator[k]+=(clamp(terms[k].sum,-15,15)-actuator[k])*dt/.004;const acc=physics?(thr===0||depleted?0:100*actuator[k])+disturbance[k]/geo.inertiaAxes[k]-2*rate[k]:(torques[k]+disturbance[k]-.0018*rate[k]-cross[k])/(hw.inertia*(k===2?1.4:1));rate[k]=clamp(rate[k]+acc*dt,-100,100);if(!physics)angle[k]+=rate[k]*dt;}
    }
    if(!crash){
     if(physics){quaternion=quaternionStep(quaternion,rate.map((v,k)=&gt;(v+omegaBefore[k])/2),dt);angle=quaternionEuler(quaternion);}
@@ -2514,7 +2521,7 @@ const FlightEngine = (() =&gt; {
     }
    }
    if(n%2===0)logs.push({t,maneuverStart,rotationStart:Number.isFinite(rotationStart)?rotationStart:null,recoveryTime:Number.isFinite(recovery)?recovery:null,heightTarget,entryPosition,stickThrottle,phase:depleted?'교육용 용량 소진 · 추진 종료':crash?'충돌':s.test==='takeoff'?'이륙 안정화':s.test==='throttle'?(hover?'정지 호버 · 스로틀 직접 입력':'6m 목표 · 단순 전진'):t&lt;start?'20m 진입 비행':needsPreparation&amp;&amp;t&lt;rotationStart?'기동 준비 상승 · '+prepHeight.toFixed(1)+'m 목표':t&lt;recovery?'기동 · 스로틀 시퀀스':'6m 복귀 · 경로 보조 전진',angles:[...angle],rates:[...rate],gyro:[...filtered],targets:tar,reference:ref,pos:[...pos],velocity:[...vel],motors:[...motor],terms,effectiveD,disturbance,wash,crash,depleted,throttle:depleted?0:thr,used,
-    saturated:gs.map((_,k)=&gt;!crash&amp;&amp;!depleted&amp;&amp;thr&gt;0&amp;&amp;Math.abs(physics?allocation.residual[k]:mix.reduce((sum,m,i)=&gt;sum+m[k]*(out[i]-raw[i]),0)/4)&gt;.001)});
+    saturated:gs.map((_,k)=&gt;!crash&amp;&amp;!depleted&amp;&amp;thr&gt;0&amp;&amp;Math.abs(physics?clamp(terms[k].sum,-15,15)-terms[k].sum:mix.reduce((sum,m,i)=&gt;sum+m[k]*(out[i]-raw[i]),0)/4)&gt;.001)});
   }
   return logs;
  }
@@ -2530,7 +2537,7 @@ const FlightEngine = (() =&gt; {
  const examplePids=()=&gt;({roll:{P:45,I:80,D:30,Dmax:40,FF:120},pitch:{P:47,I:84,D:34,Dmax:46,FF:125},yaw:{P:45,I:80,D:0,Dmax:0,FF:120}});
  const sliderDefs=[['damping','감쇠 · D'],['tracking','추적 · P / I'],['response','스틱 반응 · FF'],['dynamic','동적 감쇠 · D 최대'],['integral','드리프트 / 흔들림 · I'],['pitchD','피치 감쇠 · D'],['pitch','피치 추적 · P / I / FF'],['master','마스터 배율']];
  const defaultSliders=()=&gt;Object.fromEntries(sliderDefs.map(([k])=&gt;[k,1]));
- const legacyDefaults=()=&gt;({hoverCalibration:null,physicsV2:false,physicsHover:false,wheelbase:500,dynamicPid:{tpa:false,antiGravity:false,relax:false},axis:'pitch',punchDuration:.5,punchStrength:22,pids:examplePids(),sliders:defaultSliders(),tuningMode:'OFF',A:{P:47,I:84,D:34,Dmax:46,FF:125},force:5,noise:0.5,speed:1,throttle:38,rotationRate:720,hfEnabled:true,volume:15,test:'drop',graph:'angle',motorPreset:'v1950',batteryPreset:'c120',propPreset:'hq5050',hw:{...presets.motorPreset.v1950,...presets.batteryPreset.c120,...presets.propPreset.hq5050,drymass:400}});
+ const legacyDefaults=()=&gt;({hoverCalibration:null,physicsV2:false,physicsHover:false,wheelbase:500,dynamicPid:{tpa:false,antiGravity:false,relax:false},axis:'pitch',punchDuration:.5,punchStrength:22,pids:examplePids(),sliders:defaultSliders(),tuningMode:'OFF',A:{P:47,I:84,D:34,Dmax:46,FF:125},force:0,noise:0,speed:1,throttle:38,rotationRate:720,hfEnabled:true,volume:15,test:'throttle',graph:'rate',motorPreset:'v1950',batteryPreset:'c120',propPreset:'hq5050',hw:{...presets.motorPreset.v1950,...presets.batteryPreset.c120,...presets.propPreset.hq5050,drymass:400}});
  const educationHardware=Object.freeze({kv:900,statorD:31,statorH:15,cells:6,mah:5200,bmass:700,cRate:120,diameter:10,pitch:5,blades:3,pmass:18.1,drymass:1400});
  function lockEducationProfile(state){Object.assign(state,{hw:{...educationHardware},wheelbase:440,physicsV2:true,physicsHover:false,motorPreset:'custom',batteryPreset:'custom',propPreset:'custom'});state.hoverCalibration=FlightEngine.calibrateHover(state.hw);return state;}
  const defaults=()=&gt;lockEducationProfile({...legacyDefaults(),throttle:37});
@@ -2559,13 +2566,13 @@ const FlightEngine = (() =&gt; {
  // Keep the iframe sandbox; only its embedding page persists settings.
  const persistStatus=(message)=&gt;{const el=$('r26-storage');if(el)el.textContent=message;};
  let persistEdited=false,persistReady=false;
- function save(){persistEdited=true;try{parent.postMessage({channel:'tsd-pid-r29',kind:'save',raw:JSON.stringify(s)},'*');}catch{persistStatus('저장 불가 · 현재 세션만 유지');}}
+ function save(){persistEdited=true;try{parent.postMessage({channel:'tsd-pid-r30',kind:'save',raw:JSON.stringify(s)},'*');}catch{persistStatus('저장 불가 · 현재 세션만 유지');}}
  window.addEventListener('message',e=&gt;{
-  if(e.source!==parent||e.data?.channel!=='tsd-pid-r29')return;
+  if(e.source!==parent||e.data?.channel!=='tsd-pid-r30')return;
   if(e.data.kind==='load-result'&amp;&amp;!persistReady){persistReady=true;if(!persistEdited&amp;&amp;typeof e.data.raw==='string'&amp;&amp;e.data.raw.length&lt;=16384){s=restoreSavedState(e.data.raw);if(s.test==='pulse')s.test='split-left';controls();update();}persistStatus(e.data.ok?'설정 자동 저장 가능':'저장 불가 · 현재 세션만 유지');}
   if(e.data.kind==='save-result')persistStatus(e.data.ok?'설정 저장됨':'저장 불가 · 현재 세션만 유지');
  });
- function localStorageSafeGet(){try{return localStorage.getItem('tsd-education-r29')}catch{return null}}
+ function localStorageSafeGet(){try{return localStorage.getItem('tsd-education-r30')}catch{return null}}
 
  function gains(axis=s.axis){return FlightEngine.gains(s,axis);}
 
@@ -3130,7 +3137,7 @@ const FlightEngine = (() =&gt; {
  $('arrival').onclick=()=&gt;{const start=validAnalysisStart();if(start===null)return;t=sampleAt(start).t;playing=false;last=null;draw();};
  $('play').onclick=()=&gt;{if(t&gt;=duration())t=0;playing=!playing;last=null;draw();};$('replay').onclick=()=&gt;{t=0;playing=true;last=null;draw();};$('reset').onclick=()=&gt;{s=defaults();playing=true;controls();update();save();};
  s=restoreSavedState(localStorageSafeGet());if(s.test==='pulse')s.test='split-left';controls();update();
- parent.postMessage({channel:'tsd-pid-r29',kind:'load'},'*');
+ parent.postMessage({channel:'tsd-pid-r30',kind:'load'},'*');
  setTimeout(()=&gt;{if(!persistReady)persistStatus('저장 연결 없음 · 현재 세션만 유지');},2000);
  window.addEventListener('openai:set_globals',e=&gt;{if(e.detail?.globals?.widgetState){s=normalize(e.detail.globals.widgetState.modelContent);controls();update();}});
  new ResizeObserver(()=&gt;draw()).observe(root);
