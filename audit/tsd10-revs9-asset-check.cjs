@@ -13,10 +13,11 @@ const audit={date:new Date().toISOString(),source:'tsd10-revs8-preview.html',rev
 // Load the same two pure display functions as the live viewer to prevent BOM drift.
 const viewer=fs.readFileSync(path.join(root,'tsd10-revs8-preview.html'),'utf8');
 const helpers=['isRearRfBracket','displayPartName'].map(fn=>{
-  const match=viewer.match(new RegExp('function '+fn+'\\\\(p\\\\)\\\\{[\\\\s\\\\S]*?\\\\n\\\\}'));
-  if(!match)throw Error('viewer common BOM helper missing: '+fn);
-  return match[0];
-}).join('\\n');
+  const begin=viewer.indexOf('function '+fn+'(p){');
+  const finish=viewer.indexOf(String.fromCharCode(10)+'}',begin);
+  if(begin<0||finish<0)throw Error('viewer common BOM helper missing: '+fn);
+  return viewer.slice(begin,finish+2);
+}).join(String.fromCharCode(10));
 const isRearRfBracket=vm.runInNewContext(helpers+';isRearRfBracket');
 const displayPartName=vm.runInNewContext(helpers+';displayPartName');
 
