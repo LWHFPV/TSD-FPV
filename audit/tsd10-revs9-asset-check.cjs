@@ -54,7 +54,7 @@ function readCombo(combo){
     const blob=data.subarray(meshBase+p.offset,meshBase+p.offset+p.length);
     const digest=crypto.createHash('sha256').update(blob).digest('hex');
     let min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity],finite=true;
-    const vertexCoordinates=new Set();
+    const vertexCoordinates=new Set(),vertexCoordinates01=new Set();
     for(let j=0;j<blob.length;j+=24){
       const xyz=[];
       for(let k=0;k<3;k++){
@@ -64,6 +64,7 @@ function readCombo(combo){
       }
       if(!finite)break;
       vertexCoordinates.add(xyz.map(x=>Math.round(x*1000)).join(','));
+      vertexCoordinates01.add(xyz.map(x=>Math.round(x*100)).join(','));
     }
     if(!finite)problem(at,'non-finite 3D vertex position');
     for(let k=0;k<3;k++){
@@ -71,9 +72,10 @@ function readCombo(combo){
         problem(at,'mesh vertex min/max differs from header bounds axis '+k);
     }
     const vertexHash=crypto.createHash('sha256').update([...vertexCoordinates].sort().join(';')).digest('hex');
+    const vertexHash01=crypto.createHash('sha256').update([...vertexCoordinates01].sort().join(';')).digest('hex');
     const center=p.bounds[0].map((x,k)=>(x+p.bounds[1][k])/2);
     parts.push({id:p.id,name:p.name,category:p.category,triangles:p.triangleCount,
-      bounds:p.bounds,center,vertexHash,digest});
+      bounds:p.bounds,center,vertexHash,vertexHash01,vertexCoordinates01,digest});
   }
   if(triangles!==header.triangles)problem(combo,'header total triangle mismatch '+triangles+'/'+header.triangles);
   if(parts.length===0)problem(combo,'empty part list');
@@ -122,11 +124,19 @@ for(const connector of ['XT60','XT90']){
     const q=matches[0];used.add(q.id);
     const boundsDrift=Math.max(...[0,1].flatMap(t=>[0,1,2].map(k=>Math.abs(p.bounds[t][k]-q.bounds[t][k]))));
     const sameVertices=p.vertexHash===q.vertexHash;
+    const sameVertices01=p.vertexHash01===q.vertexHash01;
+    const overlap01=[...p.vertexCoordinates01].filter(pt=>q.vertexCoordinates01.has(pt)).length;
+    const union01=p.vertexCoordinates01.size+q.vertexCoordinates01.size-overlap01;
+    const vertexJaccard01=union01?100*overlap01/union01:100;
     const sameTriangleCount=p.triangles===q.triangles;
     audit.comparisons.push({connector,part:p.name,upperId:p.id,lowerId:q.id,category:p.category,
-      sameVertexCoordinates:sameVertices,sameTriangleCount,boundsDriftMm:+boundsDrift.toFixed(6)});
+      sameVertexCoordinates:sameVertices,sameVertexCoordinatesAt001Mm:sameVertices01,
+      vertexOverlapAt001MmPct:+vertexJaccard01.toFixed(3),
+      upperUniqueVertices001Mm:p.vertexCoordinates01.size,lowerUniqueVertices001Mm:q.vertexCoordinates01.size,
+      sameTriangleCount,boundsDriftMm:+boundsDrift.toFixed(6)});
     if(boundsDrift>0.01)problem(connector+'/'+p.name,'bounding box differs between upper and lower common part by '+boundsDrift.toFixed(3)+'mm','warning');
-    else if(!sameVertices)problem(connector+'/'+p.name,'vertex-coordinate sets differ, although bounding boxes agree; BRep comparison needed','warning');
+    else if(!sameVertices)problem(connector+'/'+p.name,
+      'vertex-coordinate sets differ (0.01mm grid overlap '+vertexJaccard01.toFixed(3)+'%; identical 0.01mm sets: '+sameVertices01+'); bounding boxes agree; BRep comparison needed','warning');
   }
   if(upper.commonRearBracketBOM.map(p=>p.displayName).join('|')!==lower.commonRearBracketBOM.map(p=>p.displayName).join('|'))
     problem(connector,'common rear RF bracket BOM label still differs between variants');
@@ -146,6 +156,7 @@ console.log('ASSEMBLY_CONTRACTS',JSON.stringify({commonBOMValidated:audit.common
     rearBracket:audit.variants[c].commonRearBracketBOM,
     gpsCenterGapMm:audit.variants[c].gpsCenterGapMm,gpsCheckedPair:audit.variants[c].gpsCheckedPair,gpsParts:audit.variants[c].gpsParts
   }]))}));
+console.log('GEOMETRY_DIFFS',JSON.stringify(audit.comparisons.filter(c=>!c.sameVertexCoordinates)));
 console.log('AUDIT_WARNINGS',JSON.stringify(audit.warnings));
 console.log('AUDIT_ERRORS',JSON.stringify(audit.errors));
 if(audit.errors.length)process.exitCode=1;
