@@ -8,6 +8,15 @@ on:
       - 'tsd10-revs8-preview.html'
       - 'tsd10-revs8-assets/**'
       - '.github/workflows/tsd10-asset-audit.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'audit/**'
+      - 'tsd10-preview.html'
+      - 'tsd10-revs8-preview.html'
+      - 'tsd10-revs8-assets/**'
+      - '.github/workflows/tsd10-asset-audit.yml'
   workflow_dispatch:
 permissions:
   contents: read
