@@ -92,4 +92,6 @@ for(const combo of combos)if(audit.variants[combo]){
 const report=path.join(__dirname,'tsd10-revs9-asset-audit-result.json');
 fs.writeFileSync(report,JSON.stringify(audit,null,2)+'\n');
 console.log(JSON.stringify({source:audit.source,variants:Object.keys(audit.variants),errors:audit.errors.length,warnings:audit.warnings.length,comparisons:audit.comparisons.length,report},null,2));
+console.log('AUDIT_WARNINGS',JSON.stringify(audit.warnings));
+console.log('AUDIT_ERRORS',JSON.stringify(audit.errors));
 if(audit.errors.length)process.exitCode=1;
