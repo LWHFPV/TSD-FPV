@@ -6,7 +6,7 @@
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#0b2450" name="theme-color"/>
 <meta content="TSD Aero Systems 비행안전정보센터: 위성지도, 현재위치, 7일 시간별 기상, 우주기상, 공역 확인 및 공식 민원 신청." name="description"/>
-<title>TSD 비행안전정보센터 v2.9.3 | TSD Aero Systems</title>
+<title>TSD 비행안전정보센터 v2.9.5 | TSD Aero Systems</title>
 <link href="https://unpkg.com" rel="preconnect"/>
 <style>
 :root{--blue:#1855c0;--blue2:#0b2450;--ink:#18263d;--muted:#65738b;--line:#dae4f0;--wash:#f3f7fd;--panel:#fff;--good:#0f8051;--bad:#ba2b30;--warn:#b77418;--sh:0 5px 25px rgba(24,46,88,.07)}
@@ -419,11 +419,59 @@ footer.footer{display:none !important;}
 @media(max-width:850px){.tsd-region-controls{justify-content:stretch}.tsd-region-controls>#locRegionGo{flex:1 1 150px}.tsd-region-controls>.tsd-agency-select-label{flex:2 1 180px}.tsd-region-controls>.tsd-agency-button{flex:1 0 105px!important}}
 @media(max-width:560px){.tsd-region-controls>.tsd-agency-select-label{flex:1 1 100%;min-width:0}.tsd-region-controls>.tsd-agency-button{flex:1 1 auto!important}}
 </style>
+<script id="tsd-cf-api-bridge">
+(function(){
+  'use strict';
+  const KEY='tsd_flight_safety_worker_url_v1';
+  function normalize(value){
+    const raw=String(value||'').trim().replace(/\/+$/,'');
+    if(!raw)return '';
+    let url;
+    try{url=new URL(raw);}catch{throw Error('URL 형식이 아닙니다.');}
+    if(url.protocol!=='https:'||!/(^|\.)workers\.dev$/i.test(url.hostname)||
+       url.hostname.split('.').length<4||url.username||url.password||url.port||
+       url.pathname!=='/'||url.search||url.hash){
+      throw Error('https://서비스명.계정명.workers.dev 형식의 주소만 입력하세요.');
+    }
+    return url.origin;
+  }
+  // Linked public TSD Cloudflare API Worker; a validated saved override takes precedence.
+  const DEFAULT_WORKER='https://jolly-dawn-3ee1tsd-flight-airspace-api.flydragon103.workers.dev';
+  let base=DEFAULT_WORKER;
+  try{base=normalize(localStorage.getItem(KEY)||DEFAULT_WORKER);}catch(_){base=DEFAULT_WORKER;}
+  window.tsdApiUrl=function(path){
+    if(typeof path!=='string'||!path.startsWith('/'))throw Error('잘못된 API 경로');
+    return (base||'')+path;
+  };
+  window.tsdApiBase=function(){return base;};
+  window.addEventListener('DOMContentLoaded',function(){
+    const input=document.getElementById('tsdApiWorkerUrl');
+    const status=document.getElementById('tsdApiWorkerState');
+    const save=document.getElementById('tsdApiWorkerSave');
+    const clear=document.getElementById('tsdApiWorkerClear');
+    if(!input||!status||!save||!clear)return;
+    input.value=base;
+    status.textContent=base?'설정된 서버: '+base+' · 실제 연결 상태는 위의 연결 진단 결과를 확인하세요.':'Worker 주소 미설정 · Cloudflare 배포 후 주소를 저장하세요.';
+    save.addEventListener('click',function(){
+      try{
+        const next=normalize(input.value);
+        if(!next)throw Error('Worker 주소를 입력하세요.');
+        localStorage.setItem(KEY,next);
+        location.reload();
+      }catch(e){status.textContent='저장하지 못했습니다: '+String(e.message||e);}
+    });
+    clear.addEventListener('click',function(){
+      try{localStorage.removeItem(KEY);}catch(_){}
+      location.reload(); // Restore the preconfigured TSD Worker URL.
+    });
+  });
+})();
+</script>
 </head>
 <body>
 <header class="header"><div class="container headrow"><a class="brand" href="./index.html"><span class="logo">TSD</span><span>Aero Systems</span></a></div></header>
 
-<section class="hero"><div class="container hero-grid"><div><div class="eyebrow">TSD FLIGHT SAFETY CENTER · BETA 2.9.1</div><h1>TSD 통합 비행안전정보</h1></div><div><div class="clock" id="clock">한국시간 기준 · --</div></div></div><div class="tsd-hero-application"><section aria-label="공식 신청·민원" class="tsd-application-inline" id="application-section"><h3>공식 신청·민원</h3><div class="linklist"><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/flight/register" rel="noopener noreferrer" target="_blank">비행승인 신청 <em>↗</em></a><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/aerophotos/register" rel="noopener noreferrer" target="_blank">항공촬영 신청 <em>↗</em></a><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/flightphotos/registerF" rel="noopener noreferrer" target="_blank">비행·촬영 원스톱 신청 <em>↗</em></a></div><p class="asideNote">원스톱 신청은 비행승인·항공촬영을 함께 접수하는 공식 메뉴입니다. 필요한 심사와 승인은 각각 진행되며 TSD가 대신 제출하지 않습니다.</p></section></div></section>
+<section class="hero"><div class="container hero-grid"><div><div class="eyebrow">TSD FLIGHT SAFETY CENTER · BETA 2.9.4</div><h1>TSD 통합 비행안전정보</h1></div><div><div class="clock" id="clock">한국시간 기준 · --</div></div></div><div class="tsd-hero-application"><section aria-label="공식 신청·민원" class="tsd-application-inline" id="application-section"><h3>공식 신청·민원</h3><div class="linklist"><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/flight/register" rel="noopener noreferrer" target="_blank">비행승인 신청 <em>↗</em></a><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/aerophotos/register" rel="noopener noreferrer" target="_blank">항공촬영 신청 <em>↗</em></a><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/flightphotos/registerF" rel="noopener noreferrer" target="_blank">비행·촬영 원스톱 신청 <em>↗</em></a></div><p class="asideNote">원스톱 신청은 비행승인·항공촬영을 함께 접수하는 공식 메뉴입니다. 필요한 심사와 승인은 각각 진행되며 TSD가 대신 제출하지 않습니다.</p></section></div></section>
 <section aria-labelledby="locator-title" class="container panel locator" id="location-search">
 <div class="locator-head"><h2 id="locator-title">⌖ 지역 이동 · 전국 지명 검색</h2><small>지역 선택·주소·좌표 검색</small></div>
 <div aria-label="행정구역 3단계 선택" class="locator-grid" role="group">
@@ -452,7 +500,18 @@ footer.footer{display:none !important;}
 </div></details>
 </section>
 <main class="container">
-<div aria-live="polite" id="connectionStatus" role="status" style="background:#fff7e9;border:1px solid #e3bb7d;border-radius:9px;padding:10px 14px;margin-top:13px;font-size:13px;color:#74511e">실행환경 진단 중…</div><div class="tsd-dashboard"><div class="tsd-main-column"><section class="gridtop" id="map-section">
+<div aria-live="polite" id="connectionStatus" role="status" style="background:#fff7e9;border:1px solid #e3bb7d;border-radius:9px;padding:10px 14px;margin-top:13px;font-size:13px;color:#74511e">실행환경 진단 중…</div><section id="tsdApiConfig" class="panel" aria-label="공역 API 서버 연결 설정" style="padding:12px 14px;margin-top:10px;border:1px solid #cbd8ed;background:#f7faff">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px"><strong>공역정보 서버 연결 설정</strong><small>GitHub Pages + 별도 Cloudflare Worker</small></div>
+  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:7px">
+    <label style="flex:1 1 320px;min-width:0">Cloudflare Worker 주소
+      <input id="tsdApiWorkerUrl" type="url" autocomplete="off" spellcheck="false" inputmode="url" placeholder="https://tsd-flight-api.계정명.workers.dev" style="display:block;width:100%;margin-top:3px;padding:10px;border:1px solid #bfd1e7;border-radius:7px" />
+    </label>
+    <button type="button" id="tsdApiWorkerSave" class="btn primary">연결 주소 저장</button>
+    <button type="button" id="tsdApiWorkerClear" class="btn">연결 해제</button>
+  </div>
+  <p id="tsdApiWorkerState" role="status" style="font-size:12px;margin:7px 0 0;color:#476078">현재 서버 연결 설정 없음 · 먼저 Cloudflare Worker를 배포하세요. 인증키는 이 입력란에 입력하지 마세요.</p>
+</section>
+<div class="tsd-dashboard"><div class="tsd-main-column"><section class="gridtop" id="map-section">
 <div class="panel map-card"><div class="map-toolbar"><div><strong style="font-size:16px">운용지역 위성지도</strong><div class="small muted">EO/IR MapLibre 지도엔진 · 영상 미수신 시 기본 지형도 표시 · 공역 판정은 별도</div></div><div class="map-actions"><select aria-label="지도 유형" id="mapType"><option value="sat" selected>위성영상</option><option value="street">일반지도</option></select><button class="btn soft sm" id="locate" type="button">◎ 현재위치</button><button aria-pressed="false" class="btn sm" id="follow" type="button">위치추종 OFF</button></div></div><section class="tsd-flight-advisory" id="tsd-flight-advisory" aria-label="비행 주의사항과 검색 지역 공역정보">
   <div class="tsd-advisory-title"><strong>⚠️ 비행 주의사항 · 검색 지역 공역</strong><span id="tsdAdviceBadge" class="tsd-advice-state">자료 확인 중</span></div>
   <div class="tsd-advisory-grid">
@@ -782,7 +841,14 @@ function tsdRenderAdvisory(){
   const f=data.matches||[],partial=Boolean(data.partial);
   if(f.length){tsdSafeText('tsdAirspaceState','지정 공역 '+f.length+'건 중첩'+(partial?' · 일부자료 미확인':''));tsdAppendList('tsdAirspaceList',f.map(tsdV29AirspaceLine).concat(partial?['일부 공역 레이어가 조회되지 않았습니다.']:[]));}
   else if(data.status==='ok'&&!partial){tsdSafeText('tsdAirspaceState','주요 정기 공역 5종 미지정');tsdAppendList('tsdAirspaceList',['5개 공식 정기 공역 레이어가 모두 조회되었고 선택 지점에서 중첩이 확인되지 않았습니다. 관제구(CTA) 전체·접근관제구역·NOTAM·고도·시설 제한은 이 조회 범위에 포함되지 않습니다.']);}
-  else{tsdSafeText('tsdAirspaceState',data.status==='loading'?'공역 조회 중':data.status==='unavailable'?'공역 공식조회 실패':'일부 공역자료만 확인 · 미지정 판정 불가');tsdAppendList('tsdAirspaceList',[data.message||'인증키 또는 공식 공역자료를 설정해야 위치별 공역을 조회할 수 있습니다.']);}
+  else{
+   const upstream520=Array.isArray(data.failure_codes)&&data.failure_codes.some(x=>/PROVIDER_(?:HTTP_|UPSTREAM_)520/.test(String(x)));
+   tsdSafeText('tsdAirspaceState',data.status==='loading'?'공역 조회 중':upstream520?'브이월드 520 오류 · 공역 미확인':data.status==='unavailable'?'공역 공식조회 실패':'일부 공역자료만 확인 · 미지정 판정 불가');
+   tsdAppendList('tsdAirspaceList',upstream520?[
+      '브이월드 공식 공역 API가 HTTP 520을 반환했습니다. 현재 위치의 공역 데이터는 확인되지 않았습니다.',
+      '공역이 없거나 비행이 허용된다는 의미가 아닙니다. 비행 전 드론원스톱·항공정보·NOTAM에서 별도 확인하세요.'
+   ]:[data.message||'인증키 또는 공식 공역자료를 설정해야 위치별 공역을 조회할 수 있습니다.']);
+  }
   tsdSafeText('tsdAirspaceSource','출처: '+(data.source||'미연결')+(data.checked_at?' · 조회 '+data.checked_at:'')+(data.checked_categories?.length?' · 확인 '+data.checked_categories.length+'종':'')+' · NOTAM 별도');
  }
 }
@@ -794,8 +860,8 @@ async function tsdFetchAirspace(){
  if(!runtime.backendAvailable){tsdAirspaceResult={status:'unavailable',message:'공역 데이터베이스 연결 없음 · Cloudflare Worker의 공식 공역 API 인증 설정을 확인해야 조회할 수 있습니다.',source:'미연결'};tsdRenderAdvisory();return;}
  try{
   const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),16000);
-  let resp;try{resp=await fetch('/api/airspace?'+new URLSearchParams({latitude:pos.lat.toFixed(5),longitude:pos.lon.toFixed(5)}),{cache:'no-store',signal:ctl.signal});}finally{clearTimeout(timer);}
-  if(!resp.ok)throw Error('HTTP '+resp.status);
+  let resp;try{resp=await fetch(tsdApiUrl('/api/airspace?')+new URLSearchParams({latitude:pos.lat.toFixed(5),longitude:pos.lon.toFixed(5)}),{cache:'no-store',signal:ctl.signal});}finally{clearTimeout(timer);}
+  if(!resp.ok){let errorText='HTTP '+resp.status;try{const err=await resp.json();errorText=String(err.error||err.message||errorText).slice(0,140);}catch(_){}throw Error(errorText);}
   const result=await resp.json();
   if(current!==tsdAirspaceSequence||!state.pos||Math.abs(state.pos.lat-pos.lat)>1e-6||Math.abs(state.pos.lon-pos.lon)>1e-6)return;
   tsdAirspaceResult=result;tsdRenderAdvisory();
@@ -820,7 +886,7 @@ async function checkBackend(){
   let healthy=false;
   try{
     const c=new AbortController();const t=setTimeout(()=>c.abort(),3200);let r;
-    try{r=await fetch('/health',{cache:'no-store',signal:c.signal});}finally{clearTimeout(t);}
+    try{r=await fetch(tsdApiUrl('/health'),{cache:'no-store',signal:c.signal});}finally{clearTimeout(t);}
     if(!r.ok)throw Error('HTTP '+r.status);
     const j=await r.json();
     if(j.status!=='ok'||!j.weather_proxy)throw Error('서버 응답형식 불일치');
@@ -828,7 +894,7 @@ async function checkBackend(){
     runtime.imageryProvider=j.imagery_provider||'esri';
     runtime.vworldKeyConfigured=!!j.vworld_wmts_key_configured;
     healthy=true;runtime.mode='TSD Cloudflare Worker';runtime.backendAvailable=true;
-    $('connectionStatus').textContent='실행환경: Cloudflare Worker 연결됨 · 장소검색 '+(j.search_configured?'인증키 설정됨(실제 검색 검증 필요)':'VWorld 인증키 미설정')+' · 위성영상 '+(runtime.imageryProvider==='vworld'?'국토교통부 VWorld (인증키 설정 여부 '+(runtime.vworldKeyConfigured?'설정':'미설정')+')':'Esri 대체경로')+' · 실제 영상 수신 여부는 [위성영상 연결 진단]으로 확인 · 공역 자동연동은 미구현';
+    $('connectionStatus').textContent='실행환경: Cloudflare Worker 연결됨 · 장소검색 '+(j.search_configured?'인증키 설정됨(실제 검색 검증 필요)':'VWorld 인증키 미설정')+' · 위성영상 '+(runtime.imageryProvider==='vworld'?'국토교통부 VWorld (인증키 설정 여부 '+(runtime.vworldKeyConfigured?'설정':'미설정')+')':'Esri 대체경로')+' · 실제 영상 수신 여부는 [위성영상 연결 진단]으로 확인 · 공역 인증 설정 '+(j.airspace_provider_configured?'있음(실제 응답 확인 필요)':'없음 · VWorld 인증키/서비스 URL 확인');
     $('connectionStatus').style.background='#eaf6f1';$('connectionStatus').style.borderColor='#c4e6d6';
   }catch(e){
     runtime.backendAvailable=false;runtime.mode='독립 HTML/미리보기';
@@ -961,7 +1027,7 @@ async function diagnoseMapConnection(){
   const pos=state.pos||{lat:36.3,lon:127.8};
   try{
     const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);
-    let r;try{r=await fetch('/api/map-diagnostics?lat='+encodeURIComponent(pos.lat)+'&lon='+encodeURIComponent(pos.lon),{cache:'no-store',signal:ctl.signal});}finally{clearTimeout(timer);}
+    let r;try{r=await fetch(tsdApiUrl('/api/map-diagnostics?lat=')+encodeURIComponent(pos.lat)+'&lon='+encodeURIComponent(pos.lon),{cache:'no-store',signal:ctl.signal});}finally{clearTimeout(timer);}
     const j=await r.json();
     if(r.ok&&j.verified)box.textContent='실제 타일 수신 성공 · '+j.provider+' · '+j.content_type+' · '+j.bytes+'바이트 · '+j.elapsed_ms+'ms. 지도가 계속 비면 [지도 재시도]를 누르세요.';
     else box.textContent='위성영상 연결 실패 · '+(j.error||'HTTP '+r.status)+' · '+(j.message||'서버 연결 확인 필요')+' · 제공기관 '+(j.provider||'미확인');
@@ -1141,12 +1207,12 @@ function drawHours(selectDefault=false){
  $('hours').querySelectorAll('tr[data-i]').forEach(tr=>tr.classList.toggle('selected',Number(tr.dataset.i)===state.selectedIndex));showSelected();
 }
 function resetWeatherValues(label){$('wind').textContent='--';$('gust').textContent='--';$('rainProb').textContent='--';$('tempRh').textContent='--';$('wxTime').textContent=label;$('wxRisk').textContent='예보 확인 불가';$('wxRiskBadge').textContent='미확인';$('wxRiskBadge').className='badge neutral';$('sunInfo').textContent='현재 선택 지역의 일출·일몰 자료를 확인하지 못했습니다. 공식 천문자료를 별도로 확인하세요.';}
-async function getForecast(force=false){if(!state.pos)return; if(runtime.healthPromise)await runtime.healthPromise;const {lat,lon}=state.pos;if(!isKoreanServiceExtent(lat,lon)){invalidCoordNotice('예보');return;}const changed=state.lastLat===null||Math.hypot(lat-state.lastLat,lon-state.lastLon)>.003;if(!force&&!changed&&state.lastFetch&&Date.now()-state.lastFetch<15*60*1000)return;state.lastLat=lat;state.lastLon=lon;const n=++state.activeFetch;$('forecastUpdate').textContent='예보 조회 중…';if(changed){state.forecast=null;state.selectedIndex=null;resetWeatherValues('새 위치 기상자료 조회 중…');tsdRenderAdvisory();$('days').textContent='새 위치의 예보를 불러오는 중입니다.';if($('forecastSun'))$('forecastSun').textContent='일출·일몰 조회 중';$('hours').innerHTML='<tr><td colspan="11">새 위치의 예보를 조회 중입니다.</td></tr>';}try{const q=new URLSearchParams({latitude:lat.toFixed(5),longitude:lon.toFixed(5),hourly:'temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,snowfall,wind_speed_10m,wind_gusts_10m,wind_direction_10m,visibility,cloud_cover,weather_code,uv_index',daily:'sunrise,sunset',timezone:'Asia/Seoul',forecast_days:'7',wind_speed_unit:'ms'});const endpoint=runtime.backendAvailable?'/api/forecast?':'https://api.open-meteo.com/v1/forecast?';const response=await fetch(endpoint+q,{cache:'no-store',signal:AbortSignal.timeout(13000)});
+async function getForecast(force=false){if(!state.pos)return; if(runtime.healthPromise)await runtime.healthPromise;const {lat,lon}=state.pos;if(!isKoreanServiceExtent(lat,lon)){invalidCoordNotice('예보');return;}const changed=state.lastLat===null||Math.hypot(lat-state.lastLat,lon-state.lastLon)>.003;if(!force&&!changed&&state.lastFetch&&Date.now()-state.lastFetch<15*60*1000)return;state.lastLat=lat;state.lastLon=lon;const n=++state.activeFetch;$('forecastUpdate').textContent='예보 조회 중…';if(changed){state.forecast=null;state.selectedIndex=null;resetWeatherValues('새 위치 기상자료 조회 중…');tsdRenderAdvisory();$('days').textContent='새 위치의 예보를 불러오는 중입니다.';if($('forecastSun'))$('forecastSun').textContent='일출·일몰 조회 중';$('hours').innerHTML='<tr><td colspan="11">새 위치의 예보를 조회 중입니다.</td></tr>';}try{const q=new URLSearchParams({latitude:lat.toFixed(5),longitude:lon.toFixed(5),hourly:'temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,snowfall,wind_speed_10m,wind_gusts_10m,wind_direction_10m,visibility,cloud_cover,weather_code,uv_index',daily:'sunrise,sunset',timezone:'Asia/Seoul',forecast_days:'7',wind_speed_unit:'ms'});const endpoint=runtime.backendAvailable?tsdApiUrl('/api/forecast?'):'https://api.open-meteo.com/v1/forecast?';const response=await fetch(endpoint+q,{cache:'no-store',signal:AbortSignal.timeout(13000)});
 if(!response.ok)throw Error('서버 예보 API HTTP '+response.status);
 const f=await response.json();if(!f.hourly?.time?.length)throw Error('시간별 예보 없음');if(n!==state.activeFetch)return;state.forecast=f;state.day=0;state.selectedIndex=null;state.lastFetch=Date.now();$('forecastUpdate').textContent='갱신 '+kstNow()+(runtime.backendAvailable?' · TSD 서버 중계':' · Open-Meteo 브라우저 직접 조회');drawDates();drawHours(true);}catch(e){if(n!==state.activeFetch)return;state.forecast=null;state.lastFetch=null;$('forecastUpdate').textContent='예보 수신 실패';$('days').textContent='예보를 불러올 수 없습니다.';if($('forecastSun'))$('forecastSun').textContent='일출·일몰 미수신';$('hours').innerHTML='<tr><td colspan="11">인터넷 연결 또는 외부 예보 API 상태를 확인하세요.</td></tr>';resetWeatherValues('기상자료 조회 실패');tsdRenderAdvisory();$('wxSource').textContent='자료 수신 실패: '+(e.name==='TimeoutError'?'서버 응답 시간 초과':e.message)+'. '+(runtime.backendAvailable?'서버의 외부 통신을 확인하세요.':'미리보기는 외부 통신이 차단될 수 있습니다. ZIP 서버로 실행해 확인하세요.')+' 미수신은 안전 판정이 아닙니다.';}}
 ['limitWind','limitGust','limitRain','limitVis'].forEach(id=>$(id).addEventListener('change',()=>{if(state.forecast)drawHours(false)}));
 async function tsdSpaceRequest(kind){
- const local=kind==='index'?'/api/space-index':'/api/space-weather';
+ const local=kind==='index'?tsdApiUrl('/api/space-index'):tsdApiUrl('/api/space-weather');
  const remote=kind==='index'?'https://spaceweather.kasa.go.kr/api/kindex':'https://spaceweather.kasa.go.kr/api/warn';
  let localError='';
  if(runtime.backendAvailable){
@@ -1392,7 +1458,7 @@ async function searchLocation(query){
     displayLocResults(cached);setLocatorStatus(cached.length?'캐시된 장소검색 '+cached.length+'건 · 결과를 선택하세요.':'캐시된 검색 결과 없음 · 다른 장소명을 입력하세요.',cached.length?'':'error');return;
   }
   if(runtime.healthPromise)await runtime.healthPromise;
-  const proxyPath=(typeof window.TSD_GEOCODE_API==='string' && window.TSD_GEOCODE_API.trim()) || (runtime.backendAvailable?'/api/geocode':'');
+  const proxyPath=(typeof window.TSD_GEOCODE_API==='string' && window.TSD_GEOCODE_API.trim()) || (runtime.backendAvailable?tsdApiUrl('/api/geocode'):'');
   if(!proxyPath){
     if(locals.length){displayLocResults(localCandidates(locals));setLocatorStatus('미리보기: 내장 행정구역 대표좌표 '+locals.length+'건만 표시합니다. 도로명·시설명은 TSD 서버 및 VWorld 인증키가 필요합니다.');}
     else setLocatorStatus('도로명·시설명 검색은 이 HTML 미리보기에서 사용할 수 없습니다. TSD Python 서버와 VWorld 인증키를 연결하세요.','error');
@@ -1501,7 +1567,7 @@ function eoirRegisterProtocol(){
   if(abortController?.signal){if(abortController.signal.aborted)controller.abort();else abortController.signal.addEventListener('abort',()=>controller.abort(),{once:true});}
   try{
     const [z,y,x]=raw.split('/');
-     const local='/api/map-tiles/sat/'+z+'/'+x+'/'+y;
+     const local=tsdApiUrl('/api/map-tiles/sat/')+z+'/'+x+'/'+y;
      const urls=(runtime.backendAvailable&&runtime.tileProxyAvailable)
        ? [local, ...(runtime.imageryProvider==='vworld'?[]:[EOIR_SAT_URL+raw])]
        : [EOIR_SAT_URL+raw];
@@ -1605,7 +1671,7 @@ function eoirStartRasterFallback(reason){
     img.style.left=(xx*256-left)+'px';img.style.top=(yy*256-top)+'px';
     const tx=(xx+n)%n;
      const direct=EOIR_SAT_URL+r.zoom+'/'+yy+'/'+tx;
-     const proxy='/api/map-tiles/sat/'+r.zoom+'/'+tx+'/'+yy;
+     const proxy=tsdApiUrl('/api/map-tiles/sat/')+r.zoom+'/'+tx+'/'+yy;
      const isSat=r.provider==='sat';
      const useProxy=isSat&&runtime.backendAvailable&&runtime.tileProxyAvailable;
      img.src=isSat?(useProxy?proxy:direct):'https://tile.openstreetmap.org/'+r.zoom+'/'+tx+'/'+yy+'.png';
@@ -1899,7 +1965,7 @@ async function fallbackBackend(lat,lon,serial,doDialog){
  }
  const ctrl=new AbortController();pending=ctrl;const timer=setTimeout(()=>ctrl.abort(),7500);
  try{
-  const res=await fetch('/api/jurisdiction?'+new URLSearchParams({latitude:lat.toFixed(5),longitude:lon.toFixed(5)}),{signal:ctrl.signal,cache:'no-store'});
+  const res=await fetch(tsdApiUrl('/api/jurisdiction?')+new URLSearchParams({latitude:lat.toFixed(5),longitude:lon.toFixed(5)}),{signal:ctrl.signal,cache:'no-store'});
   if(!res.ok)throw Error('서버 HTTP '+res.status);
   const j=await res.json();if(serial!==requestSerial)return;
   const key=j.status==='ok'?resolveOffice(j.province):'';
