@@ -2042,7 +2042,7 @@ html,body{margin:0!important;background:#0b1420!important;color:#e5effa!importan
 })();
 &lt;/script&gt;
 &lt;div id=&quot;fpv-lab&quot;&gt;
-&lt;div class=&quot;r23-title&quot;&gt;&lt;div&gt;&lt;h2&gt;&lt;span class=&quot;brand&quot;&gt;TSD / FLIGHT LAB&lt;/span&gt;&lt;br/&gt;FPV 비행장 · PID 반응 &lt;small style=&quot;font-size:12px;font-weight:500;opacity:.7&quot;&gt;Betaflight PID 교육용 기준 · R30&lt;/small&gt;&lt;/h2&gt;&lt;/div&gt;&lt;div class=&quot;r23-audio&quot;&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;button aria-pressed=&quot;false&quot; class=&quot;btn&quot; id=&quot;audioToggle&quot;&gt;비행 소리 켜기&lt;/button&gt;&lt;label class=&quot;form-label&quot;&gt;음량 &lt;span id=&quot;volumeVal&quot;&gt;15%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;volume&quot; max=&quot;50&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;15&quot;/&gt;&lt;/label&gt;&lt;span aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;audioStatus&quot;&gt;아밍음 · 이륙·턴·회복의 부하에 연동&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;r23-title&quot;&gt;&lt;div&gt;&lt;h2&gt;&lt;span class=&quot;brand&quot;&gt;TSD / FLIGHT LAB&lt;/span&gt;&lt;br/&gt;FPV 비행장 · PID 반응 &lt;small style=&quot;font-size:12px;font-weight:500;opacity:.7&quot;&gt;Betaflight PID 교육용 기준 · R32&lt;/small&gt;&lt;/h2&gt;&lt;/div&gt;&lt;div class=&quot;r23-audio&quot;&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;button aria-pressed=&quot;false&quot; class=&quot;btn&quot; id=&quot;audioToggle&quot;&gt;비행 소리 켜기&lt;/button&gt;&lt;label class=&quot;form-label&quot;&gt;음량 &lt;span id=&quot;volumeVal&quot;&gt;15%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;volume&quot; max=&quot;50&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;15&quot;/&gt;&lt;/label&gt;&lt;span aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;audioStatus&quot;&gt;아밍음 · 이륙·턴·회복의 부하에 연동&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;div class=&quot;text-small text-muted&quot;&gt;교육용 근사 모델 · 실제 기체의 비행용 튜닝값을 보증하지 않습니다.&lt;/div&gt;
 &lt;style&gt;
 #fpv-lab{max-width:1800px;gap:5px}
@@ -2423,8 +2423,8 @@ const FlightEngine = (() =&gt; {
   const delay=Array.from({length:1},()=&gt;[0,0,0]),logs=[];let dIdx=0;
   let maneuverStart=s.test==='takeoff'?0:null,entryPosition=null,splitStart=null,altIntegral=0,depleted=false;
   // R27: scripted pilot preparation before slow inverted maneuvers. Not a physical state override.
-  const slowInversion=['roll','flip'].includes(s.test)&amp;&amp;maneuverDuration(s)&gt;1;
-  const prepHeight=slowInversion?initialHeight+.5*9.81*(maneuverDuration(s)+(s.punchDuration??.5))**2:22;
+  const slowInversion=['roll','flip'].includes(s.test);
+  const prepHeight=slowInversion?initialHeight+Math.max(4,.5*9.81*(maneuverDuration(s)+.5)**2):22;
   const needsPreparation=s.test.startsWith('split-')||slowInversion;
   if(s.test!=='takeoff')motor.fill(s.throttle/100);
   logs.push({t:0,maneuverStart,rotationStart:s.test==='takeoff'?0:null,recoveryTime:null,heightTarget:s.test==='takeoff'?0:initialHeight,entryPosition,stickThrottle:throttle(s,0,maneuverStart??Infinity),phase:'초기 상태',angles:[...angle],rates:[...rate],gyro:[0,0,0],targets:[0,0,0],reference:reference(s,0,maneuverStart??Infinity),pos:[...pos],velocity:[...vel],motors:[...motor],terms:gs.map(()=&gt;({P:0,I:0,D:0,FF:0,sum:0})),effectiveD:gs.map(g=&gt;g.D),disturbance:[0,0,0],wash:0,crash:false,depleted:false,throttle:s.test!=='takeoff'?s.throttle/100:0,used:0,saturated:[false,false,false]});
@@ -2437,13 +2437,31 @@ const FlightEngine = (() =&gt; {
    const recovery=rotationStart+maneuverDuration(s)+(split||['flip','roll','yaw'].includes(s.test)?(s.punchDuration??.5):0);
    const ref=hover?[0,0,0]:cruiseReference(s,reference(s,t,rotationStart),pos,vel,t,recovery),refNext=hover?[0,0,0]:cruiseReference(s,reference(s,t+dt,rotationStart),pos,vel,t+dt,recovery),stickThrottle=throttle(s,t,rotationStart),tar=[],terms=[],effectiveD=[];
    // Scripted pilot adds collective recovery, never overwrites attitude/position.
-   const heightTarget=s.test==='takeoff'?Math.min(6,t*1.6):needsPreparation&amp;&amp;t&gt;=start&amp;&amp;t&lt;rotationStart?prepHeight:initialHeight;
+   // R32: scripted pilot captures entry altitude for Split-S, Roll, Flip and Yaw; no pose override.
+   // The vertical controller commands collective only; PID attitude response stays independent.
+   const turn=['roll','flip','yaw','split-left','split-right'].includes(s.test);
+   const splitHeight=turn&amp;&amp;entryPosition?-entryPosition[2]:initialHeight;
+   const heightTarget=s.test==='takeoff'?Math.min(6,t*1.6):needsPreparation&amp;&amp;t&gt;=start&amp;&amp;t&lt;rotationStart?prepHeight:splitHeight;
+   const splitExit=turn&amp;&amp;physics&amp;&amp;Number.isFinite(rotationStart)&amp;&amp;t&gt;=rotationStart+(s.test==='yaw'?0:maneuverDuration(s));
    const hold=s.test==='takeoff'||s.test==='throttle'||s.test==='yaw'||t&gt;=recovery||t&lt;rotationStart;
    const heightError=heightTarget+pos[2];
-   if(hold&amp;&amp;!crash&amp;&amp;stickThrottle&gt;0)altIntegral=clamp(altIntegral+heightError*dt,-8,8);
+   if(hold&amp;&amp;!splitExit&amp;&amp;!crash&amp;&amp;stickThrottle&gt;0)altIntegral=clamp(altIntegral+heightError*dt,-8,8);
    else altIntegral*=.999;
    const assist=hold?clamp(heightError*.065+vel[2]*.10+altIntegral*.015,-.35,.52):0;
-   const thr=stickThrottle===0?0:clamp(stickThrottle+(hover?0:assist),0,1);
+   let thr=stickThrottle===0?0:clamp(stickThrottle+(hover?0:assist),0,1);
+   if(splitExit&amp;&amp;stickThrottle&gt;0&amp;&amp;!crash&amp;&amp;!depleted){
+    const up=quaternionRotate([0,0,1],quaternion)[2];
+    if(up&gt;.5){
+     const vTarget=clamp(1.35*heightError,-3,2),aUp=clamp(4.5*(vTarget+vel[2]),-5,10);
+     const dragZ=.5*1.225*.12*(wheelbase/1000)**2*Math.hypot(...vel)*vel[2]/hw.mass;
+     const lift=hw.mass*Math.max(0,9.81+aUp-dragZ)/up;
+     let lo=0,hi=1;for(let i=0;i&lt;14;i++){const mid=(lo+hi)/2,force=propulsion(s.hw,hw,[mid,mid,mid,mid],used).forces.reduce((a,b)=&gt;a+b,0);if(force&lt;lift)lo=mid;else hi=mid;}
+     const u=clamp((t-rotationStart-(s.test==='yaw'?0:maneuverDuration(s)))/.18,0,1),blend=u*u*(3-2*u);
+     // Blend from the scripted punch, not the old height controller's abrupt throttle cut.
+     const punch=s.test==='yaw'?s.throttle/100:clamp(s.throttle/100+(s.punchStrength??22)/100,0,1);
+     thr=punch+( (lo+hi)/2-punch)*blend;
+    }
+   }
    // Collective is the final simulated throttle command, not receiver pulse width.
    const tpaFactor=dyn.tpa?1-.6*clamp((thr-.65)/.35,0,1):1;
    const throttleSlope=prevCollective===null?0:Math.abs(thr-prevCollective)/dt;prevCollective=thr;
@@ -2520,7 +2538,7 @@ const FlightEngine = (() =&gt; {
      pos[2]=-.16;
     }
    }
-   if(n%2===0)logs.push({t,maneuverStart,rotationStart:Number.isFinite(rotationStart)?rotationStart:null,recoveryTime:Number.isFinite(recovery)?recovery:null,heightTarget,entryPosition,stickThrottle,phase:depleted?'교육용 용량 소진 · 추진 종료':crash?'충돌':s.test==='takeoff'?'이륙 안정화':s.test==='throttle'?(hover?'정지 호버 · 스로틀 직접 입력':'6m 목표 · 단순 전진'):t&lt;start?'20m 진입 비행':needsPreparation&amp;&amp;t&lt;rotationStart?'기동 준비 상승 · '+prepHeight.toFixed(1)+'m 목표':t&lt;recovery?'기동 · 스로틀 시퀀스':'6m 복귀 · 경로 보조 전진',angles:[...angle],rates:[...rate],gyro:[...filtered],targets:tar,reference:ref,pos:[...pos],velocity:[...vel],motors:[...motor],terms,effectiveD,disturbance,wash,crash,depleted,throttle:depleted?0:thr,used,
+   if(n%2===0)logs.push({t,maneuverStart,rotationStart:Number.isFinite(rotationStart)?rotationStart:null,recoveryTime:Number.isFinite(recovery)?recovery:null,heightTarget,entryPosition,stickThrottle,phase:depleted?'교육용 용량 소진 · 추진 종료':crash?'충돌':s.test==='takeoff'?'이륙 안정화':s.test==='throttle'?(hover?'정지 호버 · 스로틀 직접 입력':'6m 목표 · 단순 전진'):t&lt;start?'20m 진입 비행':needsPreparation&amp;&amp;t&lt;rotationStart?'기동 준비 상승 · '+prepHeight.toFixed(1)+'m 목표':t&lt;recovery?'기동 · 스로틀 시퀀스':(turn?'진입 고도 '+splitHeight.toFixed(2)+'m 복귀 · 경로 보조 전진':'6m 복귀 · 경로 보조 전진'),angles:[...angle],rates:[...rate],gyro:[...filtered],targets:tar,reference:ref,pos:[...pos],velocity:[...vel],motors:[...motor],terms,effectiveD,disturbance,wash,crash,depleted,throttle:depleted?0:thr,used,
     saturated:gs.map((_,k)=&gt;!crash&amp;&amp;!depleted&amp;&amp;thr&gt;0&amp;&amp;Math.abs(physics?clamp(terms[k].sum,-15,15)-terms[k].sum:mix.reduce((sum,m,i)=&gt;sum+m[k]*(out[i]-raw[i]),0)/4)&gt;.001)});
   }
   return logs;
