@@ -43,21 +43,26 @@ function readCombo(combo){
     const blob=data.subarray(meshBase+p.offset,meshBase+p.offset+p.length);
     const digest=crypto.createHash('sha256').update(blob).digest('hex');
     let min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity],finite=true;
+    const vertexCoordinates=new Set();
     for(let j=0;j<blob.length;j+=24){
+      const xyz=[];
       for(let k=0;k<3;k++){
         const x=blob.readFloatLE(j+4*k);
         if(!Number.isFinite(x)){finite=false;break}
-        min[k]=Math.min(min[k],x);max[k]=Math.max(max[k],x);
+        xyz.push(x);min[k]=Math.min(min[k],x);max[k]=Math.max(max[k],x);
       }
       if(!finite)break;
+      vertexCoordinates.add(xyz.map(x=>Math.round(x*1000)).join(','));
     }
     if(!finite)problem(at,'non-finite 3D vertex position');
     for(let k=0;k<3;k++){
       if(Math.abs(min[k]-p.bounds[0][k])>.15||Math.abs(max[k]-p.bounds[1][k])>.15)
         problem(at,'mesh vertex min/max differs from header bounds axis '+k);
     }
+    const vertexHash=crypto.createHash('sha256').update([...vertexCoordinates].sort().join(';')).digest('hex');
+    const center=p.bounds[0].map((x,k)=>(x+p.bounds[1][k])/2);
     parts.push({id:p.id,name:p.name,category:p.category,triangles:p.triangleCount,
-      bounds:p.bounds,digest});
+      bounds:p.bounds,center,vertexHash,digest});
   }
   if(triangles!==header.triangles)problem(combo,'header total triangle mismatch '+triangles+'/'+header.triangles);
   if(parts.length===0)problem(combo,'empty part list');
@@ -73,14 +78,21 @@ for(const combo of combos)try{readCombo(combo)}catch(e){problem(combo,String(e.m
 for(const connector of ['XT60','XT90']){
   const upper=audit.variants['상부_'+connector],lower=audit.variants['하부_'+connector];
   if(!upper||!lower)continue;
-  const byName=new Map(lower.parts.map(p=>[p.name,p]));
+  const used=new Set();
   for(const p of upper.parts){
     if(!['frame','rear'].includes(p.category))continue;
-    const q=byName.get(p.name);if(!q)continue;
-    const changed=p.digest!==q.digest;
-    audit.comparisons.push({connector,part:p.name,category:p.category,sameGeometry:!changed,
-      upperBounds:p.bounds,lowerBounds:q.bounds});
-    if(changed)problem(connector+'/'+p.name,'same-named shared frame/rear mesh differs between upper and lower versions','warning');
+    const matches=lower.parts.filter(q=>q.name===p.name&&q.category===p.category&&!used.has(q.id));
+    if(!matches.length)continue;
+    // Repeated standoffs have the same name; match by actual XYZ position, not last name in a Map.
+    matches.sort((a,b)=>Math.hypot(...p.center.map((v,k)=>v-a.center[k]))-Math.hypot(...p.center.map((v,k)=>v-b.center[k])));
+    const q=matches[0];used.add(q.id);
+    const boundsDrift=Math.max(...[0,1].flatMap(t=>[0,1,2].map(k=>Math.abs(p.bounds[t][k]-q.bounds[t][k]))));
+    const sameVertices=p.vertexHash===q.vertexHash;
+    const sameTriangleCount=p.triangles===q.triangles;
+    audit.comparisons.push({connector,part:p.name,upperId:p.id,lowerId:q.id,category:p.category,
+      sameVertexCoordinates:sameVertices,sameTriangleCount,boundsDriftMm:+boundsDrift.toFixed(6)});
+    if(boundsDrift>0.01)problem(connector+'/'+p.name,'bounding box differs between upper and lower common part by '+boundsDrift.toFixed(3)+'mm','warning');
+    else if(!sameVertices)problem(connector+'/'+p.name,'vertex-coordinate sets differ, although bounding boxes agree; BRep comparison needed','warning');
   }
   if(upper.antennaBrackets.join('|')!==lower.antennaBrackets.join('|'))
     problem(connector,'upper/lower antenna bracket BOM labels are not unified','warning');
