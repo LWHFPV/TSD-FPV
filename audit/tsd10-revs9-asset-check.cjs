@@ -5,11 +5,21 @@
  * WARNING: visual mesh audit is NOT manufacturing/BRep or physical fit approval.
  */
 'use strict';
-const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib'),crypto=require('node:crypto');
+const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib'),crypto=require('node:crypto'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 const combos=['상부_XT60','상부_XT90','하부_XT60','하부_XT90'];
 const knownCategories=new Set(['frame','rear','gps','camera','electronics','wiring','battery','power','propulsion','propfastener']);
-const audit={date:new Date().toISOString(),source:'tsd10-revs8-preview.html',revision:'RevS8 (read-only review)',variants:{},errors:[],warnings:[],comparisons:[],manufacturingApproved:false};
+const audit={date:new Date().toISOString(),source:'tsd10-revs8-preview.html',revision:'RevS8 (read-only review)',variants:{},errors:[],warnings:[],comparisons:[],manufacturingApproved:false,commonBOMValidated:false};
+// Load the same two pure display functions as the live viewer to prevent BOM drift.
+const viewer=fs.readFileSync(path.join(root,'tsd10-revs8-preview.html'),'utf8');
+const helpers=['isRearRfBracket','displayPartName'].map(fn=>{
+  const match=viewer.match(new RegExp('function '+fn+'\\\\(p\\\\)\\\\{[\\\\s\\\\S]*?\\\\n\\\\}'));
+  if(!match)throw Error('viewer common BOM helper missing: '+fn);
+  return match[0];
+}).join('\\n');
+const isRearRfBracket=vm.runInNewContext(helpers+';isRearRfBracket');
+const displayPartName=vm.runInNewContext(helpers+';displayPartName');
+
 function problem(where,message,severity='error'){audit[severity==='error'?'errors':'warnings'].push({where,message})}
 function readCombo(combo){
   const base=path.join(root,'tsd10-revs8-assets');
@@ -72,9 +82,26 @@ function readCombo(combo){
   if(!frame.some(p=>/하판|lower.?frame|bottom.?plate/i.test(p.name)))problem(combo,'frame list lacks recognizable lower deck','warning');
   if(parts.some(p=>p.category==='electronics'&&/하판|lower.?frame|bottom.?plate/i.test(p.name)))problem(combo,'lower deck miscategorized as electronics');
   if(parts.some(p=>p.category==='rear'&&/상판|top.?deck|upper.?plate/i.test(p.name)))problem(combo,'upper deck miscategorized as rear');
-  audit.variants[combo]={partCount:parts.length,triangleCount:triangles,categoryCounts:Object.fromEntries([...knownCategories].map(k=>[k,parts.filter(p=>p.category===k).length])),antennaBrackets:parts.filter(p=>/안테나.*(?:브라켓|브래킷)|antenna.*bracket|rf.*bracket/i.test(p.name)).map(p=>p.name),frameNames:frame.map(p=>p.name),parts};
+  audit.variants[combo]={partCount:parts.length,triangleCount:triangles,categoryCounts:Object.fromEntries([...knownCategories].map(k=>[k,parts.filter(p=>p.category===k).length])),antennaBrackets:parts.filter(p=>/안테나.*(?:브라켓|브래킷)|antenna.*bracket|rf.*bracket/i.test(p.name)).map(p=>p.name),
+    commonRearBracketBOM:parts.filter(isRearRfBracket).map(p=>({sourceId:p.id,sourceName:p.name,displayName:displayPartName(p)})),
+    frameNames:frame.map(p=>p.name),
+    gpsParts:parts.filter(p=>p.category==='gps').map(p=>({name:p.name,center:p.center})),parts};
 }
 for(const combo of combos)try{readCombo(combo)}catch(e){problem(combo,String(e.message||e))}
+let commonBOMCount=0;
+for(const combo of combos){
+  const v=audit.variants[combo]; if(!v)continue;
+  const count=v.commonRearBracketBOM.length;
+  if(count!==1)problem(combo,'rear RF antenna bracket must have one BOM item per assembly; found '+count);
+  else commonBOMCount++;
+  const g=v.gpsParts;
+  if(g.length===2){
+    const distance=Math.hypot(...g[0].center.map((x,k)=>x-g[1].center[k]));
+    v.gpsCenterGapMm=+distance.toFixed(3);
+    if(distance>30)problem(combo,'GPS body/tray center separation exceeds 30mm: '+distance.toFixed(2)+'mm','warning');
+  }else problem(combo,'expected two separated GPS model/tray parts; found '+g.length,'warning');
+}
+audit.commonBOMValidated=commonBOMCount===4;
 for(const connector of ['XT60','XT90']){
   const upper=audit.variants['상부_'+connector],lower=audit.variants['하부_'+connector];
   if(!upper||!lower)continue;
@@ -94,8 +121,8 @@ for(const connector of ['XT60','XT90']){
     if(boundsDrift>0.01)problem(connector+'/'+p.name,'bounding box differs between upper and lower common part by '+boundsDrift.toFixed(3)+'mm','warning');
     else if(!sameVertices)problem(connector+'/'+p.name,'vertex-coordinate sets differ, although bounding boxes agree; BRep comparison needed','warning');
   }
-  if(upper.antennaBrackets.join('|')!==lower.antennaBrackets.join('|'))
-    problem(connector,'upper/lower antenna bracket BOM labels are not unified','warning');
+  if(upper.commonRearBracketBOM.map(p=>p.displayName).join('|')!==lower.commonRearBracketBOM.map(p=>p.displayName).join('|'))
+    problem(connector,'common rear RF bracket BOM label still differs between variants');
 }
 for(const combo of combos)if(audit.variants[combo]){
   const v=audit.variants[combo];
@@ -104,6 +131,14 @@ for(const combo of combos)if(audit.variants[combo]){
 const report=path.join(__dirname,'tsd10-revs9-asset-audit-result.json');
 fs.writeFileSync(report,JSON.stringify(audit,null,2)+'\n');
 console.log(JSON.stringify({source:audit.source,variants:Object.keys(audit.variants),errors:audit.errors.length,warnings:audit.warnings.length,comparisons:audit.comparisons.length,report},null,2));
+console.log('ASSEMBLY_CONTRACTS',JSON.stringify({commonBOMValidated:audit.commonBOMValidated,
+  variantContracts:Object.fromEntries(combos.filter(c=>audit.variants[c]).map(c=>[c,{
+    frameCount:audit.variants[c].categoryCounts.frame,
+    upperDecks:audit.variants[c].frameNames.filter(n=>/상판|top.?deck|upper.?plate/i.test(n)).length,
+    lowerDecks:audit.variants[c].frameNames.filter(n=>/하판|lower.?frame|bottom.?plate/i.test(n)).length,
+    rearBracket:audit.variants[c].commonRearBracketBOM,
+    gpsCenterGapMm:audit.variants[c].gpsCenterGapMm
+  }]))}));
 console.log('AUDIT_WARNINGS',JSON.stringify(audit.warnings));
 console.log('AUDIT_ERRORS',JSON.stringify(audit.errors));
 if(audit.errors.length)process.exitCode=1;
