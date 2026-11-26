@@ -33,7 +33,7 @@ jobs:
           import { execFileSync } from 'node:child_process';
           const checkedCommit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
           const axeSource=fs.readFileSync('node_modules/axe-core/axe.min.js','utf8');
-          const paths=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','simulator.html','tsd-qgc-mission-lab.html'];
+          const paths=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','simulator.html','tsd-qgc-mission-lab.html','prop-vibration-lab.html'];
           const result=[];
           const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
           async function fingerprint(header,home=false){
@@ -158,6 +158,47 @@ jobs:
               fs.writeFileSync('/tmp/tsd-header-results/header-'+file+'-'+width+'.png',PNG.sync.write(cropped));
               entry.headerCapture=true;
               entry.captureSize=[full.width,full.height];
+              if(file==='prop-vibration-lab.html'){
+                const checks={};
+                const ensure=(key,value)=>{checks[key]=!!value;if(!value)throw Error('PropLab functional failure: '+key);};
+                entry.propChecks=checks;
+                await page.locator('#motors button').first().waitFor({state:'visible',timeout:10000});
+                ensure('fourMotors',await page.locator('#motors button').count()===4);
+                ensure('canvases',await page.evaluate(()=>['airframe3d','drone','track','spectrum'].every(id=>{const c=document.getElementById(id);return c instanceof HTMLCanvasElement&&c.width>0&&c.height>0&&c.getBoundingClientRect().width>0;})));
+                const rpmBefore=await page.locator('#rpm').innerText();
+                await page.locator('#throttle').fill('60');
+                await page.waitForFunction(old=>document.querySelector('#power').textContent.includes('60')&&document.querySelector('#rpm').textContent!==old,rpmBefore,{timeout:15000});
+                ensure('throttleRPM',true);
+                for(const [id,v] of [['roll','35'],['pitch','-25'],['yaw','40']]){
+                  await page.locator('#'+id).fill(v);
+                  ensure(id,await page.locator('#'+id).inputValue()===v&&await page.locator('#'+id+'Value').innerText().then(t=>t.includes(v.replace('-',''))));
+                }
+                await page.locator('#axesCenter').click();
+                ensure('axesCenter',await page.evaluate(()=>['roll','pitch','yaw'].every(id=>document.getElementById(id).value==='0')));
+                await page.locator('#motors button').nth(2).click();
+                ensure('motorSelect',await page.locator('#motors button').nth(2).getAttribute('aria-pressed')==='true');
+                await page.locator('#blades button[data-value="4"]').click();
+                ensure('bladeSelect',await page.locator('#blades button[data-value="4"]').getAttribute('aria-pressed')==='true');
+                await page.locator('#speed button[data-value="0.1"]').click();
+                ensure('slowPlayback',await page.locator('#speed button[data-value="0.1"]').getAttribute('aria-pressed')==='true');
+                await page.locator('#pulses').click();
+                ensure('pulseToggle',await page.locator('#pulses').getAttribute('aria-pressed')==='false');
+                await page.locator('#vibrationExample').click();
+                ensure('vibrationToggle',await page.locator('#vibrationExample').getAttribute('aria-pressed')==='true');
+                await page.locator('#pause').click();
+                ensure('pause',await page.locator('#pause').getAttribute('aria-pressed')==='true');
+                await page.locator('#pause').click();
+                ensure('resume',await page.locator('#pause').getAttribute('aria-pressed')==='false');
+                await page.locator('#sound').click();
+                await page.waitForFunction(()=>document.getElementById('sound').getAttribute('aria-pressed')==='true'||document.getElementById('audioStatus').textContent.length>0,undefined,{timeout:10000});
+                ensure('audioStart',await page.locator('#sound').getAttribute('aria-pressed')==='true');
+                await page.locator('#volume').fill('20');
+                ensure('volume',await page.locator('#volumeValue').innerText()==='20%');
+                await page.locator('#reset').click();
+                ensure('reset',await page.evaluate(()=>document.getElementById('throttle').value==='0'&&document.getElementById('sound').getAttribute('aria-pressed')==='false'&&document.getElementById('vibrationExample').getAttribute('aria-pressed')==='false'));
+                ensure('noPageErrors',errors.length===0);
+                entry.propFunctionalPass=true;
+              }
               entry.designPass=entry.pass&&entry.visualDifferences.length===0&&entry.heroBackgroundMatch&&entry.heroPatternMatch&&entry.menuLabelsMatch&&entry.menuTargetsMatch&&entry.linkChecks.every(x=>x.status===200)&&entry.axe.length===0&&entry.headerCapture===true&&entry.commonCssResponse.status===200;
             } catch(e) {entry.pass=false;entry.designPass=false;entry.failure=String(e);await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'-failure.png',timeout:10000}).catch(()=>{});}
             result.push(entry); console.log(JSON.stringify(entry));await context.close();
