@@ -246,9 +246,18 @@ search('', false);
   const gate=document.getElementById('downloadGate');
   const input=document.getElementById('gatePassword');
   let action=null;
+  let copyText=null;
+  let approved=false;
+  let busy=false;
+  const submit=document.querySelector('#gateForm [type=submit]');
+  const error=document.getElementById('gateError');
+  function reset(){action=null;copyText=null;approved=false;busy=false;input.hidden=false;input.required=true;input.value='';submit.disabled=false;submit.textContent='확인';error.textContent='';}
 
-  function ask(fn,copy=false){
+  function ask(fn,copy=false,text=null){
+    if(gate.open)return;
+    reset();
     action=fn;
+    copyText=copy?text:null;
     input.value='';
     document.getElementById('gateError').textContent='';
     document.getElementById('gatePurpose').textContent=
@@ -264,14 +273,27 @@ search('', false);
     action=null;
   };
 
-  gate.addEventListener('cancel',()=>action=null);
+  gate.addEventListener('close',()=>{if(!gate.open)reset();});
+  gate.addEventListener('cancel',reset);
 
   document.getElementById('gateForm').onsubmit=async e=>{
     e.preventDefault();
-    const bytes=await crypto.subtle.digest(
-      'SHA-256',
-      new TextEncoder().encode(input.value)
-    );
+    if(busy)return;
+    if(approved&&copyText!==null){
+      busy=true;submit.disabled=true;
+      let ok=false;
+      try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(copyText);ok=true;}}catch{}
+      if(!ok){const t=document.createElement('textarea');t.value=copyText;t.style.cssText='position:fixed;left:-9999px;top:0';gate.append(t);t.select();try{ok=document.execCommand('copy');}catch{}finally{t.remove();}}
+      busy=false;submit.disabled=false;
+      if(ok)gate.close();else error.textContent='브라우저가 복사를 차단했습니다. 다시 시도하세요.';
+      return;
+    }
+    busy=true;submit.disabled=true;
+    let bytes;
+    try{bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(input.value));}
+    catch{error.textContent='인증을 수행할 수 없습니다. HTTPS 연결을 확인하세요.';return;}
+    finally{busy=false;submit.disabled=false;}
+    if(!gate.open)return;
     const hash=Array.from(
       new Uint8Array(bytes),
       n=>n.toString(16).padStart(2,'0')
@@ -285,6 +307,7 @@ search('', false);
       return;
     }
 
+    if(copyText!==null){approved=true;input.value='';input.required=false;input.hidden=true;submit.textContent='복사 실행';error.textContent='인증되었습니다. 복사 실행을 누르세요.';submit.focus();return;}
     const fn=action;
     action=null;
     input.value='';
@@ -312,10 +335,11 @@ search('', false);
 
   document.addEventListener('copy',e=>{
     if(gate.open)return;
+    if(e.target?.closest?.('input,textarea,[contenteditable=true]'))return;
     const text=window.getSelection()?.toString();
     if(!text)return;
     e.preventDefault();
-    ask(()=>navigator.clipboard.writeText(text),true);
+    ask(null,true,text);
   });
 })();
 </script>
