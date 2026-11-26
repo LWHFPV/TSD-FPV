@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSD 공역 연동 복구 검토 | 데모·운영 비교</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAo9T0B6lhgV2sFgtH5RPGtEVoWuD5Z8E7V4F3Y=" crossorigin="">
+<style>
+:root{--navy:#101d32;--navy2:#1d3454;--sky:#09a5d2;--ink:#1c2b3a;--muted:#617386;--border:#d9e3ed;--bg:#f3f7fb;--red:#a62b2b;--amber:#946000;--green:#14734b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;line-height:1.5;font-size:14px}
+header{background:var(--navy);color:#fff;padding:16px max(18px,calc((100vw - 1420px)/2));display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+header a{color:#fff;text-decoration:none}header strong{font-size:21px;font-weight:800;letter-spacing:.04em}header span{color:#a9c3dc;font-size:13px}
+main{max-width:1440px;margin:auto;padding:22px 16px 36px}.eyebrow{color:var(--sky);font-weight:800;letter-spacing:.07em}.heading{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.heading h1{font-size:25px;margin:3px 0}.notice{margin:12px 0 18px;padding:12px 16px;border-left:4px solid #d2a41e;background:#fff8e6;border-radius:6px;color:#674a12}
+.layout{display:grid;grid-template-columns: minmax(320px,1fr) minmax(320px,1fr);gap:14px;align-items:start}.card{background:white;border:1px solid var(--border);border-radius:13px;padding:17px;box-shadow:0 1px 3px #102b4310}.card h2{font-size:17px;margin:0 0 10px}.sub{font-size:12px;color:var(--muted);margin:0 0 12px}.controls{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.field{display:flex;flex-direction:column;gap:3px;flex:1;min-width:100px}.field label{font-weight:700;color:#455769;font-size:12px}input,select{width:100%;padding:9px 10px;background:#fff;border:1px solid #bdcedd;border-radius:8px;color:var(--ink);font-size:14px}button,.btn{cursor:pointer;border:0;background:var(--navy2);color:#fff;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:750;text-decoration:none}button:hover,.btn:hover{filter:brightness(1.1)}button.secondary{background:#e5f1f8;color:#174c69}.muted{color:var(--muted)}.result{background:#f6f9fc;border:1px solid #dfe8ef;border-radius:9px;padding:12px;margin-top:12px;min-height:98px;white-space:pre-wrap;overflow-wrap:anywhere}.result b{display:block;font-size:17px;margin-bottom:4px}.result.bad{border-color:#e9c5be;background:#fff5f3;color:var(--red)}.result.good{border-color:#afd8c7;background:#f1faf6;color:var(--green)}.result.warn{border-color:#ebd7aa;background:#fffaed;color:var(--amber)}.tag{padding:3px 8px;font-size:12px;border-radius:25px;background:#dfeaf1;color:#244961;font-weight:800}.tag.alert{background:#fce4df;color:#962d1f}.tag.demo{background:#fff0ce;color:#855a00}.full{grid-column:1/-1}.line{border-top:1px solid var(--border);margin:13px 0}.small{font-size:12px;color:var(--muted)}#map{height:440px;background:#dae7f0;border-radius:8px;border:1px solid #cedce8}.mapfail{height:440px;display:grid;place-items:center;text-align:center;background:#edf2f8;border-radius:8px}.split{display:grid;grid-template-columns: minmax(0,1.5fr) minmax(240px,1fr);gap:14px}.layerlist{margin:10px 0 0;padding-left:19px;color:#4d6172}.layerlist li{margin:5px 0}.source{overflow-wrap:anywhere;font-family:ui-monospace,Consolas,monospace;font-size:12px}.legend{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.legend span{font-size:12px;color:var(--muted)}.data{font-size:12px;line-height:1.6}.foot{font-size:12px;color:#6d7e8d;margin-top:17px}.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.links a{color:#146b90}
+@media(max-width:950px){.layout,.split{grid-template-columns:1fr}#map{height:370px}.mapfail{height:370px}header{padding:14px 16px}.heading h1{font-size:21px}}
+</style>
+</head>
+<body>
+<header><a href="./index.html"><strong>TSD</strong> <span>TSD Aero Systems · 홈페이지</span></a><span>공역 연동 복구 검토 · 별도 미리보기 · 운영판 변경 없음</span></header>
+<main>
+<div class="heading"><div><div class="eyebrow">AIRSPACE RECOVERY REVIEW</div><h1>배포 전 데모 ↔ Cloudflare 운영 조회 비교</h1></div><span class="tag demo">운영 미적용 · 검토 전용</span></div>
+<div class="notice"><strong>중요:</strong> 현재 공식 공역 5종 요청은 제공기관 HTTP 520으로 실패했습니다. 이 페이지는 실시간 서버 응답과 데모 방식(GeoJSON 파일 기반 표시)을 직접 시험하는 독립 화면입니다. 자료 미확인은 비행 허가나 공역 부재를 의미하지 않습니다.</div>
+<div class="card" style="margin-bottom:14px"><h2>① 비교할 좌표 선택</h2><div class="controls">
+<div class="field" style="flex:1.2"><label for="preset">시험 위치</label><select id="preset"><option value="35.9483,126.9576">익산 테스트 지점</option><option value="37.5665,126.9780">서울시청</option><option value="37.7381,127.0337">의정부시청</option><option value="36.3504,127.3845">대전시청</option><option value="custom">직접 입력</option></select></div>
+<div class="field"><label for="lat">위도</label><input id="lat" type="number" step="0.000001" value="35.9483"></div><div class="field"><label for="lon">경도</label><input id="lon" type="number" step="0.000001" value="126.9576"></div>
+<button id="run">현재 좌표 조회·비교</button></div><p class="small" style="margin:8px 0 0">지도에서 위치를 클릭해도 좌표가 변경됩니다. 키는 브라우저에 입력하지 않습니다.</p></div>
+<div class="layout">
+<section class="card"><div class="heading"><h2>② 현재 운영 Worker · 실시간 확인</h2><span id="liveTag" class="tag">조회 전</span></div><p class="sub">Cloudflare 배포본 v3.0.3의 실제 응답을 검사합니다. 응답을 임의로 정상 처리하지 않습니다.</p><div id="liveResult" class="result"><b>조회 전</b>위 좌표를 선택한 뒤 조회 버튼을 누르세요.</div><ul class="layerlist" id="layers"></ul><div class="line"></div><p class="small">접속 주소</p><div class="source" id="workerUrl"></div><p class="small" id="liveAt"></p><div class="links"><a id="rawLink" target="_blank" rel="noopener">원본 JSON 열기</a><a href="https://lwhfpv.github.io/TSD-FPV/flight-safety.html" target="_blank" rel="noopener">현재 홈페이지 공역 화면</a></div></section>
+<section class="card"><div class="heading"><h2>③ 이전 데모 방식 · GeoJSON 표시</h2><span id="fileTag" class="tag">데이터 없음</span></div><p class="sub">이전 Python 서버의 <code>TSD_AIRSPACE_GEOJSON</code> 방식처럼 보유한 공역 GeoJSON 파일을 브라우저에서 직접 불러옵니다. 파일은 서버로 전송하지 않습니다.</p><div class="controls"><div class="field"><label for="geoFile">공역 GeoJSON 파일</label><input id="geoFile" type="file" accept=".json,.geojson,application/json,application/geo+json"></div><button class="secondary" id="sample">기능 시연용 가상 도형</button><button class="secondary" id="clear">지우기</button></div><div class="result" id="fileResult"><b>파일 미입력</b>공식 GeoJSON 파일을 넣으면 지도 경계와 현재 좌표 중첩 여부를 계산합니다. 가상 도형은 기능 검증용이며 실제 공역이 아닙니다.</div><ul class="layerlist" id="fileMatches"></ul><div class="line"></div><p class="small">자료 출처와 갱신일이 검증되지 않으면 지도에 나타나더라도 현재 법적 공역 판정으로 사용하지 마세요.</p></section>
+<section class="card full"><div class="heading"><h2>④ 지도에서 경계·좌표 직접 검토</h2><div class="legend"><span>파란 점: 조회 좌표</span><span>붉은 경계: 업로드 데이터</span><span>주황 점선: 가상 실습 도형</span></div></div><div class="split"><div><div id="map"></div><div id="mapFallback" style="display:none" class="mapfail">지도 라이브러리를 가져오지 못했습니다.<br>실시간 API와 파일 검사 결과는 위에서 계속 확인할 수 있습니다.</div></div><div><div class="result" id="summary"><b>종합 판정 · 미확인</b>실시간 조회 및 GeoJSON 대조를 수행하지 않았습니다.</div><div class="line"></div><p><strong>복구 시 확인 기준</strong></p><ol class="layerlist"><li>같은 좌표에서 실제 공역 서버가 5종 정상 응답하는지 확인</li><li>기존 데모의 사용 데이터가 파일인지 공식 실시간 조회인지 구분</li><li>실제 운영 데이터의 출처·시점·공역 종류를 교차검증</li><li>공식 조회 실패 상태에서는 비행 가능 판정 금지</li></ol><div class="links"><a href="https://github.com/LWHFPV/TSD-FPV/blob/main/diagnostics/airspace-demo-production-audit-20261126.md" target="_blank" rel="noopener">원본 대조 검증보고서</a><a href="https://drone.onestop.go.kr/common/flightArea_chk" target="_blank" rel="noopener">정부 공식 공역 지도</a></div></div></div></section>
+</div><div class="foot">본 페이지는 독립적인 개발 검토용이며 기존 TSD 홈페이지/인증·로그인 Worker/운영 공역 API를 변경하지 않습니다. NOTAM·고도·시점별 운용 제한은 별도 확인이 필요합니다.</div></main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+'use strict';
+(function(){
+const API='https://jolly-dawn-3ee1tsd-flight-airspace-api.flydragon103.workers.dev';
+const ids=x=>document.getElementById(x);
+let map=null,marker=null,geoLayer=null,collection=[],kind='none',fileName='',lastLive=null,sequence=0;
+const names=['비행금지구역','비행제한구역','관제권','위험구역','군작전구역'];
+const getCoord=()=>({lat:Number(ids('lat').value),lon:Number(ids('lon').value)});
+const goodCoord=({lat,lon})=>Number.isFinite(lat)&&Number.isFinite(lon)&&lat>=32.8&&lat<=38.9&&lon>=124.3&&lon<=132.1;
+const setRes=(id,cls,head,body)=>{const el=ids(id);el.className='result '+cls;el.replaceChildren();const b=document.createElement('b');b.textContent=head;el.append(b,document.createTextNode(body));};
+const setItems=(id,items)=>{const el=ids(id);el.replaceChildren();items.forEach(item=>{const li=document.createElement('li');li.textContent=item;el.append(li);});};
+function inRing(lon,lat,pts){if(!Array.isArray(pts)||pts.length<4)return false;let odd=false;
+for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[j],b=pts[i];if(!Array.isArray(a)||!Array.isArray(b))continue;
+const [ax,ay]=a,[bx,by]=b;
+const cross=(lon-ax)*(by-ay)-(lat-ay)*(bx-ax);
+if(Math.abs(cross)<1e-10&&lon>=Math.min(ax,bx)-1e-10&&lon<=Math.max(ax,bx)+1e-10&&lat>=Math.min(ay,by)-1e-10&&lat<=Math.max(ay,by)+1e-10)return true;
+if((ay>lat)!==(by>lat)&&lon<(bx-ax)*(lat-ay)/(by-ay)+ax)odd=!odd;
+}return odd;}
+function inPoly(lon,lat,poly){return Array.isArray(poly)&&poly.length>0&&inRing(lon,lat,poly[0])&&!poly.slice(1).some(r=>inRing(lon,lat,r));}
+function contains(g,lon,lat){if(!g)return false;if(g.type==='Polygon')return inPoly(lon,lat,g.coordinates);if(g.type==='MultiPolygon')return Array.isArray(g.coordinates)&&g.coordinates.some(p=>inPoly(lon,lat,p));return false;}
+function featName(f,i){const p=f.properties||{};return String(p.name||p.airspace_name||p.zone_name||p.zone_nm||p.nam||p.title||p.category||('객체 '+(i+1))).slice(0,140);}
+function updateFile(){
+ const {lat,lon}=getCoord();const hit=collection.filter(f=>contains(f.geometry,lon,lat));
+ if(kind==='none'){ids('fileTag').textContent='데이터 없음';setRes('fileResult','warn','데이터 미입력','데모 데이터가 없어 비교할 수 없습니다.');setItems('fileMatches',[]);return;}
+ ids('fileTag').textContent=kind==='sample'?'가상 자료':'파일 데이터';
+ const label=kind==='sample'?'가상 실습 도형 — 실제 공역 아님':fileName+' — 자료 시점·공식 여부 미검증';
+ setRes('fileResult',kind==='sample'?'warn':'good',label,collection.length+'개 지형 객체 / 선택 좌표와 겹치는 객체 '+hit.length+'개. 경계 포함 여부 계산만 검증합니다.');
+ setItems('fileMatches',hit.length?hit.slice(0,25).map((f,i)=>'중첩: '+featName(f,i)):['선택 지점과 중첩된 객체 없음. 단, 이는 이 파일에 포함된 도형만 확인한 결과입니다.']);
+}
+function drawData(){
+ if(!map||!window.L)return;
+ if(geoLayer){map.removeLayer(geoLayer);geoLayer=null;}
+ if(!collection.length)return;
+ try{geoLayer=L.geoJSON({type:'FeatureCollection',features:collection},{style:()=>({color:kind==='sample'?'#d88c07':'#bd2b28',weight:2,opacity:.85,fillOpacity:.13,dashArray:kind==='sample'?'6 5':undefined})}).addTo(map);}
+ catch(e){setRes('fileResult','bad','도형 렌더링 실패',String(e.message));}
+}
+function moveMap(){const c=getCoord();if(!goodCoord(c))return;if(map){map.setView([c.lat,c.lon],Math.max(map.getZoom(),11));if(marker)marker.setLatLng([c.lat,c.lon]);else marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#fff',weight:2,fillColor:'#1176c7',fillOpacity:1}).addTo(map).bindPopup('현재 조회 좌표');}updateFile();updateSummary();}
+function updateSummary(){
+ if(lastLive&&lastLive.complete===true&&lastLive.status==='ok'){setRes('summary','good','공식 5종 조회 결과 수신','공식 API 응답을 수신했습니다. 다만 NOTAM·고도·시간 조건을 별도로 확인해야 합니다.');return;}
+ if(kind==='none'){setRes('summary','warn','실시간 공역 미확인','파일 자료도 없습니다. 공식 공역 조회가 실패하면 비행 가능 여부를 판정할 수 없습니다.');return;}
+ setRes('summary','warn','데모 표시 기능만 확인 가능',(kind==='sample'?'가상 도형':'업로드된 GeoJSON')+'의 위치 중첩은 볼 수 있지만 운영 공역 최신성·법적 유효성은 검증되지 않았습니다.');
+}
+async function run(){
+ const c=getCoord();if(!goodCoord(c)){setRes('liveResult','bad','좌표 입력 오류','대한민국 서비스 범위 위도 32.8~38.9, 경도 124.3~132.1을 입력하세요.');return;}
+ moveMap(); const query='?latitude='+c.lat.toFixed(6)+'&longitude='+c.lon.toFixed(6);
+ const url=API+'/api/airspace'+query;ids('workerUrl').textContent=url;ids('rawLink').href=url;
+ const seq=++sequence;lastLive=null;ids('liveTag').textContent='조회 중';setRes('liveResult','', '공식 5종 공역정보 조회 중','브이월드 요청 결과를 확인하고 있습니다.');setItems('layers',[]);updateSummary();
+ const ac=new AbortController(),timer=setTimeout(()=>ac.abort(),32000);
+ try{
+ const r=await fetch(url,{cache:'no-store',signal:ac.signal});const j=await r.json();
+ if(seq!==sequence)return;lastLive=j;
+ const checked=Array.isArray(j.checked_layers)?j.checked_layers:Array.isArray(j.checked_categories)?j.checked_categories:[];
+ const failures=Array.isArray(j.failure_codes)?j.failure_codes:[];
+ const matches=Array.isArray(j.matches)?j.matches:[];
+ const ok=j.status==='ok'&&j.complete===true;
+ ids('liveTag').textContent=ok?'공식 조회 완료':'공식 조회 실패';
+ ids('liveTag').className='tag '+(ok?'':'alert');
+ const head=ok?'공식 5종 조회 완료':(j.provider_error==='HTTP_520'?'브이월드 HTTP 520 · 공역 미확인':'공식 공역 미확인');
+ setRes('liveResult',ok?'good':'bad',head,(j.message||'결과 메시지 없음')+'\n조회 완료 레이어: '+checked.length+'/5 · 중첩 결과: '+matches.length+'건 · 실패: '+failures.length+'건');
+ setItems('layers',failures.length?failures:(ok?matches.map(m=>JSON.stringify(m).slice(0,220)):names.map(x=>x+' — 확인되지 않음')));
+ ids('liveAt').textContent='조회 시각: '+new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+' · HTTP '+r.status;
+ }catch(e){if(seq!==sequence)return;ids('liveTag').textContent='네트워크 실패';ids('liveTag').className='tag alert';setRes('liveResult','bad','연결 실패',e.name==='AbortError'?'32초 제한시간 초과':'브라우저 네트워크/CORS 오류: '+e.message);}
+ finally{clearTimeout(timer);if(seq===sequence)updateSummary();}
+}
+function setFeatures(doc,name,isSample){
+ let list;if(doc&&doc.type==='FeatureCollection'&&Array.isArray(doc.features))list=doc.features;
+ else if(doc&&doc.type==='Feature')list=[doc];
+ else if(doc&&doc.type&&doc.coordinates)list=[{type:'Feature',geometry:doc,properties:{name}}];
+ else throw Error('GeoJSON FeatureCollection / Feature / Polygon 구조가 아닙니다.');
+ if(list.length>15000)throw Error('지나치게 큰 파일입니다(15,000개 초과).');
+ collection=list.filter(f=>f&&f.type==='Feature'&&f.geometry&&['Polygon','MultiPolygon'].includes(f.geometry.type));
+ if(!collection.length)throw Error('Polygon / MultiPolygon 경계가 포함되어 있지 않습니다.');
+ fileName=name;kind=isSample?'sample':'file';drawData();updateFile();updateSummary();
+}
+ids('geoFile').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{if(f.size>20*1024*1024)throw Error('파일 크기는 20MB 이하여야 합니다.');setFeatures(JSON.parse(await f.text()),f.name,false);}catch(err){kind='none';collection=[];drawData();setRes('fileResult','bad','파일 로드 실패',err.message);updateSummary();}});
+ids('sample').addEventListener('click',()=>{const c=getCoord();if(!goodCoord(c))return;const x=c.lon,y=c.lat,d=.009;setFeatures({type:'FeatureCollection',features:[{type:'Feature',properties:{name:'기능 시험용 가상 영역 — 공식 공역 아님'},geometry:{type:'Polygon',coordinates:[[[x-d,y-d],[x+d,y-d],[x+d,y+d],[x-d,y+d],[x-d,y-d]]]}}]},'가상 훈련 도형',true);});
+ids('clear').addEventListener('click',()=>{collection=[];kind='none';ids('geoFile').value='';drawData();updateFile();updateSummary();});
+ids('preset').addEventListener('change',e=>{if(e.target.value==='custom')return;const [lat,lon]=e.target.value.split(',').map(Number);ids('lat').value=lat;ids('lon').value=lon;moveMap();});
+['lat','lon'].forEach(id=>ids(id).addEventListener('change',()=>{ids('preset').value='custom';moveMap();}));
+ids('run').addEventListener('click',run);
+if(window.L){try{
+ map=L.map('map',{zoomControl:true}).setView([35.9483,126.9576],11);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+ map.on('click',e=>{ids('lat').value=e.latlng.lat.toFixed(6);ids('lon').value=e.latlng.lng.toFixed(6);ids('preset').value='custom';moveMap();});
+ moveMap();
+ }catch(e){ids('map').style.display='none';ids('mapFallback').style.display='grid';}}
+else{ids('map').style.display='none';ids('mapFallback').style.display='grid';}
+ids('workerUrl').textContent=API;
+run();
+})();
+</script>
+</body></html>
