@@ -1,0 +1,30 @@
+name: Apply guarded EOIR design patch (review only)
+on:
+  push:
+    branches: ['review/tsd-aero-unified-header']
+    paths: ['.github/workflows/eoir-design-review.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/review/tsd-aero-unified-header'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: review/tsd-aero-unified-header
+          fetch-depth: 1
+      - name: Apply and verify only EOIR HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = 'review/tsd-aero-unified-header'
+          python3 audit/apply-eoir-common-design.py
+          test "$(git diff --name-only)" = 'TSD_EOIR_V24_Mission.html'
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- TSD_EOIR_V24_Mission.html
+          git commit -m 'Apply EOIR unified design while preserving original scripts'
+          git push origin HEAD:refs/heads/review/tsd-aero-unified-header
