@@ -808,4 +808,18 @@ setupManualEntry();driveStatus();for(const id of ['cells','kv','motorCount','pro
 <script id="drive-compact-ui">
 (()=>{for(const card of document.querySelectorAll('#ui-components .drive-card')){const key=card.dataset.drive,host=card.querySelector('.drive-model'),btn=host.querySelector('.manual-trigger'),panel=host.querySelector('.manual-panel'),details=card.querySelector('.drive-source');if(!btn||!panel)continue;btn.setAttribute('aria-controls',panel.id);btn.setAttribute('aria-label',card.querySelector('h3').textContent+' 직접 입력창 열기 또는 닫기');const update=()=>{btn.textContent=panel.hidden?'직접 입력':'닫기';btn.setAttribute('aria-expanded',String(!panel.hidden));};new MutationObserver(update).observe(panel,{attributes:true,attributeFilter:['hidden']});update();for(const id of ['manualStatus_'+key,'provenance_'+key]){const node=document.getElementById(id);if(node)details.append(node);}}})();
 </script>
+<script id="tsd-copy-guard-v1">
+(()=>{'use strict';
+if(document.getElementById('downloadGate')||document.getElementById('tsdCopyGuardDialog'))return;
+const expected='7bdacc02706cecc07f481e49973f821dd4fc3a0b99c3088624e4c4097846f06b';
+const d=document.createElement('dialog');d.id='tsdCopyGuardDialog';d.setAttribute('aria-label','복사 비밀번호 확인');d.style.cssText='color:#fff;background:#172636;border:1px solid #62bad8;border-radius:12px;padding:24px;max-width:calc(100vw - 32px);width:340px;box-sizing:border-box';
+d.innerHTML='<form style="margin:0"><h3 style="margin:0 0 12px">비밀번호 확인</h3><p>페이지 내용을 복사하려면 비밀번호를 입력하세요.</p><input aria-label="복사 비밀번호" type="password" autocomplete="off" required style="width:100%;box-sizing:border-box;padding:8px"><p role="status" aria-live="polite"></p><button type="submit">확인</button> <button type="button" data-cancel>취소</button></form>';
+document.body.append(d);const form=d.querySelector('form'),input=d.querySelector('input'),status=d.querySelector('[role=status]'),submit=form.querySelector('[type=submit]');let pending='',approved=false,bypass=false;
+function clear(){pending='';approved=false;input.value='';input.hidden=false;input.required=true;submit.textContent='확인';submit.disabled=false;status.textContent='';}
+d.addEventListener('close',clear);d.querySelector('[data-cancel]').onclick=()=>d.close();
+document.addEventListener('copy',e=>{if(bypass||d.open)return;const target=e.target; if(target&&target.closest&&target.closest('input,textarea,[contenteditable=true]'))return;const selected=window.getSelection()?.toString();if(!selected)return;e.preventDefault();e.stopImmediatePropagation();clear();pending=selected;d.showModal();input.focus();},true);
+form.onsubmit=async e=>{e.preventDefault();if(!pending)return;if(!approved){submit.disabled=true;try{const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(input.value));const hash=Array.from(new Uint8Array(bytes),n=>n.toString(16).padStart(2,'0')).join('');if(hash!==expected){status.textContent='비밀번호가 올바르지 않습니다.';input.value='';input.focus();return;}approved=true;input.value='';input.required=false;input.hidden=true;submit.textContent='복사 실행';status.textContent='인증되었습니다. 복사 실행을 누르세요.';}catch{status.textContent='인증을 수행할 수 없습니다. HTTPS 연결을 확인하세요.';}finally{submit.disabled=false;}return;}
+const value=pending;let ok=false;try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(value);ok=true;}}catch{}if(!ok){const t=document.createElement('textarea');t.value=value;t.style.cssText='position:fixed;left:-9999px;top:0';d.append(t);t.select();bypass=true;try{ok=document.execCommand('copy');}catch{}finally{bypass=false;t.remove();}}if(ok)d.close();else status.textContent='브라우저가 클립보드 접근을 차단했습니다. 복사 실행을 다시 눌러주세요.';};
+})();
+</script>
 </body></html>
