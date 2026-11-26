@@ -112,6 +112,47 @@ jobs:
             }
             return out;
           }
+          async function verifyPropControls(page,entry,errors){
+          const checks={};
+          const ensure=(key,value)=>{checks[key]=!!value;if(!value)throw Error('PropLab functional failure: '+key);};
+          entry.propChecks=checks;
+          await page.locator('#motors button').first().waitFor({state:'visible',timeout:10000});
+          ensure('fourMotors',await page.locator('#motors button').count()===4);
+          ensure('canvases',await page.evaluate(()=>['airframe3d','drone','track','spectrum'].every(id=>{const c=document.getElementById(id);return c instanceof HTMLCanvasElement&&c.width>0&&c.height>0&&c.getBoundingClientRect().width>0;})));
+          const rpmBefore=await page.locator('#rpm').innerText();
+          await page.locator('#throttle').fill('60');
+          await page.waitForFunction(old=>document.querySelector('#power').textContent.includes('60')&&document.querySelector('#rpm').textContent!==old,rpmBefore,{timeout:15000});
+          ensure('throttleRPM',true);
+          for(const [id,v] of [['roll','35'],['pitch','-25'],['yaw','40']]){
+            await page.locator('#'+id).fill(v);
+            ensure(id,await page.locator('#'+id).inputValue()===v&&await page.locator('#'+id+'Value').innerText().then(t=>t.includes(v.replace('-',''))));
+          }
+          await page.locator('#axesCenter').click();
+          ensure('axesCenter',await page.evaluate(()=>['roll','pitch','yaw'].every(id=>document.getElementById(id).value==='0')));
+          await page.locator('#motors button').nth(2).click();
+          ensure('motorSelect',await page.locator('#motors button').nth(2).getAttribute('aria-pressed')==='true');
+          await page.locator('#blades button[data-value="4"]').click();
+          ensure('bladeSelect',await page.locator('#blades button[data-value="4"]').getAttribute('aria-pressed')==='true');
+          await page.locator('#speed button[data-value="0.1"]').click();
+          ensure('slowPlayback',await page.locator('#speed button[data-value="0.1"]').getAttribute('aria-pressed')==='true');
+          await page.locator('#pulses').click();
+          ensure('pulseToggle',await page.locator('#pulses').getAttribute('aria-pressed')==='false');
+          await page.locator('#vibrationExample').click();
+          ensure('vibrationToggle',await page.locator('#vibrationExample').getAttribute('aria-pressed')==='true');
+          await page.locator('#pause').click();
+          ensure('pause',await page.locator('#pause').getAttribute('aria-pressed')==='true');
+          await page.locator('#pause').click();
+          ensure('resume',await page.locator('#pause').getAttribute('aria-pressed')==='false');
+          await page.locator('#sound').click();
+          await page.waitForFunction(()=>document.getElementById('sound').getAttribute('aria-pressed')==='true'||document.getElementById('audioStatus').textContent.length>0,undefined,{timeout:10000});
+          ensure('audioStart',await page.locator('#sound').getAttribute('aria-pressed')==='true');
+          await page.locator('#volume').fill('20');
+          ensure('volume',await page.locator('#volumeValue').innerText()==='20%');
+          await page.locator('#reset').click();
+          ensure('reset',await page.evaluate(()=>document.getElementById('throttle').value==='0'&&document.getElementById('sound').getAttribute('aria-pressed')==='false'&&document.getElementById('vibrationExample').getAttribute('aria-pressed')==='false'));
+          ensure('noPageErrors',errors.length===0);
+          entry.propFunctionalPass=true;
+          }
           for (const file of paths) for (const width of [1440,768,390,320]) {
             const context=await browser.newContext({viewport:{width,height:900}});
             const page=await context.newPage(); const errors=[];
@@ -197,47 +238,7 @@ jobs:
               fs.writeFileSync('/tmp/tsd-header-results/header-'+file+'-'+width+'.png',PNG.sync.write(cropped));
               entry.headerCapture=true;
               entry.captureSize=[full.width,full.height];
-              if(file==='prop-vibration-lab.html'){
-                const checks={};
-                const ensure=(key,value)=>{checks[key]=!!value;if(!value)throw Error('PropLab functional failure: '+key);};
-                entry.propChecks=checks;
-                await page.locator('#motors button').first().waitFor({state:'visible',timeout:10000});
-                ensure('fourMotors',await page.locator('#motors button').count()===4);
-                ensure('canvases',await page.evaluate(()=>['airframe3d','drone','track','spectrum'].every(id=>{const c=document.getElementById(id);return c instanceof HTMLCanvasElement&&c.width>0&&c.height>0&&c.getBoundingClientRect().width>0;})));
-                const rpmBefore=await page.locator('#rpm').innerText();
-                await page.locator('#throttle').fill('60');
-                await page.waitForFunction(old=>document.querySelector('#power').textContent.includes('60')&&document.querySelector('#rpm').textContent!==old,rpmBefore,{timeout:15000});
-                ensure('throttleRPM',true);
-                for(const [id,v] of [['roll','35'],['pitch','-25'],['yaw','40']]){
-                  await page.locator('#'+id).fill(v);
-                  ensure(id,await page.locator('#'+id).inputValue()===v&&await page.locator('#'+id+'Value').innerText().then(t=>t.includes(v.replace('-',''))));
-                }
-                await page.locator('#axesCenter').click();
-                ensure('axesCenter',await page.evaluate(()=>['roll','pitch','yaw'].every(id=>document.getElementById(id).value==='0')));
-                await page.locator('#motors button').nth(2).click();
-                ensure('motorSelect',await page.locator('#motors button').nth(2).getAttribute('aria-pressed')==='true');
-                await page.locator('#blades button[data-value="4"]').click();
-                ensure('bladeSelect',await page.locator('#blades button[data-value="4"]').getAttribute('aria-pressed')==='true');
-                await page.locator('#speed button[data-value="0.1"]').click();
-                ensure('slowPlayback',await page.locator('#speed button[data-value="0.1"]').getAttribute('aria-pressed')==='true');
-                await page.locator('#pulses').click();
-                ensure('pulseToggle',await page.locator('#pulses').getAttribute('aria-pressed')==='false');
-                await page.locator('#vibrationExample').click();
-                ensure('vibrationToggle',await page.locator('#vibrationExample').getAttribute('aria-pressed')==='true');
-                await page.locator('#pause').click();
-                ensure('pause',await page.locator('#pause').getAttribute('aria-pressed')==='true');
-                await page.locator('#pause').click();
-                ensure('resume',await page.locator('#pause').getAttribute('aria-pressed')==='false');
-                await page.locator('#sound').click();
-                await page.waitForFunction(()=>document.getElementById('sound').getAttribute('aria-pressed')==='true'||document.getElementById('audioStatus').textContent.length>0,undefined,{timeout:10000});
-                ensure('audioStart',await page.locator('#sound').getAttribute('aria-pressed')==='true');
-                await page.locator('#volume').fill('20');
-                ensure('volume',await page.locator('#volumeValue').innerText()==='20%');
-                await page.locator('#reset').click();
-                ensure('reset',await page.evaluate(()=>document.getElementById('throttle').value==='0'&&document.getElementById('sound').getAttribute('aria-pressed')==='false'&&document.getElementById('vibrationExample').getAttribute('aria-pressed')==='false'));
-                ensure('noPageErrors',errors.length===0);
-                entry.propFunctionalPass=true;
-              }
+              if(file==='prop-vibration-lab.html') await verifyPropControls(page,entry,errors);
               if(file==='simulator.html'){
                 const card=page.locator('#prop-vibration-lab a[aria-label="프롭 진동 실습 시작"]');
                 const target=await card.getAttribute('href');
@@ -253,12 +254,14 @@ jobs:
           }
           const external={url:'https://tsd-prop-sound-lab.amiablecoati.chatgpt.site/',comparable:false};
           const externalPage=await browser.newPage();
+          const externalErrors=[];externalPage.on('pageerror',e=>externalErrors.push(String(e)));
           try {
             const response=await externalPage.goto(external.url,{waitUntil:'domcontentloaded',timeout:25000});
             external.http=response?.status();external.finalUrl=externalPage.url();external.title=await externalPage.title();
             const ids=['motors','airframe3d','drone','track','spectrum','throttle','roll','pitch','yaw','sound','reset'];
             external.controls=await externalPage.evaluate(ids=>Object.fromEntries(ids.map(id=>[id,!!document.getElementById(id)])),ids);
             external.comparable=external.http===200&&Object.values(external.controls).every(Boolean);
+            await verifyPropControls(externalPage,external,externalErrors);
             await externalPage.screenshot({path:'/tmp/tsd-header-results/external-prop.png',timeout:10000}).catch(()=>{});
           }catch(e){external.error=String(e)}
           fs.writeFileSync('/tmp/tsd-header-results/external-prop-audit.json',JSON.stringify(external,null,2));
@@ -293,7 +296,7 @@ jobs:
           fs.writeFileSync('/tmp/tsd-header-results/design-audit.json',JSON.stringify({checkedCommit,baselines,summary:{smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length},results:result},null,2));
           console.log(JSON.stringify({checkedCommit,smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length,total:result.length}));
           const unresolvedScripts=sourceAudit.filter(x=>!x.functionalSourcePreserved).map(x=>x.file);
-          const externalPassed=external.comparable===true;
+          const externalPassed=external.comparable===true&&external.propFunctionalPass===true;
           const propRoundTrips=result.filter(x=>x.file==='simulator.html'&&x.propCardRoundTrip===true).length;
           const propFunctional=result.filter(x=>x.file==='prop-vibration-lab.html'&&x.propFunctionalPass===true).length;
           console.log(JSON.stringify({releaseGate:{unresolvedScripts,externalPassed,propRoundTrips,propFunctional,unlockedAudit,allHeaderTestsPassed:result.every(x=>x.pass&&x.designPass)}}));
