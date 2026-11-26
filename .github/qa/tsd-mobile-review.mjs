@@ -98,7 +98,15 @@ try{
     if(orientation==='landscape'){await page.setViewportSize({width:device.viewport.height,height:device.viewport.width});await page.waitForTimeout(400);}
     entry.header=await header(page,file);
     entry.orientationPass=entry.header.landscape===(orientation==='landscape');
-    entry.touchProfile=entry.header.touchPoints>0&&entry.header.coarse;
+    // Headless WebKit can report maxTouchPoints=0 while trusted touch input works.
+    // Probe actual browser-delivered touch input rather than treating a capability hint as proof.
+    entry.touchProbe=await (async()=>{
+      await page.evaluate(()=>{const b=document.createElement('button');b.id='tsd-qa-touch-probe';b.type='button';b.textContent='QA touch';b.style.cssText='position:fixed;top:4px;left:4px;width:76px;height:40px;z-index:2147483647;touch-action:manipulation;';window.__tsdTouchProbe=[];for(const type of ['touchstart','pointerdown','click'])b.addEventListener(type,e=>window.__tsdTouchProbe.push({type:e.type,trusted:e.isTrusted,pointerType:e.pointerType??null,touches:e.touches?.length??null}));document.body.append(b);});
+      try{await page.locator('#tsd-qa-touch-probe').tap({timeout:10000});const events=await page.evaluate(()=>window.__tsdTouchProbe);return {events,pass:events.some(e=>e.trusted&&(e.type==='touchstart'||e.pointerType==='touch'))&&events.some(e=>e.trusted&&e.type==='click')};}
+      finally{await page.evaluate(()=>{document.getElementById('tsd-qa-touch-probe')?.remove();delete window.__tsdTouchProbe;});}
+    })();
+    entry.touchProfile=entry.touchProbe.pass;
+    if(entry.header.pageOverflow){entry.overflowDetails=await page.evaluate(()=>[...document.querySelectorAll('body *')].map(e=>({tag:e.tagName,id:e.id,cls:typeof e.className==='string'?e.className:'',right:Math.round(e.getBoundingClientRect().right),left:Math.round(e.getBoundingClientRect().left)})).filter(e=>e.right>innerWidth+2||e.left<-2).slice(0,30));}
     if(file==='prop-vibration-lab.html')entry.prop=await prop(page,context,orientation,errors);
     entry.errors=[...errors];
     entry.pass=http===200&&entry.header.pass&&entry.orientationPass&&entry.touchProfile&&entry.errors.length===0&&(!entry.prop||entry.prop.pass);
