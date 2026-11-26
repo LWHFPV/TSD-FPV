@@ -41,6 +41,21 @@ jobs:
               const response=await page.goto('http://127.0.0.1:8765/'+file,{waitUntil:'domcontentloaded',timeout:30000});
               entry.http=response?.status();
               const header=page.locator('[data-tsd-common-header]:visible').first();
+              if(file==='tsd-qgc-mission-lab.html'){
+                await page.waitForLoadState('load',{timeout:30000}).catch(()=>{});
+                entry.qgcInitial=await page.evaluate(()=>({ready:document.readyState,course:document.getElementById('courseHome')?.className,openCourseType:typeof openCourse,buttons:[...document.querySelectorAll('button')].filter(b=>b.getBoundingClientRect().width>0).map(b=>({id:b.id,text:b.textContent.trim().slice(0,70),handler:b.getAttribute('onclick')})).slice(0,80)}));
+                if(!await header.count()){
+                  const courseButton=page.locator('button:visible').filter({hasText:/^(교육 과정|교육과정|교육 홈|실습 과정|실습과정|실습 홈|교육 시작|단계별 실습|튜토리얼|처음부터 배우기|학습 과정|교육 목록|실습 목록)$/}).first();
+                  if(await courseButton.count()){
+                    entry.courseEntry='visible UI button';
+                    await courseButton.click({timeout:5000}).catch(e=>entry.courseClickError=String(e));
+                  }
+                  if(!await header.count()){
+                    entry.courseEntry='direct diagnostic only';
+                    entry.courseOpened=await page.evaluate(()=>{if(typeof openCourse!=='function')return false;openCourse();return true;});
+                  }
+                }else entry.courseEntry='initial';
+              }
               await header.waitFor({state:'visible',timeout:10000});
               const nav=await header.evaluate(h=>{
                 const r=h.getBoundingClientRect();
@@ -48,9 +63,9 @@ jobs:
                 return {left:r.left,right:r.right,viewport:innerWidth,links,overflow:h.scrollWidth>h.clientWidth+1};
               });
               Object.assign(entry,nav);
-              entry.pass=entry.http===200&&!entry.overflow&&nav.left>=-1&&nav.right<=width+1&&nav.links.length>=6&&nav.links.every(a=>a.visible&&a.left>=-1&&a.right<=width+1)&&errors.length===0;
+              entry.pass=entry.http===200&&!entry.overflow&&nav.left>=-1&&nav.right<=width+1&&nav.links.length>=6&&nav.links.every(a=>a.visible&&a.left>=-1&&a.right<=width+1)&&errors.length===0&&entry.courseEntry!=='direct diagnostic only';
               await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'.png',timeout:10000});
-            } catch(e) {entry.pass=false;entry.failure=String(e);}
+            } catch(e) {entry.pass=false;entry.failure=String(e);await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'-failure.png',timeout:10000}).catch(()=>{});}
             result.push(entry); console.log(JSON.stringify(entry));await context.close();
           }
           await browser.close();
