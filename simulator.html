@@ -76,22 +76,19 @@ footer{background:#fff;border-top:1px solid var(--line);color:var(--muted)}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
+<link rel="stylesheet" href="./tsd-aero-common.css">
 </head>
 <body>
 <a class="skip" href="#main">본문 바로가기</a>
-<header class="siteHeader">
-  <div class="wrap headerInner">
-    <a class="brand" href="./index.html"><span class="brandMark" aria-hidden="true">TSD</span> TSD Aero Systems</a>
-    <nav class="siteNav" aria-label="주 메뉴">
-      <a href="./education.html">체험교육</a>
-      <a href="#technology" id="servicesLink" aria-current="page">시뮬레이터 체험</a>
-      <a href="./drone-design.html">드론설계</a>
-    </nav>
-    <a class="headerContact" href="./contact.html">문의</a>
+<header data-tsd-common-header class="siteHeader">
+  <div class="wrap headerInner" data-tsd-common-bar>
+    <a class="brand" data-tsd-common-brand href="./index.html"><span class="brandMark" aria-hidden="true">TSD</span> TSD Aero Systems</a>
+    <nav data-tsd-common-nav class="siteNav" aria-label="주 메뉴"><a href="./education.html">체험교육</a><a href="#technology" id="servicesLink" aria-current="page">시뮬레이터 체험</a><a href="./drone-design.html">드론설계</a><a href="./flight-safety.html">비행안전정보</a></nav>
+    <a class="headerContact" data-tsd-common-contact href="./contact.html">문의</a>
   </div>
 </header>
 <main id="main">
-  <section class="hero" aria-labelledby="title">
+  <section data-tsd-common-hero class="hero" aria-labelledby="title">
     <div class="wrap heroInner">
       <h1 id="title">시뮬레이터 체험</h1>
       <form class="search" id="siteSearch" role="search">
@@ -107,59 +104,59 @@ footer{background:#fff;border-top:1px solid var(--line);color:var(--muted)}
     </div>
     <p id="searchFeedback" role="status" hidden></p>
     <button type="button" id="showAll" hidden>전체 서비스 보기</button>
-    <div class="cards">
+    <div class="cards" data-tsd-card-list>
       <article class="card" id="simulator" data-keywords="fpv p i d ff betaflight 베타플라이트 드론 조종 튜닝">
-        <h3>PID 비행 실습</h3>
+        <div class="tsd-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="17" r="2"/></svg></div><h3>PID 비행 실습</h3>
         <p>Roll·Pitch·Yaw의 P·I·D와 Feedforward를 바꾸고 스틱 입력과 기동에 따른 기체 반응을 살펴보세요.</p>
         <p class="detail">스로틀 · 비행 기동 · 추적·FPV 카메라</p>
         <p class="detail">비행제어 학습용 모델이며, 실제 Betaflight 알고리즘과 기체별 튜닝 결과에는 차이가 있습니다.</p>
         <a class="cardLink" href="./fpv-flight-lab.html">실습 시작 <span aria-hidden="true">→</span></a>
       </article>
       <article class="card" id="blackbox-lab" data-keywords="blackbox 블랙박스 betaflight 베타플라이트 fpv bbl bfl pid ff dterm 필터 진동 스펙트럼 로그 분석 교육">
-        <h3>블랙박스 PID·필터 분석</h3>
+        <div class="tsd-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18M5 15l4-6 4 5 7-8"/></svg></div><h3>블랙박스 PID·필터 분석</h3>
         <p>BBL/BFL 비행 로그를 분석하고 PID·필터 진단, A/B 비교와 교육 실습을 진행합니다.</p>
         <p class="detail">비행 당시 설정 자동 확인 · 브라우저 로컬 분석</p>
         <a class="cardLink" href="./blackbox-analyzer.html">분석기 열기 <span aria-hidden="true">→</span></a>
       </article>
       <article class="card" id="prop-vibration-lab" data-keywords="fpv 프롭 프로펠러 진동 모터 회전음 rpm 스펙트럼 스로틀 롤 피치 요">
-        <h3>프롭 진동 실습실</h3>
+        <div class="tsd-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M12 10c-7-9-12 0-5 2m7 0c9-7 0-12-2-5m0 7c7 9 12 0 5-2m-7 0c-9 7 0 12 2 5"/></svg></div><h3>프롭 진동 실습실</h3>
         <p>스로틀·롤·피치·요를 조절하며 3D 기체의 자세와 네 모터의 회전음이 어떻게 달라지는지 체험하세요.</p>
         <p class="detail">모터별 RPM · 날개 통과 주파수 · 공기 펄스</p>
         <a class="cardLink" href="https://tsd-prop-sound-lab.amiablecoati.chatgpt.site/" aria-label="프롭 진동 실습 시작">실습 시작 <span aria-hidden="true">→</span></a>
       </article>
       <article class="card" id="mission-lab" data-keywords="qgc qgroundcontrol px4 웨이포인트 자동비행 지도 위성">
-        <h3>QGroundControl 임무비행 실습</h3>
+        <div class="tsd-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 5h10a4 4 0 010 8H7a3 3 0 000 6h10"/></svg></div><h3>QGroundControl 임무비행 실습</h3>
         <p>지도에서 경로를 만들고 임무 업로드, 비행 전 점검, 이륙·복귀·착륙까지 연습하세요.</p>
         <p class="detail">웨이포인트 · 지형 추종 · DMS · UTM · MGRS · 비상상황 훈련</p>
         <p class="detail">QGC의 주요 절차를 연습하는 독립 교육용 데모입니다.</p>
         <a class="cardLink" href="./tsd-qgc-mission-lab.html" target="_blank" rel="noopener">실습 시작 <span aria-hidden="true">↗</span></a>
       </article>
       <article class="card" id="eoir-training" data-keywords="eo ir 열화상 실종자 산악 수색 구조 드론 가상 스틱 임무비행">
-        <h3>EO·IR 수색 훈련</h3>
+        <div class="tsd-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 8V3h5m8 0h5v5m0 8v5h-5m-8 0H3v-5M3 12s4-5 9-5 9 5 9 5-4 5-9 5-9-5-9-5z"/><circle cx="12" cy="12" r="2"/></svg></div><h3>EO·IR 수색 훈련</h3>
         <p>실제 3D 지형에서 EO·IR 카메라를 전환하며 모의 표적을 수색하고 촬영본을 판독하세요.</p>
         <p class="detail">가상 조종기 · 직선·원형 수색 · 촬영본 판독</p>
         <a class="cardLink" href="./TSD_EOIR_V24_Mission.html" target="_blank" rel="noopener">훈련 시작 <span aria-hidden="true">↗</span></a>
       </article>
       <article class="card" id="link-budget" data-keywords="vtx vrx 아날로그 hdzero dji walksnail 고글 링크버짓 안테나 편파 커넥터">
-        <h3>영상 링크 버짓 계산기</h3>
+        <div class="tsd-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 10L6 22h12l-6-12zM8 8a5 5 0 018 0M4 5a10 10 0 0116 0"/><circle cx="12" cy="7" r="1"/></svg></div><h3>영상 링크 버짓 계산기</h3>
         <p>VTX·고글·안테나 조합으로 이론 영상 거리를 계산하고 장비 연동을 확인하세요.</p>
         <p class="detail">이론 거리는 지형·간섭·기체 자세에 따라 달라집니다.</p>
         <a class="cardLink" href="./link-budget.html">계산기 열기 <span aria-hidden="true">→</span></a>
       </article>
       <article class="card" id="long-range" data-keywords="장거리 거리 비행반경 배터리 lipo li-ion 맞바람 뒷바람 전력 순항">
-        <h3>장거리 비행 계산기</h3>
+        <div class="tsd-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 10v4m-10-6-3 5h4l-3 4"/></svg></div><h3>장거리 비행 계산기</h3>
         <p>배터리 용량, 소비 전력, 기체 중량, 순항 속도와 바람을 바탕으로 이론 왕복 거리와 귀환 가능 반경을 계산하세요.</p>
         <p class="detail">상승 에너지 · 풍속 한계 그래프 · 영상·제어 링크 한계</p>
         <p class="detail">계산값은 이론적 추정치이며 실제 비행 가능 거리는 시험비행과 실측 데이터로 검증하세요.</p>
         <a class="cardLink" href="./long-range-calculator.html">계산기 열기 <span aria-hidden="true">→</span></a>
       </article>
       <article class="card" id="equipment" data-keywords="장비연구실 장비 연구실 전송 영상송수신 조종기 호환">
-        <h3>영상 연결 시스템 메커니즘</h3>
+        <div class="tsd-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-5h14v5"/></svg></div><h3>영상 연결 시스템 메커니즘</h3>
         <p>기체·영상 송수신기·고글·조종기의 연결 구조와 호환 조합을 확인하세요.</p>
         <a class="cardLink" href="./equipment-lab.html">비밀번호로 연구실 열기 <span aria-hidden="true">→</span></a>
       </article>
       <article class="card" id="education" data-keywords="체험교육 체험 교육 학교 드론 진로 교육과정 문의">
-        <h3>드론 체험교육</h3>
+        <div class="tsd-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m2 9 10-5 10 5-10 5zM6 11v6c4 3 8 3 12 0v-6m4-2v7"/></svg></div><h3>드론 체험교육</h3>
         <p>드론 비행 체험과 교육 프로그램을 확인하세요.</p>
         <a class="cardLink" href="./education.html">프로그램 보기 <span aria-hidden="true">→</span></a>
       </article>
