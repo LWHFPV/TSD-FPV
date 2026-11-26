@@ -3783,6 +3783,34 @@ const FlightEngine = (() =&gt; {
 })();
 &lt;/script&gt;
 &lt;script&gt;window.addEventListener('error',function(e){const el=document.getElementById('demo-error');if(el){el.hidden=false;el.textContent='실행 오류: '+e.message;}});&lt;/script&gt;
+&lt;script id=&quot;tsd-copy-guard-v1&quot;&gt;
+(()=&gt;{&#39;use strict&#39;;
+if(document.getElementById(&#39;downloadGate&#39;)||document.getElementById(&#39;tsdCopyGuardDialog&#39;))return;
+const expected=&#39;7bdacc02706cecc07f481e49973f821dd4fc3a0b99c3088624e4c4097846f06b&#39;;
+const d=document.createElement(&#39;dialog&#39;);d.id=&#39;tsdCopyGuardDialog&#39;;d.setAttribute(&#39;aria-label&#39;,&#39;복사 비밀번호 확인&#39;);d.style.cssText=&#39;color:#fff;background:#172636;border:1px solid #62bad8;border-radius:12px;padding:24px;max-width:calc(100vw - 32px);width:340px;box-sizing:border-box&#39;;
+d.innerHTML=&#39;&lt;form style=&quot;margin:0&quot;&gt;&lt;h3 style=&quot;margin:0 0 12px&quot;&gt;비밀번호 확인&lt;/h3&gt;&lt;p&gt;페이지 내용을 복사하려면 비밀번호를 입력하세요.&lt;/p&gt;&lt;input aria-label=&quot;복사 비밀번호&quot; type=&quot;password&quot; autocomplete=&quot;off&quot; required style=&quot;width:100%;box-sizing:border-box;padding:8px&quot;&gt;&lt;p role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;&lt;/p&gt;&lt;button type=&quot;submit&quot;&gt;확인&lt;/button&gt; &lt;button type=&quot;button&quot; data-cancel&gt;취소&lt;/button&gt;&lt;/form&gt;&#39;;
+document.body.append(d);const form=d.querySelector(&#39;form&#39;),input=d.querySelector(&#39;input&#39;),status=d.querySelector(&#39;[role=status]&#39;),submit=form.querySelector(&#39;[type=submit]&#39;);let pending=&#39;&#39;,approved=false,bypass=false;
+function clear(){pending=&#39;&#39;;approved=false;input.value=&#39;&#39;;input.hidden=false;input.required=true;submit.textContent=&#39;확인&#39;;submit.disabled=false;status.textContent=&#39;&#39;;}
+d.addEventListener(&#39;close&#39;,clear);d.querySelector(&#39;[data-cancel]&#39;).onclick=()=&gt;d.close();
+document.addEventListener(&#39;copy&#39;,e=&gt;{if(bypass||d.open)return;const target=e.target; if(target&amp;&amp;target.closest&amp;&amp;target.closest(&#39;input,textarea,[contenteditable=true]&#39;))return;const selected=window.getSelection()?.toString();if(!selected)return;e.preventDefault();e.stopImmediatePropagation();clear();pending=selected;d.showModal();input.focus();},true);
+form.onsubmit=async e=&gt;{e.preventDefault();if(!pending)return;if(!approved){submit.disabled=true;try{const bytes=await crypto.subtle.digest(&#39;SHA-256&#39;,new TextEncoder().encode(input.value));const hash=Array.from(new Uint8Array(bytes),n=&gt;n.toString(16).padStart(2,&#39;0&#39;)).join(&#39;&#39;);if(hash!==expected){status.textContent=&#39;비밀번호가 올바르지 않습니다.&#39;;input.value=&#39;&#39;;input.focus();return;}approved=true;input.value=&#39;&#39;;input.required=false;input.hidden=true;submit.textContent=&#39;복사 실행&#39;;status.textContent=&#39;인증되었습니다. 복사 실행을 누르세요.&#39;;}catch{status.textContent=&#39;인증을 수행할 수 없습니다. HTTPS 연결을 확인하세요.&#39;;}finally{submit.disabled=false;}return;}
+const value=pending;let ok=false;try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(value);ok=true;}}catch{}if(!ok){const t=document.createElement(&#39;textarea&#39;);t.value=value;t.style.cssText=&#39;position:fixed;left:-9999px;top:0&#39;;d.append(t);t.select();bypass=true;try{ok=document.execCommand(&#39;copy&#39;);}catch{}finally{bypass=false;t.remove();}}if(ok)d.close();else status.textContent=&#39;브라우저가 클립보드 접근을 차단했습니다. 복사 실행을 다시 눌러주세요.&#39;;};
+})();
+&lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;" title="TSD FPV PID 교육용 비행 시뮬레이터"></iframe>
+<script id="tsd-copy-guard-v1">
+(()=>{'use strict';
+if(document.getElementById('downloadGate')||document.getElementById('tsdCopyGuardDialog'))return;
+const expected='7bdacc02706cecc07f481e49973f821dd4fc3a0b99c3088624e4c4097846f06b';
+const d=document.createElement('dialog');d.id='tsdCopyGuardDialog';d.setAttribute('aria-label','복사 비밀번호 확인');d.style.cssText='color:#fff;background:#172636;border:1px solid #62bad8;border-radius:12px;padding:24px;max-width:calc(100vw - 32px);width:340px;box-sizing:border-box';
+d.innerHTML='<form style="margin:0"><h3 style="margin:0 0 12px">비밀번호 확인</h3><p>페이지 내용을 복사하려면 비밀번호를 입력하세요.</p><input aria-label="복사 비밀번호" type="password" autocomplete="off" required style="width:100%;box-sizing:border-box;padding:8px"><p role="status" aria-live="polite"></p><button type="submit">확인</button> <button type="button" data-cancel>취소</button></form>';
+document.body.append(d);const form=d.querySelector('form'),input=d.querySelector('input'),status=d.querySelector('[role=status]'),submit=form.querySelector('[type=submit]');let pending='',approved=false,bypass=false;
+function clear(){pending='';approved=false;input.value='';input.hidden=false;input.required=true;submit.textContent='확인';submit.disabled=false;status.textContent='';}
+d.addEventListener('close',clear);d.querySelector('[data-cancel]').onclick=()=>d.close();
+document.addEventListener('copy',e=>{if(bypass||d.open)return;const target=e.target; if(target&&target.closest&&target.closest('input,textarea,[contenteditable=true]'))return;const selected=window.getSelection()?.toString();if(!selected)return;e.preventDefault();e.stopImmediatePropagation();clear();pending=selected;d.showModal();input.focus();},true);
+form.onsubmit=async e=>{e.preventDefault();if(!pending)return;if(!approved){submit.disabled=true;try{const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(input.value));const hash=Array.from(new Uint8Array(bytes),n=>n.toString(16).padStart(2,'0')).join('');if(hash!==expected){status.textContent='비밀번호가 올바르지 않습니다.';input.value='';input.focus();return;}approved=true;input.value='';input.required=false;input.hidden=true;submit.textContent='복사 실행';status.textContent='인증되었습니다. 복사 실행을 누르세요.';}catch{status.textContent='인증을 수행할 수 없습니다. HTTPS 연결을 확인하세요.';}finally{submit.disabled=false;}return;}
+const value=pending;let ok=false;try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(value);ok=true;}}catch{}if(!ok){const t=document.createElement('textarea');t.value=value;t.style.cssText='position:fixed;left:-9999px;top:0';d.append(t);t.select();bypass=true;try{ok=document.execCommand('copy');}catch{}finally{bypass=false;t.remove();}}if(ok)d.close();else status.textContent='브라우저가 클립보드 접근을 차단했습니다. 복사 실행을 다시 눌러주세요.';};
+})();
+</script>
 </body></html>
