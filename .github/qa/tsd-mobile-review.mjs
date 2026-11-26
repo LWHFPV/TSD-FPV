@@ -147,7 +147,17 @@ try{
    fs.writeFileSync(dir+'/flight-safety-baseline.json',JSON.stringify(baselineDiagnostic,null,2));
    console.log('MOBILE_BASELINE_DIAGNOSTIC '+JSON.stringify(baselineDiagnostic));
  }
- const summary={checkedCommit,engine,profile,pass:results.filter(x=>x.pass).length,total:results.length,headerPass:results.filter(x=>x.header?.pass).length,navigation,baselineDiagnostic,physicalDevice:false};
+ // Distinguish an inherited remote CORS failure from a new header regression.
+ const base=baselineDiagnostic?.tests?.find(x=>x.mode==='main');
+ const candidate=baselineDiagnostic?.tests?.find(x=>x.mode==='candidate');
+ const inheritedErrors=base&&candidate?base.errors.filter(e=>candidate.errors.includes(e)&&/^Fetch API cannot load https: \/(?:jolly-dawn-3ee1tsd-flight-airspace-api\.flydragon103\.workers\.dev\/health|spaceweather\.kasa\.go\.kr\/api\/kindex) due to access control checks\.$/.test(e)):[];
+ for(const entry of results){
+   entry.inheritedExternalOnly=entry.file==='flight-safety.html'&&!entry.pass&&!entry.failure&&entry.http===200&&entry.header?.pass===true&&entry.orientationPass===true&&entry.touchProfile===true&&entry.errors?.length>0&&entry.errors.every(e=>inheritedErrors.includes(e));
+   entry.headerRegressionPass=entry.pass||entry.inheritedExternalOnly;
+ }
+ const regressionPass=results.filter(x=>x.headerRegressionPass).length;
+ const inheritedExternalFailures=results.filter(x=>x.inheritedExternalOnly).map(x=>({file:x.file,orientation:x.orientation,errors:x.errors}));
+ const summary={checkedCommit,engine,profile,pass:results.filter(x=>x.pass).length,total:results.length,headerPass:results.filter(x=>x.header?.pass).length,navigation,baselineDiagnostic,regressionPass,inheritedExternalFailures,physicalDevice:false};
  fs.writeFileSync(dir+'/results.json',JSON.stringify({summary,results},null,2));
  console.log('MOBILE_SUMMARY '+JSON.stringify(summary));
  if(results.some(x=>!x.pass)||!navigation.pass)process.exitCode=1;
