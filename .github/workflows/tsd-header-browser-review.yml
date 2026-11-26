@@ -44,7 +44,13 @@ jobs:
             const candidate=fs.readFileSync(file,'utf8');
             const scripts=s=>[...s.matchAll(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi)].map(m=>m[0].replace(/\r\n/g,'\n'));
             const before=scripts(baseline),after=scripts(candidate);
-            return {file,baselineScripts:before.length,candidateScripts:after.length,scriptsIdentical:JSON.stringify(before)===JSON.stringify(after)};
+            const differences=before.map((x,i)=>{
+              const y=after[i]??'';if(x===y)return null;
+              let p=0;while(p<Math.min(x.length,y.length)&&x[p]===y[p])p++;
+              let q=0;while(q<Math.min(x.length,y.length)-p&&x[x.length-1-q]===y[y.length-1-q])q++;
+              return {index:i,beforeLength:x.length,afterLength:y.length,firstDifference:p,before:x.slice(Math.max(0,p-100),Math.min(x.length-q+100,p+700)),after:y.slice(Math.max(0,p-100),Math.min(y.length-q+100,p+700))};
+            }).filter(Boolean);
+            return {file,baselineScripts:before.length,candidateScripts:after.length,scriptsIdentical:JSON.stringify(before)===JSON.stringify(after),differences};
           });
           fs.writeFileSync('/tmp/tsd-header-results/source-audit.json',JSON.stringify({baseCommit,checkedCommit,sourceAudit},null,2));
           console.log(JSON.stringify({baseCommit,checkedCommit,sourceAudit}));
@@ -142,7 +148,7 @@ jobs:
                 entry.linkChecks.push({file:filePath,status:response.status(),hash:url.hash});
               }
               await page.addScriptTag({content:axeSource});
-              entry.axe=await header.evaluate(async h=>{const result=await window.axe.run(h,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));});
+              entry.axe=await header.evaluate(async h=>{const result=await window.axe.run(h,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));},undefined,{timeout:90000});
               // Capture the rendered viewport once, without waiting for another layout action.
               // The header crop is derived from real PNG pixels, not reconstructed markup.
               let pixels;
@@ -242,7 +248,12 @@ jobs:
           fs.writeFileSync('/tmp/tsd-header-results/results.json',JSON.stringify(result,null,2));
           fs.writeFileSync('/tmp/tsd-header-results/design-audit.json',JSON.stringify({checkedCommit,baselines,summary:{smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length},results:result},null,2));
           console.log(JSON.stringify({checkedCommit,smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length,total:result.length}));
-          if(result.some(x=>!x.pass||!x.designPass)) process.exitCode=1;
+          const unresolvedScripts=sourceAudit.filter(x=>!x.scriptsIdentical).map(x=>x.file);
+          const externalPassed=external.comparable===true;
+          const propRoundTrips=result.filter(x=>x.file==='simulator.html'&&x.propCardRoundTrip===true).length;
+          const propFunctional=result.filter(x=>x.file==='prop-vibration-lab.html'&&x.propFunctionalPass===true).length;
+          console.log(JSON.stringify({releaseGate:{unresolvedScripts,externalPassed,propRoundTrips,propFunctional,allHeaderTestsPassed:result.every(x=>x.pass&&x.designPass)}}));
+          if(result.some(x=>!x.pass||!x.designPass)||unresolvedScripts.length||!externalPassed||propRoundTrips!==4||propFunctional!==4) process.exitCode=1;
           JS
       - uses: actions/upload-artifact@v4
         if: always()
