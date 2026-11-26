@@ -1,0 +1,51 @@
+name: One-time drone design header patch
+on:
+  push:
+    branches: ['review/tsd-aero-unified-header']
+    paths: ['.github/workflows/tsd-header-one-shot.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.ref == 'refs/heads/review/tsd-aero-unified-header'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Patch header only
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          path = Path('drone-design.html')
+          raw = path.read_bytes()
+          assert hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest() == '7c77a7b2fb7bc3cf314597b19fd53843b7cfefe7'
+          s=raw.decode('utf-8')
+          h, body = s.split('<main id="viewer">',1)
+          edits = [
+            ('</head>', '<link rel="stylesheet" href="./tsd-aero-common.css">\r\n<style>[data-tsd-common-header]{display:block!important;margin:0!important}[data-tsd-common-hero]{border-radius:0!important}</style>\r\n</head>'),
+            ('<header class="site-header">','<header class="site-header" data-tsd-common-header>'),
+            ('class="tsd-wrap tsd-header-inner"','class="tsd-wrap tsd-header-inner" data-tsd-common-bar'),
+            ('class="brand" href="https://lwhfpv.github.io/TSD-FPV/index.html"','class="brand" data-tsd-common-brand href="./index.html"'),
+            ('<nav class="nav"','<nav class="nav" data-tsd-common-nav'),
+            ('https://lwhfpv.github.io/TSD-FPV/education.html','./education.html'),
+            ('https://lwhfpv.github.io/TSD-FPV/index.html#technology','./simulator.html'),
+            ('<a href="#viewer" aria-current="page">드론설계</a>','<a href="./drone-design.html" aria-current="page">드론설계</a>\r\n  <a href="./flight-safety.html">비행안전정보</a>'),
+            ('class="header-contact" href="https://lwhfpv.github.io/TSD-FPV/contact.html"','class="header-contact" data-tsd-common-contact href="./contact.html"'),
+            ('<section class="hero"','<section class="hero" data-tsd-common-hero')
+          ]
+          for old,new in edits:
+              assert h.count(old)==1,old
+              h=h.replace(old,new,1)
+          out=(h+'<main id="viewer">'+body).encode('utf-8')
+          assert out.split(b'<main id="viewer">',1)[1]==raw.split(b'<main id="viewer">',1)[1]
+          path.write_bytes(out)
+          print('PASS: viewer and embedded data byte-identical')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add drone-design.html
+          git commit -m "Unify drone design header only"
+          git push origin HEAD:refs/heads/review/tsd-aero-unified-header
