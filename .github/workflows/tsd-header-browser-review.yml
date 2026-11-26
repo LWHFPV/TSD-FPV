@@ -23,7 +23,28 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.51.1 axe-core@4.10.3 pngjs@7.0.0
-      - run: npx playwright install --with-deps chromium
+      - name: Export existing encrypted equipment page for private browser verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsd-equipment-encrypted-candidate
+          path: |
+            equipment-lab.html
+            tsd-aero-common.css
+          retention-days: 3
+      - name: Install Chromium and system dependencies
+        shell: bash
+        run: |
+          if ! npx playwright install --with-deps chromium; then
+            # The Ubuntu runner's unrelated Microsoft apt repository can return 403.
+            # Remove only its source for this disposable runner, never application code.
+            sudo grep -rl 'packages.microsoft.com/ubuntu/24.04/prod' /etc/apt/sources.list.d/ | while IFS= read -r file; do
+              if sudo grep -Eqv '^(#.*|[[:space:]]*|.*packages.microsoft.com/ubuntu/24.04/prod.*|Types:.*|Suites:.*|Components:.*|Signed-By:.*|Architectures:.*)$' "$file"; then
+                echo "Unexpected mixed apt source; not modifying $file"; exit 1
+              fi
+              sudo mv "$file" "$file.disabled"
+            done
+            npx playwright install --with-deps chromium
+          fi
       - name: Run desktop and mobile header smoke checks
         env:
           TSD_EQUIPMENT_QA_PASSWORD: ${{ secrets.TSD_EQUIPMENT_QA_PASSWORD }}
