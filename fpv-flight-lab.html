@@ -2034,7 +2034,7 @@ html,body{margin:0!important;background:#0b1420!important;color:#e5effa!importan
 })();
 &lt;/script&gt;
 &lt;div id=&quot;fpv-lab&quot;&gt;
-&lt;div class=&quot;r23-title&quot;&gt;&lt;div&gt;&lt;h2&gt;&lt;span class=&quot;brand&quot;&gt;TSD / FLIGHT LAB&lt;/span&gt;&lt;br/&gt;FPV 비행장 · PID 반응 &lt;small style=&quot;font-size:12px;font-weight:500;opacity:.7&quot;&gt;Betaflight PID 교육용 기준 · R35 미리보기&lt;/small&gt;&lt;/h2&gt;&lt;/div&gt;&lt;div class=&quot;r23-audio&quot;&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;button aria-pressed=&quot;false&quot; class=&quot;btn&quot; id=&quot;audioToggle&quot;&gt;비행 소리 켜기&lt;/button&gt;&lt;label class=&quot;form-label&quot;&gt;음량 &lt;span id=&quot;volumeVal&quot;&gt;15%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;volume&quot; max=&quot;50&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;15&quot;/&gt;&lt;/label&gt;&lt;span aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;audioStatus&quot;&gt;아밍음 · 이륙·턴·회복의 부하에 연동&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;r23-title&quot;&gt;&lt;div&gt;&lt;h2&gt;&lt;span class=&quot;brand&quot;&gt;TSD / FLIGHT LAB&lt;/span&gt;&lt;br/&gt;FPV 비행장 · PID 반응 &lt;small style=&quot;font-size:12px;font-weight:500;opacity:.7&quot;&gt;Betaflight PID 교육용 기준 · R36 그래픽 미리보기&lt;/small&gt;&lt;/h2&gt;&lt;/div&gt;&lt;div class=&quot;r23-audio&quot;&gt;&lt;div class=&quot;viz-controls&quot;&gt;&lt;button aria-pressed=&quot;false&quot; class=&quot;btn&quot; id=&quot;audioToggle&quot;&gt;비행 소리 켜기&lt;/button&gt;&lt;label class=&quot;form-label&quot;&gt;음량 &lt;span id=&quot;volumeVal&quot;&gt;15%&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;volume&quot; max=&quot;50&quot; min=&quot;0&quot; step=&quot;1&quot; type=&quot;range&quot; value=&quot;15&quot;/&gt;&lt;/label&gt;&lt;span aria-live=&quot;polite&quot; class=&quot;text-small&quot; id=&quot;audioStatus&quot;&gt;아밍음 · 이륙·턴·회복의 부하에 연동&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;div class=&quot;text-small text-muted&quot;&gt;교육용 근사 모델 · 실제 기체의 비행용 튜닝값을 보증하지 않습니다.&lt;/div&gt;
 &lt;style&gt;
 #fpv-lab{max-width:1800px;gap:5px}
@@ -2719,6 +2719,10 @@ const FlightEngine = (() =&gt; {
   const a=rotate3([1,0,0],r,p,y,inverse),b=rotate3([0,1,0],r,p,y,inverse),c=rotate3([0,0,1],r,p,y,inverse);
   return ([x,y,z])=&gt;[a[0]*x+b[0]*y+c[0]*z,a[1]*x+b[1]*y+c[1]*z,a[2]*x+b[2]*y+c[2]*z];
  }
+ function r36Shade(p,col){
+  if(p.length&lt;3)return col;const a=p[1].map((v,k)=&gt;v-p[0][k]),b=p[2].map((v,k)=&gt;v-p[0][k]),n=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],len=Math.hypot(...n)||1;
+  const light=.94+.48*Math.abs((-.35*n[0]-.45*n[1]-.82*n[2])/len);let rgb=col.match(/\d+(?:\.\d+)?/g);if(/^#[0-9a-f]{6}$/i.test(col))rgb=[1,3,5].map(i=&gt;parseInt(col.slice(i,i+2),16));else if(!/^rgb\(/.test(col))return col;if(!rgb||rgb.length&lt;3)return col;return 'rgb('+rgb.slice(0,3).map(v=&gt;Math.min(255,Math.round(+v*light+12))).join(',')+')';
+ }
  function drone(n,i){
   const {ctx:c,w,h}=setup($('drone'+n)),q=pose(t),fg='#f1f6ff';
   const chaseYaw=chaseHeading(displayTime(),sampleAt(t).rotationStart);
@@ -2726,41 +2730,41 @@ const FlightEngine = (() =&gt; {
   const angles=i?[q.r,q.p,q.y]:[0,-Math.atan2(.65,1.8),chaseYaw],f=w*.66;
   const toView=rotationTransform(...angles,true),mount=i&amp;&amp;$('r23-camera').value==='mount',mountView=rotationTransform(0,-35*Math.PI/180,0);
   const view=v=&gt;{const body=toView(v.map((a,k)=&gt;a-camera[k]));return mount?mountView(body):body;},project=v=&gt;[w/2+f*v[1]/v[0],h/2+f*v[2]/v[0]];
-  const sky=c.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#294764');sky.addColorStop(1,'#a8cedb');c.fillStyle=sky;c.fillRect(0,0,w,h);
+  const sky=c.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#4087bc');sky.addColorStop(.65,'#a4cbe0');sky.addColorStop(1,'#e0e6d8');c.fillStyle=sky;c.fillRect(0,0,w,h);
   const faces=[];
   function polygon(points,col,alpha=1){let v=points.map(view),res=[];for(let j=0;j&lt;v.length;j++){const a=v[j],b=v[(j+1)%v.length],inside=a[0]&gt;=.2,next=b[0]&gt;=.2;if(inside)res.push(a);if(inside!==next){const k=(.2-a[0])/(b[0]-a[0]);res.push(a.map((x,i)=&gt;x+k*(b[i]-x)));}}if(res.length&lt;3)return;faces.push({v:res,col,alpha,depth:res.reduce((a,p)=&gt;a+p[0],0)/res.length});}
+  function flush(sort=true){if(sort)faces.sort((a,b)=&gt;b.depth-a.depth);for(const face of faces){c.globalAlpha=face.alpha;c.fillStyle=face.col;c.beginPath();face.v.forEach((p,j)=&gt;j?c.lineTo(...project(p)):c.moveTo(...project(p)));c.closePath();c.fill();}c.globalAlpha=1;faces.length=0;}
   function line(a,b,col,width=1){let u=view(a),v=view(b);if(u[0]&lt;.2&amp;&amp;v[0]&lt;.2)return;if(u[0]&lt;.2||v[0]&lt;.2){const back=u[0]&lt;.2?u:v,front=u[0]&lt;.2?v:u,k=(.2-back[0])/(front[0]-back[0]),p=back.map((x,j)=&gt;x+k*(front[j]-x));if(u[0]&lt;.2)u=p;else v=p;}c.strokeStyle=col;c.lineWidth=width;c.beginPath();c.moveTo(...project(u));c.lineTo(...project(v));c.stroke();}
-  polygon([[-4000,-4000,0],[4000,-4000,0],[4000,4000,0],[-4000,4000,0]],'#456f60');
-  for(let x=-40;x&lt;200;x+=24)line([x,-55,-.02],[x,55,-.02],'#b8cbd2',.55);
-  // Minimal open-air practice ground: sparse landmarks and just three gates.
-  for(const [x,y] of [[-16,-32],[48,-35],[115,-32],[-8,35],[74,38],[156,36]]){
-   const height=3.5;
-   polygon([[x-.25,y-.25,0],[x+.25,y-.25,0],[x+.25,y-.25,-height],[x-.25,y-.25,-height]],'#8496a3',.45);
-   for(let side=0;side&lt;4;side++){
-    const a=side*Math.PI/2,b=(side+1)*Math.PI/2;
-    polygon([[x+1.9*Math.cos(a),y+1.9*Math.sin(a),-height+1.2],[x+1.9*Math.cos(b),y+1.9*Math.sin(b),-height+1.2],[x,y,-height-1.8]],'#56a58a',.58);
-   }
+  const rnd=(a,b)=&gt;{const n=Math.sin(a*127.1+b*311.7)*43758.5453;return n-Math.floor(n);};
+  // World-anchored cloud layers; no screen-space camera stabilization.
+  for(let j=0;j&lt;12;j++){const ang=j*Math.PI/6,dx=Math.cos(ang),dy=Math.sin(ang),cx=620*dx,cy=620*dy,cz=-95-45*rnd(j,6);for(let k=0;k&lt;3;k++){const off=(k-1)*54,rx=44+42*rnd(j,k),rz=11+9*rnd(k,j);const pts=Array.from({length:12},(_,n)=&gt;{const a=n*Math.PI/6;const u=off+rx*Math.cos(a);return [cx-dy*u,cy+dx*u,cz+rz*Math.sin(a)];});polygon(pts,k===1?'#f8faf5':'#dce9ec',.85);}}flush();
+  polygon([[-4000,-4000,0],[4000,-4000,0],[4000,4000,0],[-4000,4000,0]],'#637b41');flush(false);
+  // Distant terrain silhouette, independent of the practice flight physics.
+  for(let j=0;j&lt;48;j++){const a=j*Math.PI/24,b=(j+1)*Math.PI/24,ra=780+120*rnd(j,8),rb=780+120*rnd(j+1,8),za=-24-23*(.5+.5*Math.sin(a*5+.7))-14*(.5+.5*Math.sin(a*11)),zb=-24-23*(.5+.5*Math.sin(b*5+.7))-14*(.5+.5*Math.sin(b*11));polygon([[ra*Math.cos(a),ra*Math.sin(a),0],[rb*Math.cos(b),rb*Math.sin(b),0],[rb*Math.cos(b),rb*Math.sin(b),zb],[ra*Math.cos(a),ra*Math.sin(a),za]],'#829a8a');}flush();
+  // Mown grass and small anchored patches: perspective changes with the real pose.
+  const bx=Math.floor(q.pos[0]/14),by=Math.floor(q.pos[1]/14);
+  for(let ix=bx-9;ix&lt;=bx+9;ix++)for(let iy=by-7;iy&lt;=by+7;iy++){const x=ix*14,y=iy*14,n=rnd(ix,iy),g=120+Math.round(n*5)+(iy%2===0?3:0);polygon([[x,y,-.006],[x+14,y,-.006],[x+14,y+14,-.006],[x,y+14,-.006]],`rgb(${Math.round(g*.76)},${g},${Math.round(g*.49)})`);}
+  flush(false);
+  const gx=Math.floor(q.pos[0]/3),gy=Math.floor(q.pos[1]/3);
+  for(let ix=gx-10;ix&lt;=gx+10;ix++)for(let iy=gy-7;iy&lt;=gy+7;iy++){const n=rnd(ix,iy);if(n&lt;.35)continue;const x=3*ix+n*1.4,y=3*iy+rnd(iy,ix)*1.4,l=.25+n*.9;polygon([[x,y,-.015],[x+l,y+.1,-.015],[x+l*.65,y+.25,-.015],[x-.12,y+.15,-.015]],n&gt;.74?'#b4b76a':'#48652e',.65);}flush(false);
+  // Faint aircraft ground shadow, projected from the same calculated position.
+  if(!i){const z=Math.max(0,-q.pos[2]),a=.27/(1+z*.045),rad=.42+z*.035;polygon(Array.from({length:16},(_,j)=&gt;[q.pos[0]+.2*z+rad*Math.cos(j*Math.PI/8),q.pos[1]+.12*z+rad*.72*Math.sin(j*Math.PI/8),-.028]),'#263b23',a);flush(false);}
+  // Trees have trunks and layered, lit crown facets; positions do not animate.
+  for(const [x,y] of [[-180,-35],[-92,38],[-16,-32],[48,-35],[115,-32],[-8,35],[74,38],[156,36],[240,-42],[330,46],[410,-45],[-265,40]]){
+   const ht=4.5+3*rnd(x,y),r=1.6+1.2*rnd(y,x);polygon([[x-.18,y,0],[x+.18,y,0],[x+.13,y,-ht*.78],[x-.13,y,-ht*.78]],'#68503b');polygon([[x,y-.18,0],[x,y+.18,0],[x,y+.13,-ht*.78],[x,y-.13,-ht*.78]],'#8b6e48');
+   for(let layer=0;layer&lt;3;layer++){const z=-ht*(.45+layer*.20),rr=r*(1-layer*.20);for(let j=0;j&lt;8;j++){const a=j*Math.PI/4,b=(j+1)*Math.PI/4;polygon([[x+rr*Math.cos(a),y+rr*Math.sin(a),z],[x+rr*Math.cos(b),y+rr*Math.sin(b),z],[x,y,z-ht*.34]],['#315534','#426c3d','#527c43','#65894a'][j%4]);}}
   }
-  faces.sort((a,b)=&gt;b.depth-a.depth).forEach(face=&gt;{c.globalAlpha=face.alpha;c.fillStyle=face.col;c.beginPath();face.v.forEach((p,j)=&gt;j?c.lineTo(...project(p)):c.moveTo(...project(p)));c.closePath();c.fill();});c.globalAlpha=1;
-  for(let x=Math.floor(q.pos[0]/20)*20-200;x&lt;q.pos[0]+300;x+=20){line([x,-300,-.02],[x,300,-.02],'#71998a',.7);}for(let y=-300;y&lt;=300;y+=20)line([q.pos[0]-200,y,-.02],[q.pos[0]+300,y,-.02],'#71998a',.7);
-  // Sparse bidirectional gates; no overlapping obstacle grids.
-  // Two-way Split-S route: gates on BOTH sides of the reversal point.
-  // Negative-X gates become visible after the 180-degree heading reversal.
+  // Banded race gates with depth and visual contrast, identical route locations.
   for(const x of [-300,-220,-140,-60,20,100,180,260,340,420,500,580]){
-   const gate='#9babb7',z=-8;
-   line([x,-5,0],[x,-5,z],gate,2);
-   line([x,5,0],[x,5,z],gate,2);
-   line([x,-5,z],[x,5,z],gate,2);
-  }
-  for(let x=-24;x&lt;174;x+=18){
-   line([x,-11,-.03],[x+3,-11,-.03],'#c4d2d9',1);
-   line([x,11,-.03],[x+3,11,-.03],'#c4d2d9',1);
-  }
+   for(const y of [-5,5])for(let z=0;z&lt;8;z+=1){const col=z%2?'#eee8d6':'#e95d36';polygon([[x,y-.14,-z],[x,y+.14,-z],[x,y+.14,-z-1],[x,y-.14,-z-1]],col);polygon([[x-.14,y,-z],[x+.14,y,-z],[x+.14,y,-z-1],[x-.14,y,-z-1]],z%2?'#b4b6ab':'#a64429');}
+   for(let y=-5;y&lt;5;y+=1)polygon([[x,y,-7.88],[x,y+1,-7.88],[x,y+1,-8.15],[x,y,-8.15]],Math.floor(y+5)%2?'#fff2da':'#e95d36');
+  }flush();
+  for(let x=Math.floor(q.pos[0]/18)*18-162;x&lt;q.pos[0]+180;x+=18){line([x,-11,-.03],[x+3,-11,-.03],'#c8cbb0',1);line([x,11,-.03],[x+3,11,-.03],'#c8cbb0',1);}
   if(!i &amp;&amp; window.TSD10Airframe){
    faces.length=0;
    const bodyRotation=rotationTransform(q.r,q.p,q.y);
    const body=p=&gt;bodyRotation(p.map(v=&gt;v/1000)).map((a,k)=&gt;a+q.pos[k]);
-   TSD10Airframe.drawFaces((vertices,shade)=&gt;polygon(vertices.map(body),shade),displayTime(),flightThrottle(t),sampleAt(t).propPhase);
+   TSD10Airframe.drawFaces((vertices,shade)=&gt;{const pts=vertices.map(body);polygon(pts,r36Shade(pts,shade));},displayTime(),flightThrottle(t),sampleAt(t).propPhase);
    faces.sort((a,b)=&gt;b.depth-a.depth);
    for(const face of faces){
     c.fillStyle=face.col;
@@ -3060,12 +3064,12 @@ const FlightEngine = (() =&gt; {
   const q=sampleAt(t),index=Math.round(q.t*500),prefix=axes[k].toUpperCase()+' · ';$('bbStats').textContent=prefix+(mode==='terms'?['P','I','D','FF'].map(a=&gt;a+' '+q.terms[k][a].toFixed(3)).join(' / '):mode==='dmax'?'유효 D '+q.effectiveD[k].toFixed(1)+' / 기준 '+idealTrajectory[index].effectiveD[k].toFixed(1):mode==='motor'?q.motors.map((v,i)=&gt;'M'+(i+1)+' '+(v*100).toFixed(1)+'%').join(' / '):mode==='pose'?'동일 시각 기준 대비 기체축 '+rad(q.educationPoseError[k]).toFixed(2)+'°':mode==='error'?'각속도 오차 '+rad(q.gyro[k]-q.targets[k]).toFixed(1)+'°/s':'목표 '+rad(q.targets[k]).toFixed(1)+'°/s · 현재 '+rad(q.gyro[k]).toFixed(1)+'°/s · 기준 '+rad(idealTrajectory[index].gyro[k]).toFixed(1)+'°/s');
  }
  function drawHorizon(R,P){
-  const {ctx:g,w:hw,h:hh}=setup($('attHorizon')),x=hw/2,y=hh/2,radius=Math.min(hw,hh)*.35;
+  const {ctx:g,w:hw,h:hh}=setup($('attHorizon')),tapeW=Math.min(64,hw*.33),x=(hw-tapeW)/2,y=hh*.48,radius=Math.min(hw-tapeW,hh)*.28;
   // Equivalent upright Euler attitude: a half roll + half loop is level with reversed heading.
   const bank=Math.atan2(Math.sin(R)*Math.cos(P),Math.cos(R)*Math.cos(P)),pitch=Math.asin(Math.sin(P));
-  g.fillStyle='#132440';g.fillRect(0,0,hw,hh);
+  const panel=g.createLinearGradient(0,0,0,hh);panel.addColorStop(0,'#23374a');panel.addColorStop(1,'#0a1725');g.fillStyle=panel;g.fillRect(0,0,hw,hh);
   g.save();g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.clip();g.translate(x,y);g.rotate(-bank);g.translate(0,pitch*radius*.8);
-  g.fillStyle='#3978a8';g.fillRect(-hw*2,-hh*3,hw*4,hh*3);g.fillStyle='#80694d';g.fillRect(-hw*2,0,hw*4,hh*3);
+  const air=g.createLinearGradient(0,-radius*2,0,0);air.addColorStop(0,'#184c86');air.addColorStop(1,'#72c1e8');g.fillStyle=air;g.fillRect(-hw*2,-hh*3,hw*4,hh*3);const earth=g.createLinearGradient(0,0,0,radius*2);earth.addColorStop(0,'#b29059');earth.addColorStop(1,'#5b3b29');g.fillStyle=earth;g.fillRect(-hw*2,0,hw*4,hh*3);
   g.strokeStyle='#edf6ff';g.lineWidth=1.5;g.beginPath();g.moveTo(-hw,0);g.lineTo(hw,0);g.stroke();
   for(const deg of [-30,-20,-10,10,20,30]){const py=-deg*Math.PI/180*radius*.8,len=Math.abs(deg)%20===0?radius*.35:radius*.2;g.lineWidth=1;g.beginPath();g.moveTo(-len,py);g.lineTo(len,py);g.stroke();}
   g.restore();g.strokeStyle='#a7bfd3';g.lineWidth=2;g.beginPath();g.arc(x,y,radius,0,2*Math.PI);g.stroke();
@@ -3074,18 +3078,23 @@ const FlightEngine = (() =&gt; {
   for(const deg of [-90,-60,-30,-20,-10,0,10,20,30,60,90]){
    const a=deg*Math.PI/180,major=deg===0||Math.abs(deg)&gt;=30,inner=radius+3,outer=radius+(major?12:8);
    g.beginPath();g.moveTo(x+Math.sin(a)*inner,y-Math.cos(a)*inner);g.lineTo(x+Math.sin(a)*outer,y-Math.cos(a)*outer);g.stroke();
-   if(deg!==0){const textR=radius+21;g.fillText(Math.abs(deg)+'',x+Math.sin(a)*textR,y-Math.cos(a)*textR);}
+   if(Math.abs(deg)&gt;=30){const textR=radius+13;g.fillText(Math.abs(deg)+'',x+Math.sin(a)*textR,y-Math.cos(a)*textR);}
   }
   const pointerRadius=radius-5,px=x+Math.sin(bank)*pointerRadius,py=y-Math.cos(bank)*pointerRadius;
   g.save();g.translate(px,py);g.rotate(bank);g.fillStyle='#ffe07c';g.beginPath();g.moveTo(0,-5);g.lineTo(-5,6);g.lineTo(5,6);g.closePath();g.fill();g.restore();
   g.strokeStyle='#ffe07c';g.lineWidth=3;g.beginPath();g.moveTo(x-radius*.55,y);g.lineTo(x-12,y);g.lineTo(x,y+6);g.lineTo(x+12,y);g.lineTo(x+radius*.55,y);g.stroke();
-  g.font='11px sans-serif';g.fillStyle='#e9f2fa';g.fillText('롤 '+(bank*180/Math.PI).toFixed(1)+'°',x,hh-12);g.textBaseline='alphabetic';
+  g.font='10px sans-serif';g.fillStyle='#e9f2fa';g.fillText('R '+(bank*180/Math.PI).toFixed(1)+'°  P '+(pitch*180/Math.PI).toFixed(1)+'°',x,hh-9);
+  const q=sampleAt(t),alt=-q.pos[2],vs=-q.velocity[2],left=hw-tapeW+3,tw=tapeW-6,mid=hh*.47,step=10;
+  g.save();g.beginPath();g.rect(left,2,tw,hh-4);g.clip();g.fillStyle='#0b1724';g.fillRect(left,2,tw,hh-4);g.strokeStyle='#557087';g.strokeRect(left+.5,2.5,tw-1,hh-5);g.fillStyle='#96b4c8';g.font='9px sans-serif';g.textAlign='center';g.fillText('ALT m',left+tw/2,9);
+  for(let v=Math.floor(alt)-4;v&lt;=Math.floor(alt)+4;v++){const yy=mid+(alt-v)*step;if(yy&lt;17||yy&gt;hh-17)continue;g.strokeStyle='#7d97aa';g.beginPath();g.moveTo(left+2,yy);g.lineTo(left+(v%5===0?9:5),yy);g.stroke();if(v%2===0){g.fillStyle='#bed0dc';g.textAlign='right';g.fillText(String(v),left+tw-4,yy);}}
+  g.fillStyle='#101d2a';g.fillRect(left+1,mid-10,tw-2,20);g.strokeStyle='#b8ddf2';g.strokeRect(left+1.5,mid-10,tw-3,20);g.fillStyle='#eafaff';g.font='bold 12px monospace';g.textAlign='center';g.fillText(alt.toFixed(1),left+tw/2,mid);
+  g.fillStyle=vs&gt;0.08?'#8ee8ae':vs&lt;-.08?'#ffd38e':'#b7cad6';g.font='9px sans-serif';g.fillText((vs&gt;=0?'+':'')+vs.toFixed(1)+' m/s',left+tw/2,hh-9);g.restore();g.textBaseline='alphabetic';
  }
 
  function attitude(){
   if(!pidTrajectory.length)return;const q=pose(t),R=q.r,P=q.p,Y=q.y;
   const {ctx:c,w,h}=setup($('attQuad'));
-  c.fillStyle='#132440';c.fillRect(0,0,w,h);
+  const bg=c.createRadialGradient(w*.48,h*.37,1,w*.48,h*.48,Math.max(w,h)*.64);bg.addColorStop(0,'#3d5263');bg.addColorStop(1,'#101d2d');c.fillStyle=bg;c.fillRect(0,0,w,h);
   // Use the same nose (+X), lateral (+Y), and attitude as the chase camera.
   // Project into a clear 3/4 overhead view: nose (+X) points toward screen top.
   const chaseYaw=chaseHeading(displayTime(),sampleAt(t).rotationStart);
@@ -3096,7 +3105,7 @@ const FlightEngine = (() =&gt; {
     const local=vertices.map(point=&gt;toChase(bodyRotation(point.map(v=&gt;v*.00465))));
     const depth=local.reduce((d,[x,,z])=&gt;d+x*.44+z*.74,0)/local.length;
     const points=local.map(([x,y,z])=&gt;[cx+y*scale,cy-x*scale*.74+z*scale*.44]);
-    attitudeFaces.push({points,depth,shade});
+    attitudeFaces.push({points,depth,shade:r36Shade(local,shade)});
    },displayTime(),flightThrottle(t),sampleAt(t).propPhase);
    attitudeFaces.sort((a,b)=&gt;b.depth-a.depth);
    for(const {points,shade} of attitudeFaces){
