@@ -74,6 +74,30 @@
   #tsd-fpv-preview footer { background: #fff; color: var(--tsd-muted); border-top: 1px solid var(--tsd-line); }
   #tsd-fpv-preview .tsd-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px; font-size: 13px; }
   #tsd-fpv-preview .tsd-foot button { padding: 5px 8px; font: inherit; color: var(--tsd-blue); background: #fff; border: 1px solid var(--tsd-line); border-radius: 5px; }
+
+/* TSD Aero common visual standard — homepage */
+#tsd-fpv-preview .tsd-hero { color:#153b65; position:relative; isolation:isolate; padding:12px 0 14px; background:linear-gradient(105deg,#eaf6ff 0%,#c5e2fa 30%,#83b8eb 65%,#347bc3 100%); box-shadow:inset 0 -3px #347bc3; }
+#tsd-fpv-preview .tsd-hero::before { content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22680%22%20height%3D%22100%22%20viewBox%3D%220%200%20680%20100%22%3E%3Cg%20stroke%3D%22white%22%20fill%3D%22none%22%20opacity%3D%22.6%22%3E%3Ccircle%20cx%3D%22624%22%20cy%3D%2250%22%20r%3D%2238%22%2F%3E%3Ccircle%20cx%3D%22624%22%20cy%3D%2250%22%20r%3D%2228%22%2F%3E%3Ccircle%20cx%3D%22624%22%20cy%3D%2250%22%20r%3D%2215%22%2F%3E%3Cpath%20d%3D%22M580%2050H668M624%206V94M597%2023L651%2077M651%2023L597%2077%22%20stroke-dasharray%3D%223%204%22%2F%3E%3Cpath%20d%3D%22M0%2075H80L110%2045H158M0%2085H90L120%2055H170M510%200L550%2040H575%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"),linear-gradient(to right,#ffffff4d 1px,transparent 1px),linear-gradient(to bottom,#ffffff4d 1px,transparent 1px); background-size:100% 100%,18px 18px,18px 18px; }
+#tsd-fpv-preview .tsd-hero-sub { margin:3px 0 0; color:#204d79; font-size:clamp(9px,1.1vw,11px); letter-spacing:.16em; font-weight:600; line-height:1.4; }
+#tsd-unlock-title:focus-visible { outline-color:#153b65; }
+#tsd-fpv-preview .tsd-resource-group + .tsd-resource-group { margin-top:12px; }
+#tsd-fpv-preview .tsd-resource-group h2 { font-size:18.5px; font-weight:650; line-height:1.3; margin:0 0 6px; text-align:left; }
+#tsd-fpv-preview .tsd-links { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+#tsd-fpv-preview .tsd-blind { position:relative; border-radius:6px; }
+#tsd-fpv-preview .tsd-blind h3 { padding:0; border:0; background:#fff; color:var(--tsd-ink); border-radius:6px; }
+#tsd-fpv-preview .tsd-blind h3 button { width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 12px; min-height:32px; border:0; border-radius:6px; background:none; color:inherit; font:600 14px/1.3 inherit; font-family:inherit; font-size:14px; font-weight:600; line-height:1.3; text-align:left; cursor:pointer; }
+#tsd-fpv-preview .tsd-blind h3 button:hover,#tsd-fpv-preview .tsd-blind h3 button[aria-expanded="true"] { background:#eaf1ff; color:#123f91; }
+#tsd-fpv-preview .tsd-blind h3 button:focus-visible { outline:2px solid #1763db; outline-offset:-2px; }
+#tsd-fpv-preview .tsd-chevron { color:var(--tsd-blue); transition:transform .16s; font-size:18px; line-height:1; }
+#tsd-fpv-preview [aria-expanded="true"] .tsd-chevron { transform:rotate(180deg); }
+#tsd-fpv-preview .tsd-blind ul { position:absolute; left:-1px; right:-1px; top:100%; z-index:20; background:#fff; border:1px solid var(--tsd-line); border-radius:0 0 6px 6px; box-shadow:0 8px 20px #173b6120; max-height:min(55vh,420px); overflow-y:auto; animation:tsd-reveal .16s ease-out; }
+#tsd-fpv-preview .tsd-blind ul[hidden] { display:none; }
+@keyframes tsd-reveal { from { opacity:0; transform:translateY(-4px); } to {opacity:1;transform:translateY(0);} }
+@media(prefers-reduced-motion:reduce){#tsd-fpv-preview .tsd-blind ul{animation:none;}#tsd-fpv-preview .tsd-chevron{transition:none;}}
+@media(max-width:690px){#tsd-fpv-preview .tsd-links{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:430px){#tsd-fpv-preview .tsd-links{grid-template-columns:1fr;gap:6px;}}
+@media(pointer:coarse){#tsd-fpv-preview .tsd-blind h3 button{min-height:44px;}#tsd-fpv-preview .tsd-blind ul{position:static;box-shadow:none;border-width:1px 0 0;}}
+
 </style>
 </head>
 <body>
@@ -86,7 +110,7 @@
         <a href="./education.html">체험교육</a>
         <a href="./simulator.html#technology">시뮬레이터 체험</a>
         <a href="./drone-design.html">드론설계</a>
-        <a class="tsd-safety-banner" href="./flight-safety.html" title="TSD 비행안전정보센터">비행안전정보</a>
+        <a href="./flight-safety.html" title="TSD 비행안전정보센터">비행안전정보</a>
       </nav>
       <a class="tsd-contact" href="./contact.html">문의</a>
     </div>
@@ -94,15 +118,47 @@
   <div class="tsd-hero">
     <div class="tsd-inner">
       <h1 id="tsd-unlock-title" role="button" tabindex="0">TSD 기술 연구소</h1>
+      <p class="tsd-hero-sub">AERO SYSTEMS · RESEARCH &amp; TECHNOLOGY</p>
     </div>
   </div>
   <main class="tsd-inner tsd-content" id="main" inert>
-    <section aria-labelledby="tsd-preview-resource-title">
-      <h2 id="tsd-preview-resource-title">FPV 자료실</h2>
-      <div class="tsd-links">
-        <section class="tsd-panel" aria-labelledby="tsd-preview-creators">
-          <h3 id="tsd-preview-creators">FPV 블로거·크리에이터</h3>
-          <ul>
+<section class="tsd-resource-group" aria-labelledby="tsd-group-0"><h2 id="tsd-group-0">공공·행정정보</h2><div class="tsd-links"><section class="tsd-panel tsd-blind" aria-labelledby="tsd-blind-0-0"><h3 id="tsd-blind-0-0"><button type="button" aria-expanded="false" aria-controls="tsd-blind-0-0-list">드론 민원·비행승인<span aria-hidden="true" class="tsd-chevron">⌄</span></button></h3><ul id="tsd-blind-0-0-list" hidden><li><a href="https://drone.onestop.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>드론원스톱 민원서비스</strong><small>기체 신고·비행승인·항공촬영 민원</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.kiast.or.kr/" target="_blank" rel="noopener noreferrer"><span><strong>항공안전기술원</strong><small>특별비행승인 검사·안전성 인증</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.molit.go.kr/sroa/intro.do" target="_blank" rel="noopener noreferrer"><span><strong>서울지방항공청</strong><small>관할 항공행정</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.molit.go.kr/broa/" target="_blank" rel="noopener noreferrer"><span><strong>부산지방항공청</strong><small>관할 항공행정</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.gov.kr/" target="_blank" rel="noopener noreferrer"><span><strong>정부24</strong><small>정부 민원 서비스</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.epeople.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>국민신문고</strong><small>민원·질의</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li></ul></section>
+<section class="tsd-panel tsd-blind" aria-labelledby="tsd-blind-0-1"><h3 id="tsd-blind-0-1"><button type="button" aria-expanded="false" aria-controls="tsd-blind-0-1-list">드론 정책·산업정보<span aria-hidden="true" class="tsd-chevron">⌄</span></button></h3><ul id="tsd-blind-0-1-list" hidden><li><a href="https://droneportal.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>드론정보포털</strong><small>드론 제도·산업정보</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.data.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>공공데이터포털</strong><small>공공 데이터·API</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.bizinfo.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>기업마당</strong><small>기업 지원사업</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.g2b.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>나라장터</strong><small>공공 입찰</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.k-startup.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>K-Startup</strong><small>창업지원</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.ntis.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>NTIS</strong><small>국가 연구개발</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li></ul></section>
+<section class="tsd-panel tsd-blind" aria-labelledby="tsd-blind-0-2"><h3 id="tsd-blind-0-2"><button type="button" aria-expanded="false" aria-controls="tsd-blind-0-2-list">항공법규·자격정보<span aria-hidden="true" class="tsd-chevron">⌄</span></button></h3><ul id="tsd-blind-0-2-list" hidden><li><a href="https://www.law.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>국가법령정보센터</strong><small>항공안전법 등 공식 법령</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.molit.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>국토교통부</strong><small>항공 정책·제도</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.kotsa.or.kr/" target="_blank" rel="noopener noreferrer"><span><strong>한국교통안전공단</strong><small>항공안전·교육기관</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://lic.kotsa.or.kr/" target="_blank" rel="noopener noreferrer"><span><strong>TS 국가자격시험</strong><small>조종자 자격시험</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://edu.kotsa.or.kr/" target="_blank" rel="noopener noreferrer"><span><strong>TS 배움터</strong><small>온라인 교육</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li></ul></section></div></section>
+<section class="tsd-resource-group" aria-labelledby="tsd-group-1"><h2 id="tsd-group-1">비행환경·공간정보</h2><div class="tsd-links"><section class="tsd-panel tsd-blind" aria-labelledby="tsd-blind-1-0"><h3 id="tsd-blind-1-0"><button type="button" aria-expanded="false" aria-controls="tsd-blind-1-0-list">기상·환경정보<span aria-hidden="true" class="tsd-chevron">⌄</span></button></h3><ul id="tsd-blind-1-0-list" hidden><li><a href="https://amo.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>항공기상청</strong><small>공항기상·METAR·TAF</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.weather.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>기상청 날씨누리</strong><small>기상특보·풍향·풍속</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://data.kma.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>기상자료개방포털</strong><small>관측자료 조회</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://mtweather.nifos.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>산악기상정보시스템</strong><small>산악 관측정보</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://astro.kasi.re.kr/" target="_blank" rel="noopener noreferrer"><span><strong>한국천문연구원 생활천문관</strong><small>일출·일몰</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.windy.com/" target="_blank" rel="noopener noreferrer"><span><strong>Windy</strong><small>민간 예보 참고</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.uavforecast.com/" target="_blank" rel="noopener noreferrer"><span><strong>UAV Forecast</strong><small>민간 비행기상 참고</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li></ul></section>
+<section class="tsd-panel tsd-blind" aria-labelledby="tsd-blind-1-1"><h3 id="tsd-blind-1-1"><button type="button" aria-expanded="false" aria-controls="tsd-blind-1-1-list">지형·공간정보<span aria-hidden="true" class="tsd-chevron">⌄</span></button></h3><ul id="tsd-blind-1-1-list" hidden><li><a href="https://map.ngii.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>국토정보플랫폼</strong><small>정사영상·표고 자료</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.vworld.kr/" target="_blank" rel="noopener noreferrer"><span><strong>브이월드</strong><small>공간정보·지도</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://map.forest.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>산림공간정보서비스</strong><small>산림 공간정보</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://ecvam.neins.go.kr/main.do" target="_blank" rel="noopener noreferrer"><span><strong>국토환경성평가지도</strong><small>환경공간정보</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.eum.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>토지이음</strong><small>토지이용계획</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://earth.google.com/web/" target="_blank" rel="noopener noreferrer"><span><strong>Google Earth</strong><small>위성영상 참고</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://browser.dataspace.copernicus.eu/" target="_blank" rel="noopener noreferrer"><span><strong>Copernicus Browser</strong><small>위성 관측자료</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li></ul></section>
+<section class="tsd-panel tsd-blind" aria-labelledby="tsd-blind-1-2"><h3 id="tsd-blind-1-2"><button type="button" aria-expanded="false" aria-controls="tsd-blind-1-2-list">공역·비행정보<span aria-hidden="true" class="tsd-chevron">⌄</span></button></h3><ul id="tsd-blind-1-2-list" hidden><li><a href="https://www.molit.go.kr/atmo/" target="_blank" rel="noopener noreferrer"><span><strong>항공교통본부</strong><small>공역·항공교통</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://aim.koca.go.kr/eaipPub/" target="_blank" rel="noopener noreferrer"><span><strong>대한민국 e-AIP</strong><small>공식 항공정보간행물</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://aim.koca.go.kr/" target="_blank" rel="noopener noreferrer"><span><strong>항공정보통합관리시스템</strong><small>항공정보·NOTAM</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="./flight-safety.html"><span><strong>TSD 비행안전정보센터</strong><small>자체 비행안전 서비스</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
+<li><a href="https://www.flightradar24.com/" target="_blank" rel="noopener noreferrer"><span><strong>Flightradar24</strong><small>민간 유인항공기 운항 참고</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li></ul></section></div></section>
+<section class="tsd-resource-group" aria-labelledby="tsd-preview-resource-title"><h2 id="tsd-preview-resource-title">FPV 기술자료</h2><div class="tsd-links"><section class="tsd-panel tsd-blind" aria-labelledby="tsd-preview-creators"><h3 id="tsd-preview-creators"><button type="button" aria-expanded="false" aria-controls="tsd-preview-creators-list">FPV 블로거·크리에이터<span aria-hidden="true" class="tsd-chevron">⌄</span></button></h3><ul id="tsd-preview-creators-list" hidden>
             <li><a href="https://oscarliang.com/" target="_blank" rel="noopener noreferrer"><span><strong>Oscar Liang</strong><small>기체 조립·튜닝 가이드</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://www.fpvknowitall.com/" target="_blank" rel="noopener noreferrer"><span><strong>Joshua Bardwell</strong><small>장비 선택·FPV 입문 자료</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://www.youtube.com/channel/UCBGpbEe0G9EchyGYCRRd4hg" target="_blank" rel="noopener noreferrer"><span><strong>Nick Burns</strong><small>마이크로 FPV·Tiny Whoop 리뷰</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
@@ -113,11 +169,8 @@
             <li><a href="https://www.youtube.com/channel/UCQEqPV0AwJ6mQYLmSO0rcNA" target="_blank" rel="noopener noreferrer"><span><strong>Mr Steele</strong><small>FPV 프리스타일 비행</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://www.youtube.com/@JohnnyFPV" target="_blank" rel="noopener noreferrer"><span><strong>Johnny FPV</strong><small>시네마틱 FPV 촬영</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://www.youtube.com/channel/UCemG3VoNCmjP8ucHR2YY7hw" target="_blank" rel="noopener noreferrer"><span><strong>Rotor Riot</strong><small>FPV 팀 채널 · 프리스타일·조립</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
-          </ul>
-        </section>
-        <section class="tsd-panel" aria-labelledby="tsd-preview-stores">
-          <h3 id="tsd-preview-stores">브랜드·쇼핑몰</h3>
-          <ul>
+          </ul></section>
+<section class="tsd-panel tsd-blind" aria-labelledby="tsd-preview-stores"><h3 id="tsd-preview-stores"><button type="button" aria-expanded="false" aria-controls="tsd-preview-stores-list">브랜드·쇼핑몰<span aria-hidden="true" class="tsd-chevron">⌄</span></button></h3><ul id="tsd-preview-stores-list" hidden>
             <li><a href="https://store.dji.com/kr" target="_blank" rel="noopener noreferrer"><span><strong>DJI 공식 스토어</strong><small>한국 스토어 · 기체·고글·영상장치</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://radiomasterrc.com/" target="_blank" rel="noopener noreferrer"><span><strong>RadioMaster</strong><small>공식 사이트 · 조종기·수신기</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://www.getfpv.com/" target="_blank" rel="noopener noreferrer"><span><strong>GetFPV</strong><small>미국 FPV 전문 부품몰</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
@@ -128,11 +181,8 @@
             <li><a href="https://www.caddxfpv.com/" target="_blank" rel="noopener noreferrer"><span><strong>CADDXFPV · Walksnail</strong><small>공식 사이트 · Avatar 영상 시스템</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://www.racedayquads.com/" target="_blank" rel="noopener noreferrer"><span><strong>RaceDayQuads</strong><small>미국 FPV 전문 부품몰</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://www.fpv24.com/de/" target="_blank" rel="noopener noreferrer"><span><strong>FPV24</strong><small>독일 FPV 전문몰</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
-          </ul>
-        </section>
-        <section class="tsd-panel tsd-tools" aria-labelledby="tsd-preview-tools">
-          <h3 id="tsd-preview-tools">설정·운용 프로그램</h3>
-          <ul>
+          </ul></section>
+<section class="tsd-panel tsd-blind" aria-labelledby="tsd-preview-tools"><h3 id="tsd-preview-tools"><button type="button" aria-expanded="false" aria-controls="tsd-preview-tools-list">설정·운용 프로그램<span aria-hidden="true" class="tsd-chevron">⌄</span></button></h3><ul id="tsd-preview-tools-list" hidden>
             <li><a href="https://betaflight.com/download" target="_blank" rel="noopener noreferrer"><span><strong>Betaflight</strong><small>비행제어기(FC) 설정·펌웨어</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://github.com/mavlink/qgroundcontrol/releases" target="_blank" rel="noopener noreferrer"><span><strong>QGroundControl</strong><small>지상통제·임무 계획</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://github.com/bitdump/BLHeli" target="_blank" rel="noopener noreferrer"><span><strong>BLHeli</strong><small>ESC 펌웨어·기존 설정 자료</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
@@ -143,11 +193,8 @@
             <li><a href="https://blackbox.betaflight.com/" target="_blank" rel="noopener noreferrer"><span><strong>Betaflight Blackbox</strong><small>비행 로그·진동·PID 분석</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://github.com/iNavFlight/inav-configurator/releases" target="_blank" rel="noopener noreferrer"><span><strong>INAV Configurator</strong><small>INAV 비행제어기·GPS 설정</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
             <li><a href="https://ardupilot.org/planner/docs/mission-planner-installation.html" target="_blank" rel="noopener noreferrer"><span><strong>Mission Planner</strong><small>ArduPilot 설정·임무 계획</small></span><span class="tsd-arrow" aria-hidden="true">↗</span></a></li>
-          </ul>
-        </section>
-      </div>
-    </section>
-  </main>
+          </ul></section></div></section>
+</main>
   <footer inert>
     <div class="tsd-inner tsd-foot">
       <span>© 2026 TSD Aero Systems</span>
@@ -356,6 +403,26 @@
   });
 
   setLocked(!isSavedUnlock());
+})();
+</script>
+<script>
+(function(){
+  'use strict';
+  const panels=[...document.querySelectorAll('#tsd-fpv-preview .tsd-blind')];
+  let active=null;
+  const fine=window.matchMedia('(hover: hover) and (pointer: fine)');
+  function close(){if(!active)return;active.querySelector('button').setAttribute('aria-expanded','false');active.querySelector('ul').hidden=true;active=null;}
+  function open(panel){if(active===panel)return;close();active=panel;panel.querySelector('button').setAttribute('aria-expanded','true');panel.querySelector('ul').hidden=false;}
+  panels.forEach(panel=>{
+    const button=panel.querySelector('button');
+    panel.addEventListener('mouseenter',()=>{if(fine.matches&&!panel.closest('[inert]'))open(panel);});
+    panel.addEventListener('mouseleave',()=>{if(fine.matches&&active===panel)close();});
+    button.addEventListener('click',()=>{if(fine.matches&&active===panel)return;active===panel?close():open(panel);});
+    panel.addEventListener('focusout',e=>{if(active===panel&&!panel.contains(e.relatedTarget)&&!panel.matches(':hover'))close();});
+  });
+  document.addEventListener('pointerdown',e=>{if(active&&!active.contains(e.target))close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&active){const b=active.querySelector('button');close();b.focus();}});
+  window.addEventListener('pageshow',close);
 })();
 </script>
 </body>
