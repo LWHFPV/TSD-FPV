@@ -1,0 +1,65 @@
+name: TSD header browser review
+on:
+  push:
+    branches: [review/tsd-header-browser-check-20261126]
+  pull_request:
+    branches: [review/tsd-aero-header-main-safe-20261126]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.51.1
+      - run: npx playwright install --with-deps chromium
+      - name: Run desktop and mobile header smoke checks
+        shell: bash
+        run: |
+          mkdir -p /tmp/tsd-header-results
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/tsd-header-http.log 2>&1 &
+          node --input-type=module <<'JS'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          const paths=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','simulator.html','tsd-qgc-mission-lab.html'];
+          const result=[];
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          for (const file of paths) for (const width of [1440,768,390,320]) {
+            const context=await browser.newContext({viewport:{width,height:900}});
+            const page=await context.newPage(); const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            const entry={file,width,errors};
+            try {
+              const response=await page.goto('http://127.0.0.1:8765/'+file,{waitUntil:'domcontentloaded',timeout:30000});
+              entry.http=response?.status();
+              const header=page.locator('[data-tsd-common-header]:visible').first();
+              await header.waitFor({state:'visible',timeout:10000});
+              const nav=await header.evaluate(h=>{
+                const r=h.getBoundingClientRect();
+                const links=[...h.querySelectorAll('a')].map(a=>{const b=a.getBoundingClientRect(); return {label:a.textContent.trim(),href:a.getAttribute('href'),visible:b.width>0&&b.height>0,left:b.left,right:b.right};});
+                return {left:r.left,right:r.right,viewport:innerWidth,links,overflow:h.scrollWidth>h.clientWidth+1};
+              });
+              Object.assign(entry,nav);
+              entry.pass=entry.http===200&&!entry.overflow&&nav.left>=-1&&nav.right<=width+1&&nav.links.length>=6&&nav.links.every(a=>a.visible&&a.left>=-1&&a.right<=width+1)&&errors.length===0;
+              await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'.png',timeout:10000});
+            } catch(e) {entry.pass=false;entry.failure=String(e);}
+            result.push(entry); console.log(JSON.stringify(entry));await context.close();
+          }
+          await browser.close();
+          fs.writeFileSync('/tmp/tsd-header-results/results.json',JSON.stringify(result,null,2));
+          if(result.some(x=>!x.pass)) process.exitCode=1;
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsd-header-browser-results
+          path: /tmp/tsd-header-results
+          retention-days: 7
