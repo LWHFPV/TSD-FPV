@@ -41,7 +41,16 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts playwright@1.52.0
           npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Official public CSV download probe
+        if: matrix.browser == 'chromium'
+        run: node tools/forest/public_download_probe.mjs
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.browser == 'chromium'
+        with:
+          name: forest-download-evidence
+          path: forest-download-evidence/
       - name: Browser environment smoke, then actual V10 gate
+        if: always() && !cancelled()
         env:
           BROWSER: ${{ matrix.browser }}
         run: |
