@@ -14,8 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: review/tsd-aero-header-main-safe-20261126
           fetch-depth: 1
           lfs: false
+      - name: Fetch baseline main for source comparison
+        run: git fetch --no-tags --depth=1 origin refs/heads/main:refs/remotes/origin/main
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -35,6 +38,16 @@ jobs:
           const axeSource=fs.readFileSync('node_modules/axe-core/axe.min.js','utf8');
           const paths=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','simulator.html','tsd-qgc-mission-lab.html','prop-vibration-lab.html'];
           const result=[];
+          const baseCommit=execFileSync('git',['rev-parse','refs/remotes/origin/main'],{encoding:'utf8'}).trim();
+          const sourceAudit=paths.filter(f=>f!=='prop-vibration-lab.html').map(file=>{
+            const baseline=execFileSync('git',['show',baseCommit+':'+file],{encoding:'utf8',maxBuffer:100*1024*1024});
+            const candidate=fs.readFileSync(file,'utf8');
+            const scripts=s=>[...s.matchAll(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi)].map(m=>m[0].replace(/\r\n/g,'\n'));
+            const before=scripts(baseline),after=scripts(candidate);
+            return {file,baselineScripts:before.length,candidateScripts:after.length,scriptsIdentical:JSON.stringify(before)===JSON.stringify(after)};
+          });
+          fs.writeFileSync('/tmp/tsd-header-results/source-audit.json',JSON.stringify({baseCommit,checkedCommit,sourceAudit},null,2));
+          console.log(JSON.stringify({baseCommit,checkedCommit,sourceAudit}));
           const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
           async function fingerprint(header,home=false){
             return header.evaluate((h,home)=>{
@@ -199,10 +212,32 @@ jobs:
                 ensure('noPageErrors',errors.length===0);
                 entry.propFunctionalPass=true;
               }
+              if(file==='simulator.html'){
+                const card=page.locator('#prop-vibration-lab a[aria-label="프롭 진동 실습 시작"]');
+                const target=await card.getAttribute('href');
+                if(target!=='./prop-vibration-lab.html')throw Error('PropLab card target incorrect: '+target);
+                await Promise.all([page.waitForURL('**/prop-vibration-lab.html',{timeout:15000}),card.click({timeout:15000})]);
+                await page.locator('#motors button').first().waitFor({state:'visible',timeout:15000});
+                await Promise.all([page.waitForURL('**/simulator.html',{timeout:15000}),page.locator('[data-tsd-common-nav] a[href="./simulator.html"]').click({timeout:15000})]);
+                entry.propCardRoundTrip=true;
+              }
               entry.designPass=entry.pass&&entry.visualDifferences.length===0&&entry.heroBackgroundMatch&&entry.heroPatternMatch&&entry.menuLabelsMatch&&entry.menuTargetsMatch&&entry.linkChecks.every(x=>x.status===200)&&entry.axe.length===0&&entry.headerCapture===true&&entry.commonCssResponse.status===200;
             } catch(e) {entry.pass=false;entry.designPass=false;entry.failure=String(e);await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'-failure.png',timeout:10000}).catch(()=>{});}
             result.push(entry); console.log(JSON.stringify(entry));await context.close();
           }
+          const external={url:'https://tsd-prop-sound-lab.amiablecoati.chatgpt.site/',comparable:false};
+          const externalPage=await browser.newPage();
+          try {
+            const response=await externalPage.goto(external.url,{waitUntil:'domcontentloaded',timeout:25000});
+            external.http=response?.status();external.finalUrl=externalPage.url();external.title=await externalPage.title();
+            const ids=['motors','airframe3d','drone','track','spectrum','throttle','roll','pitch','yaw','sound','reset'];
+            external.controls=await externalPage.evaluate(ids=>Object.fromEntries(ids.map(id=>[id,!!document.getElementById(id)])),ids);
+            external.comparable=external.http===200&&Object.values(external.controls).every(Boolean);
+            await externalPage.screenshot({path:'/tmp/tsd-header-results/external-prop.png',timeout:10000}).catch(()=>{});
+          }catch(e){external.error=String(e)}
+          fs.writeFileSync('/tmp/tsd-header-results/external-prop-audit.json',JSON.stringify(external,null,2));
+          console.log(JSON.stringify({externalPropAudit:external}));
+          await externalPage.close();
           await browser.close();
           fs.writeFileSync('/tmp/tsd-header-results/results.json',JSON.stringify(result,null,2));
           fs.writeFileSync('/tmp/tsd-header-results/design-audit.json',JSON.stringify({checkedCommit,baselines,summary:{smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length},results:result},null,2));
