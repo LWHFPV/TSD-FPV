@@ -119,7 +119,35 @@ try{
  const context=await browser.newContext({...device});const page=await context.newPage();
  let navigation={};
  try{await page.goto(root+'simulator.html',{waitUntil:'domcontentloaded',timeout:45000});const link=page.locator('#prop-vibration-lab a.cardLink');await link.scrollIntoViewIfNeeded();await Promise.all([page.waitForURL('**/prop-vibration-lab.html',{timeout:15000}),link.tap({timeout:15000})]);navigation={pass:true,url:page.url()};}catch(e){navigation={pass:false,error:String(e)};}await context.close();
- const summary={checkedCommit,engine,profile,pass:results.filter(x=>x.pass).length,total:results.length,headerPass:results.filter(x=>x.header?.pass).length,navigation,physicalDevice:false};
+ // Compare the existing main implementation under the same origin and WebKit profile.
+ let baselineDiagnostic=null;
+ if(engine==='webkit'&&results.some(x=>x.file==='flight-safety.html'&&!x.pass)){
+   try{
+     execFileSync('git',['fetch','--no-tags','--depth=1','origin','refs/heads/main:refs/remotes/origin/main'],{encoding:'utf8'});
+     const baselineCommit=execFileSync('git',['rev-parse','refs/remotes/origin/main'],{encoding:'utf8'}).trim();
+     const baselineHtml=execFileSync('git',['show',baselineCommit+':flight-safety.html'],{encoding:'utf8',maxBuffer:20*1024*1024});
+     const tests=[];
+     for(const mode of ['main','candidate']){
+       const c=await browser.newContext({...device});const p=await c.newPage();
+       const errors=[],requests=[];
+       p.on('pageerror',e=>errors.push(String(e)));
+       p.on('requestfailed',r=>{if(r.url().includes('workers.dev'))requests.push({url:r.url(),failure:r.failure()?.errorText});});
+       p.on('response',r=>{if(r.url().includes('workers.dev'))requests.push({url:r.url(),status:r.status(),cors:r.headers()['access-control-allow-origin']??null});});
+       try{
+         if(mode==='main')await p.route(root+'flight-safety.html',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:baselineHtml}));
+         await p.goto(root+'flight-safety.html',{waitUntil:'domcontentloaded',timeout:45000});
+         await p.setViewportSize({width:device.viewport.height,height:device.viewport.width});
+         await p.waitForTimeout(5000);
+       }catch(e){errors.push(String(e));}
+       finally{await c.close();}
+       tests.push({mode,errors,requests});
+     }
+     baselineDiagnostic={baselineCommit,checkedCommit,tests};
+   }catch(e){baselineDiagnostic={failure:String(e)};}
+   fs.writeFileSync(dir+'/flight-safety-baseline.json',JSON.stringify(baselineDiagnostic,null,2));
+   console.log('MOBILE_BASELINE_DIAGNOSTIC '+JSON.stringify(baselineDiagnostic));
+ }
+ const summary={checkedCommit,engine,profile,pass:results.filter(x=>x.pass).length,total:results.length,headerPass:results.filter(x=>x.header?.pass).length,navigation,baselineDiagnostic,physicalDevice:false};
  fs.writeFileSync(dir+'/results.json',JSON.stringify({summary,results},null,2));
  console.log('MOBILE_SUMMARY '+JSON.stringify(summary));
  if(results.some(x=>!x.pass)||!navigation.pass)process.exitCode=1;
