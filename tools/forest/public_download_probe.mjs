@@ -36,10 +36,12 @@ try {
     if(size===0||size>200*1024*1024) throw Error('Unexpected file size');
     const handle=await fs.open(local,'r');
     try {const head=Buffer.alloc(8);const {bytesRead}=await handle.read(head,0,8,0);status.magicHex=head.subarray(0,bytesRead).toString('hex');} finally {await handle.close();}
-    const result=spawnSync('python3',['tools/forest/inspect_download.py',local],{encoding:'utf8',timeout:90000,maxBuffer:65536});
+    const result=spawnSync('python3',['tools/forest/inspect_download.py',local],{encoding:'utf8',timeout:180000,maxBuffer:262144});
     if(result.error) throw result.error;
     const info=JSON.parse(result.stdout);
-    if(result.status!==0||info.schemaVerified!==true) throw Error(info.inspectionError||'CSV content inspection failed');
+    if(result.status!==0) throw Error(info.inspectionError||'CSV content inspection failed');
+    Object.assign(status,info);
+    if(info.schemaVerified!==true) throw Error('No occurrence CSV schema verified');
     Object.assign(status,info,{downloadStatus:'raw_csv_obtained',sourceCrsVerified:false});
   } finally {await fs.rm(local,{force:true});}
 } catch(e) {

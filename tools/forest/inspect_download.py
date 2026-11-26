@@ -50,28 +50,48 @@ def inspect_download(file):
             base.update({"expandedSize": expanded, "memberCount": len(infos)})
             candidates = [i for i in infos if not i.is_dir() and i.filename.lower().endswith(".csv")]
             base.update({"container":"zip", "csvMemberCount":len(candidates)})
-            if len(candidates) != 1:
-                raise ValueError("Archive must contain exactly one CSV; found "+str(len(candidates)))
-            item = candidates[0]
-            if item.flag_bits & 1:
-                raise ValueError("Encrypted archive not supported")
-            if item.file_size <= 0 or item.file_size > EXPANDED_LIMIT or item.file_size > MAX_RATIO * max(1, item.compress_size):
-                raise ValueError("CSV member size invalid")
-            # No extractall, no paths from archive are used to write files.
-            with z.open(item) as stream:
-                raw = stream.read(8192)
-                schema = inspect_header(raw)
-                csv_hash = hashlib.sha256(raw)
-                streamed = len(raw)
-                for chunk in iter(lambda: stream.read(1024*1024), b""):
-                    streamed += len(chunk)
-                    if streamed > EXPANDED_LIMIT or streamed > item.file_size:
-                        raise ValueError("Expanded stream exceeds declared or permitted size")
-                    csv_hash.update(chunk)
-                if streamed != item.file_size:
-                    raise ValueError("Expanded size mismatch")
-            return {**base, **schema, "csvSha256":csv_hash.hexdigest(), "csvSize":item.file_size,
-                    "csvMember":pathlib.PurePosixPath(item.filename).name}
+            if not candidates:
+                raise ValueError("Archive contains no CSV")
+            if len({i.filename for i in candidates}) != len(candidates):
+                raise ValueError("Duplicate archive member paths")
+            members = []
+            for item in candidates:
+                if item.flag_bits & 1:
+                    raise ValueError("Encrypted archive not supported")
+                if item.file_size <= 0 or item.file_size > EXPANDED_LIMIT or item.file_size > MAX_RATIO * max(1, item.compress_size):
+                    raise ValueError("CSV member size invalid")
+                member = {"csvMember": pathlib.PurePosixPath(item.filename).name, "csvSize":item.file_size}
+                with z.open(item) as stream:
+                    raw = stream.read(8192)
+                    try:
+                        member.update(inspect_header(raw))
+                    except ValueError:
+                        member["schemaVerified"] = False
+                        # Header only; do not publish records.
+                        for enc in ("utf-8-sig", "cp949"):
+                            try:
+                                header = next(csv.reader([raw.splitlines()[0].decode(enc)]))
+                                if len(header) > 1 and len(header) <= 200:
+                                    member["headerCandidate"] = [x[:100] for x in header]
+                                    break
+                            except (UnicodeError, StopIteration, IndexError, csv.Error):
+                                pass
+                    csv_hash = hashlib.sha256(raw)
+                    streamed = len(raw)
+                    for chunk in iter(lambda: stream.read(1024*1024), b""):
+                        streamed += len(chunk)
+                        if streamed > EXPANDED_LIMIT or streamed > item.file_size:
+                            raise ValueError("Expanded stream exceeds declared or permitted size")
+                        csv_hash.update(chunk)
+                    if streamed != item.file_size:
+                        raise ValueError("Expanded size mismatch")
+                member["csvSha256"] = csv_hash.hexdigest()
+                members.append(member)
+            matched = sum(m["schemaVerified"] for m in members)
+            return {**base, "schemaVerified": matched > 0, "matchedCsvCount":matched,
+                    "allCsvSchemasVerified":matched == len(members), "members":members,
+                    "coverageComplete":False}
+
     return {**base, "container":"plain", **inspect_header(head), "csvSha256":digest.hexdigest(), "csvSize":size}
 
 if __name__ == "__main__":

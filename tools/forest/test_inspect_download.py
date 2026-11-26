@@ -27,11 +27,29 @@ class TestDownloadInspection(unittest.TestCase):
         self.assertTrue(r["schemaVerified"])
     def test_html_rejected(self):
         with self.assertRaises(ValueError): self.check_file(b"<html>not a CSV</html>")
-    def test_multiple_csv_rejected(self):
+    def test_multiple_csv_inspected(self):
         b=io.BytesIO()
         with zipfile.ZipFile(b,"w") as z:
             for n in ("a.csv","b.csv"): z.writestr(n,HEADER.encode("utf-8"))
-        with self.assertRaises(ValueError): self.check_file(b.getvalue(),".zip")
+        r=self.check_file(b.getvalue(),".zip")
+        self.assertEqual(r["matchedCsvCount"],2)
+        self.assertTrue(r["allCsvSchemasVerified"])
+        self.assertFalse(r["coverageComplete"])
+    def test_mixed_schemas_not_complete(self):
+        b=io.BytesIO()
+        with zipfile.ZipFile(b,"w") as z:
+            z.writestr("a.csv",HEADER.encode())
+            z.writestr("b.csv",b"code,name\n1,x\n")
+        r=self.check_file(b.getvalue(),".zip")
+        self.assertEqual(r["matchedCsvCount"],1)
+        self.assertFalse(r["allCsvSchemasVerified"])
+        self.assertFalse(r["coverageComplete"])
+    def test_no_matching_schema(self):
+        b=io.BytesIO()
+        with zipfile.ZipFile(b,"w") as z:
+            z.writestr("a.csv",b"code,name\n1,x\n")
+        r=self.check_file(b.getvalue(),".zip")
+        self.assertFalse(r["schemaVerified"])
     def test_missing_coordinate_rejected(self):
         with self.assertRaises(ValueError): self.check_file("지역X좌표,감염목구분\n".encode())
 if __name__=="__main__":
