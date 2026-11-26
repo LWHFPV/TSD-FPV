@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TSD | 산림예찰 촬영계획 — 검토용</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>body{margin:0;background:#101820;color:#e9f2f6;font:15px system-ui,sans-serif}header{padding:18px 24px;border-bottom:1px solid #354751}a{color:#89d9ee}header a{text-decoration:none;font-weight:bold}main{max-width:1200px;margin:auto;padding:20px}h1{font-size:26px}h2{font-size:18px}section{border:1px solid #354751;border-radius:10px;padding:16px;margin-bottom:14px;background:#18242d}label{display:block;margin:10px 0}input,button{font:inherit;max-width:100%;margin:5px 0}button{padding:9px 12px;border:1px solid #7696a4;border-radius:6px;background:#254758;color:#fff;cursor:pointer}#map{height:54vh;min-height:300px;background:#27353d}#status{white-space:pre-wrap;overflow-wrap:anywhere}#details{overflow-wrap:anywhere;white-space:pre-wrap}.muted{color:#acc0cb}.warn{color:#ffd79c}.grid{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2fr);gap:14px}@media(max-width:780px){.grid{grid-template-columns:1fr}}.leaflet-popup-content{white-space:pre-wrap;overflow-wrap:anywhere}</style></head>
+<body><header><a href="./index.html">TSD Aero Systems</a> · 산림예찰 촬영계획 · 검토용</header>
+<main><h1>산림예찰 촬영계획</h1><p class="warn">자료 연동 검토 단계 · 실시간 발생정보 또는 비행 승인 정보가 아닙니다.</p>
+<div class="grid"><div><section><h2>공식 산림 데이터</h2><p><a href="https://www.data.go.kr/data/15120580/fileData.do" target="_blank" rel="noopener noreferrer">산림청 병해충발생관리정보 (15120580)</a></p><p>연간 갱신 CSV · 포털 수정일 확인: 2026-09-04. 실제 관측일과 다릅니다.</p><p><a href="https://map.forest.go.kr/" target="_blank" rel="noopener noreferrer">산림공간정보서비스</a></p><p class="muted">공식 원본 좌표계가 확인되지 않았으므로 X/Y를 경위도로 자동 해석하지 않습니다. 좌표계가 검증된 WGS84 GeoJSON만 읽습니다.</p></section>
+<section><h2>발생 지점 가져오기</h2><label>자료 기준일 <input type="date" id="asof"></label><label>자료 출처 URL <input type="url" id="source" value="https://www.data.go.kr/data/15120580/fileData.do"></label><label>WGS84 GeoJSON 파일 <input type="file" id="file" accept=".geojson,.json,application/json,application/geo+json"></label><label><input type="checkbox" id="confirmed"> 원본의 좌표계 및 변환 결과를 확인했습니다.</label><button id="load">지점 검증 및 표시</button><button id="clear">초기화</button><p id="status" role="status">실제 발생자료 미수신 · 표시 지점 0</p></section>
+<section><h2>후속 연동 상태</h2><p>자동 원본 수집: 미연동<br>지형·표고: 미연동<br>실시간 기상: 미연동<br>공역 검증: 미연동<br>촬영 가능 면적: 산출 보류</p><p class="muted">비행에 필요한 제약정보가 검증되기 전에는 자동 비행계획을 생성하지 않습니다.</p><a href="./flight-safety.html">기존 비행안전정보 열기</a></section></div>
+<div><section><h2>발생 위치 지도</h2><div id="map" aria-label="산림 발생 지점 지도"></div><p class="muted">배경 지도는 지형 분석 자료가 아닙니다. 지도상 지점은 사용자 가져오기 자료에 해당하며 감염 여부를 독립 검증하지 않습니다.</p></section><section><h2>선택 지점</h2><div id="details">표시할 지점을 선택하십시오.</div></section></div></div></main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let map=null, layer=null, operation=0;
+if(typeof L!=='undefined'){map=L.map('map').setView([36.4,127.8],7);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);layer=L.layerGroup().addTo(map);}else{$('map').textContent='지도 라이브러리를 불러오지 못했습니다.';}
+function validate(data, meta){
+ if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features))throw Error('GeoJSON FeatureCollection이 필요합니다.');
+ if(data.crs)throw Error('별도 CRS 선언이 있는 파일은 검토 후 WGS84 표준 GeoJSON으로 변환하십시오.');
+ if(data.features.length===0||data.features.length>20000)throw Error('1~20,000개 지점 단위로 가져오십시오.');
+ const out=[];for(let i=0;i<data.features.length;i++){
+ const f=data.features[i],c=f?.geometry?.coordinates;
+ if(f?.type!=='Feature'||f?.geometry?.type!=='Point'||!Array.isArray(c)||c.length<2||!Number.isFinite(c[0])||!Number.isFinite(c[1])||c[0]<124||c[0]>132||c[1]<32||c[1]>39.5)throw Error((i+1)+'번째 지점의 형식 또는 경위도 범위가 잘못되었습니다.');
+ const p=f.properties&&typeof f.properties==='object'&&!Array.isArray(f.properties)?f.properties:{};
+ const attributes={}; for(const k of ['발생관리기관코드','국가지점번호','PNU코드','토지관리번호','발생경급수치','고사목구분','감염목구분','발생일','관측일']){if(Object.hasOwn(p,k)&&['string','number','boolean'].includes(typeof p[k]))attributes[k]=String(p[k]).slice(0,300);}
+ out.push({domain:'forest',kind:'pine_wilt_occurrence',geometry:{type:'Point',coordinates:[c[0],c[1]]},source:{url:meta.url,asOf:meta.asOf,ingestion:'user_import',importedAt:meta.importedAt},attributes});
+ }return out;
+}
+function clear(){operation++;if(layer)layer.clearLayers();$('status').textContent='실제 발생자료 미수신 · 표시 지점 0';$('details').textContent='표시할 지점을 선택하십시오.';}
+$('clear').onclick=clear;
+$('load').onclick=async()=>{clear();const id=operation;try{
+ if(!map||!layer)throw Error('지도가 초기화되지 않았습니다.');
+ if(!$('confirmed').checked)throw Error('좌표계 확인이 필요합니다.');
+ const asOf=$('asof').value;if(!asOf)throw Error('자료 기준일이 필요합니다.');
+ const url=new URL($('source').value);if(url.protocol!=='https:')throw Error('HTTPS 출처 URL이 필요합니다.');
+ const file=$('file').files[0];if(!file||file.size>15*1024*1024)throw Error('15 MB 이하의 GeoJSON 파일을 선택하십시오.');
+ const data=JSON.parse(await file.text());if(id!==operation)return;
+ const rows=validate(data,{url:url.href,asOf,importedAt:new Date().toISOString()});
+ const bounds=[];for(const row of rows){const [lon,lat]=row.geometry.coordinates;const marker=L.circleMarker([lat,lon],{radius:5,color:'#c0462d',fillColor:'#e66d46',fillOpacity:.7,weight:1}).addTo(layer);bounds.push([lat,lon]);marker.on('click',()=>{$('details').textContent='자료 출처: '+row.source.url+'\n자료 기준일: '+row.source.asOf+'\n경도: '+lon+' / 위도: '+lat+'\n'+Object.entries(row.attributes).map(([k,v])=>k+': '+v).join('\n');});}map.fitBounds(bounds,{maxZoom:16,padding:[18,18]});$('status').textContent='사용자 자료 가져오기 완료: '+rows.length+'개 지점\n자료 기준일: '+asOf+'\n실시간 자동 수신 아님';
+ }catch(e){if(id===operation){if(layer)layer.clearLayers();$('status').textContent='표시 중단: '+e.message;}}};
+</script></body></html>
