@@ -249,9 +249,10 @@ search('', false);
   let copyText=null;
   let approved=false;
   let busy=false;
+  let generation=0;
   const submit=document.querySelector('#gateForm [type=submit]');
   const error=document.getElementById('gateError');
-  function reset(){action=null;copyText=null;approved=false;busy=false;input.hidden=false;input.required=true;input.value='';submit.disabled=false;submit.textContent='확인';error.textContent='';}
+  function reset(){generation++;action=null;copyText=null;approved=false;busy=false;input.hidden=false;input.required=true;input.value='';submit.disabled=false;submit.textContent='확인';error.textContent='';}
 
   function ask(fn,copy=false,text=null){
     if(gate.open)return;
@@ -279,11 +280,14 @@ search('', false);
   document.getElementById('gateForm').onsubmit=async e=>{
     e.preventDefault();
     if(busy)return;
+    const attempt=generation;
     if(approved&&copyText!==null){
       busy=true;submit.disabled=true;
       let ok=false;
       try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(copyText);ok=true;}}catch{}
+      if(attempt!==generation||!gate.open)return;
       if(!ok){const t=document.createElement('textarea');t.value=copyText;t.style.cssText='position:fixed;left:-9999px;top:0';gate.append(t);t.select();try{ok=document.execCommand('copy');}catch{}finally{t.remove();}}
+      if(attempt!==generation||!gate.open)return;
       busy=false;submit.disabled=false;
       if(ok)gate.close();else error.textContent='브라우저가 복사를 차단했습니다. 다시 시도하세요.';
       return;
@@ -291,9 +295,9 @@ search('', false);
     busy=true;submit.disabled=true;
     let bytes;
     try{bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(input.value));}
-    catch{error.textContent='인증을 수행할 수 없습니다. HTTPS 연결을 확인하세요.';return;}
-    finally{busy=false;submit.disabled=false;}
-    if(!gate.open)return;
+    catch{if(attempt===generation&&gate.open)error.textContent='인증을 수행할 수 없습니다. HTTPS 연결을 확인하세요.';return;}
+    finally{if(attempt===generation){busy=false;submit.disabled=false;}}
+    if(attempt!==generation||!gate.open)return;
     const hash=Array.from(
       new Uint8Array(bytes),
       n=>n.toString(16).padStart(2,'0')
