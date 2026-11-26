@@ -29,6 +29,21 @@ main{max-width:1440px;margin:auto;padding:22px 16px 36px}.eyebrow{color:var(--sk
 <section class="card"><div class="heading"><h2>③ 이전 데모 방식 · GeoJSON 표시</h2><span id="fileTag" class="tag">데이터 없음</span></div><p class="sub">이전 Python 서버의 <code>TSD_AIRSPACE_GEOJSON</code> 방식처럼 보유한 공역 GeoJSON 파일을 브라우저에서 직접 불러옵니다. 파일은 서버로 전송하지 않습니다.</p><div class="controls"><div class="field"><label for="geoFile">공역 GeoJSON 파일</label><input id="geoFile" type="file" accept=".json,.geojson,application/json,application/geo+json"></div><button class="secondary" id="sample">기능 시연용 가상 도형</button><button class="secondary" id="clear">지우기</button></div><div class="result" id="fileResult"><b>파일 미입력</b>공식 GeoJSON 파일을 넣으면 지도 경계와 현재 좌표 중첩 여부를 계산합니다. 가상 도형은 기능 검증용이며 실제 공역이 아닙니다.</div><ul class="layerlist" id="fileMatches"></ul><div class="line"></div><p class="small">자료 출처와 갱신일이 검증되지 않으면 지도에 나타나더라도 현재 법적 공역 판정으로 사용하지 마세요.</p></section>
 <section class="card full"><div class="heading"><h2>④ 지도에서 경계·좌표 직접 검토</h2><div class="legend"><span>파란 점: 조회 좌표</span><span>붉은 경계: 업로드 데이터</span><span>주황 점선: 가상 실습 도형</span></div></div><div class="split"><div><div id="map"></div><div id="mapFallback" style="display:none" class="mapfail">지도 라이브러리를 가져오지 못했습니다.<br>실시간 API와 파일 검사 결과는 위에서 계속 확인할 수 있습니다.</div></div><div><div class="result" id="summary"><b>종합 판정 · 미확인</b>실시간 조회 및 GeoJSON 대조를 수행하지 않았습니다.</div><div class="line"></div><p><strong>복구 시 확인 기준</strong></p><ol class="layerlist"><li>같은 좌표에서 실제 공역 서버가 5종 정상 응답하는지 확인</li><li>기존 데모의 사용 데이터가 파일인지 공식 실시간 조회인지 구분</li><li>실제 운영 데이터의 출처·시점·공역 종류를 교차검증</li><li>공식 조회 실패 상태에서는 비행 가능 판정 금지</li></ol><div class="links"><a href="https://github.com/LWHFPV/TSD-FPV/blob/main/diagnostics/airspace-demo-production-audit-20261126.md" target="_blank" rel="noopener">원본 대조 검증보고서</a><a href="https://drone.onestop.go.kr/common/flightArea_chk" target="_blank" rel="noopener">정부 공식 공역 지도</a></div></div></div></section>
 
+
+<section class="card full" id="snapshot-reference">
+  <div class="heading"><h2>⑤ 과거 브이월드 공역 경계 자동 표시 · 실데이터 참고용</h2><span class="tag demo">2026-05 수집본 · 공식 최신자료 아님</span></div>
+  <div class="notice" style="margin:8px 0">국토교통부의 <a href="https://www.molit.go.kr/atmo/USR/BORD0201/m_37238/LST.jsp" target="_blank" rel="noopener">2026-09-30 공식 KML 게시글</a>은 존재를 확인했으나 첨부 원본 다운로드가 막혀 실제 좌표는 대조하지 못했습니다. 아래는 <strong>제3자 저장소에 공개된 2026-05-25 VWorld WFS 과거 스냅샷</strong>입니다. 군작전구역과 최신 변경·NOTAM은 빠져 있으며, 실제 비행 승인·가능 판정에 사용하면 안 됩니다.</div>
+  <div class="controls" style="align-items:center;margin:10px 0">
+    <label><input id="snap0" type="checkbox" checked style="width:auto"> 비행금지</label>
+    <label><input id="snap1" type="checkbox" checked style="width:auto"> 비행제한</label>
+    <label><input id="snap2" type="checkbox" checked style="width:auto"> 관제권</label>
+    <label><input id="snap3" type="checkbox" checked style="width:auto"> 위험구역</label>
+    <button type="button" class="secondary" id="snapRetry">공개자료 다시 불러오기</button>
+  </div>
+  <div class="result warn" id="snapResult"><b>과거 공개 공역자료 조회 준비</b>기존 지도 위에 별도 경계 레이어로 표시합니다.</div>
+  <p class="small" id="snapHits">조회 좌표와의 중첩을 검사합니다.</p>
+  <div class="links"><a href="https://github.com/ufxpri/inha-drone-now/tree/main/src/main/resources/geojson" target="_blank" rel="noopener">과거 VWorld WFS 공개자료 출처</a><a href="https://aim.koca.go.kr/eaipPub/" target="_blank" rel="noopener">공식 최신 eAIP 확인</a></div>
+</section>
 <section class="card full" id="recovery-results">
   <div class="heading"><h2>⑤ 제가 직접 실행한 복구 시나리오 검증 결과</h2><span class="tag">코드 모의검증 23/23 통과 · 실 API 520 지속</span></div>
   <p class="sub">2026-11-26 · 배포 중인 Worker v3.0.3과 바이트 단위로 동일한 소스에 장애 응답을 주입해 실행한 결과 19/19, 과거 Python 데모 원본의 GeoJSON 경로 4/4. 실제 정부 서버의 네트워크 성공을 뜻하지 않습니다.</p>
@@ -140,8 +155,84 @@ if(window.L){try{
  moveMap();
  }catch(e){ids('map').style.display='none';ids('mapFallback').style.display='grid';}}
 else{ids('map').style.display='none';ids('mapFallback').style.display='grid';}
+
+const snapLayers=[];
+const snapData=[];
+const snapConfig=[
+ {file:'lt_c_aisprhc',name:'비행금지',color:'#be342e'},
+ {file:'lt_c_aisresc',name:'비행제한',color:'#da9822'},
+ {file:'lt_c_aisctrc',name:'관제권',color:'#2a64c3'},
+ {file:'lt_c_aisdngc',name:'위험구역',color:'#a043a5'}
+];
+function mercatorPosition(p){
+ const lon=p[0]/20037508.34*180;
+ const lat=(2*Math.atan(Math.exp(p[1]/20037508.34*Math.PI))-Math.PI/2)*180/Math.PI;
+ if(!Number.isFinite(lon)||!Number.isFinite(lat)||lon<120||lon>136||lat<29||lat>42)throw Error('좌표 범위 오류');
+ return [lon,lat];
+}
+function mercatorGeometry(g){
+ const ring=points=>points.map(mercatorPosition);
+ if(g.type==='Polygon')return {type:g.type,coordinates:g.coordinates.map(ring)};
+ if(g.type==='MultiPolygon')return {type:g.type,coordinates:g.coordinates.map(poly=>poly.map(ring))};
+ throw Error('지원하지 않는 도형');
+}
+function snapshotName(p,i,kind){
+ const fields=[['prh_lbl_1','prohibited'],['res_lbl_1','restricted'],['ctr_lbl_1'],['dng_lbl_1','danger_lab']][kind];
+ for(const key of fields){if(typeof p[key]==='string'&&p[key].trim())return p[key].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,90)}
+ return snapConfig[kind].name+' '+(i+1);
+}
+function snapshotStats(){
+ let total=0;const hits=[];const c=getCoord();
+ for(let i=0;i<4;i++){
+  if(!ids('snap'+i).checked||!snapData[i])continue;
+  total+=snapData[i].features.length;
+  if(goodCoord(c))snapData[i].features.forEach(f=>{if(contains(f.geometry,c.lon,c.lat))hits.push(snapConfig[i].name+': '+f.properties._name)});
+ }
+ const have=snapData.filter(Boolean).length;
+ setRes('snapResult',have?'warn':'bad',have?'참고 공역 '+have+'/4종 로드 · 최신성 미검증':'과거 공역 데이터 연결 실패',
+ '화면 표시 도형 '+total+'개 · 현재 좌표와 중첩하는 과거 도형 '+hits.length+'개. 최신 공역 또는 비행 가능 판정 아님.');
+ ids('snapHits').textContent=hits.length?'과거 데이터 중첩: '+hits.slice(0,16).join(' / '):'선택 좌표와 겹치는 과거 도형 없음. 실제 공역의 부재를 의미하지 않습니다.';
+}
+function paintSnapshots(){
+ if(!map||!window.L)return;
+ for(let i=0;i<4;i++){
+  if(snapLayers[i])map.removeLayer(snapLayers[i]);
+  snapLayers[i]=null;
+  if(!snapData[i]||!ids('snap'+i).checked)continue;
+  const cfg=snapConfig[i];
+  snapLayers[i]=L.geoJSON(snapData[i],{
+   style:{color:cfg.color,weight:1.6,opacity:.87,fillOpacity:.10},
+   onEachFeature:(f,l)=>l.bindPopup(f.properties._name+' · '+cfg.name+' (2026-05 과거 자료, 최신성 미확인)')
+  }).addTo(map);
+ }
+ snapshotStats();
+}
+async function getPublicSnapshots(){
+ setRes('snapResult','','공개된 공역 4종 가져오는 중','2026-05-25 참고 자료이며 최신 정부 공역 KML이 아닙니다.');
+ const results=await Promise.all(snapConfig.map(async(cfg,i)=>{
+  try{
+   const ac=new AbortController(),timer=setTimeout(()=>ac.abort(),22000);
+   let res;try{res=await fetch('https://raw.githubusercontent.com/ufxpri/inha-drone-now/main/src/main/resources/geojson/'+cfg.file+'.geojson',{cache:'no-cache',signal:ac.signal})}finally{clearTimeout(timer)}
+   if(!res.ok)throw Error('HTTP '+res.status);
+   const doc=await res.json();
+   if(doc.type!=='FeatureCollection'||!Array.isArray(doc.features))throw Error('GeoJSON 형식 오류');
+   const features=doc.features.filter(f=>f&&f.geometry&&['Polygon','MultiPolygon'].includes(f.geometry.type)).map((f,j)=>({
+    type:'Feature',geometry:mercatorGeometry(f.geometry),properties:{_name:snapshotName(f.properties||{},j,i)}
+   }));
+   return {i,features};
+  }catch(e){return {i,error:String(e.message||e)}}
+ }));
+ const errors=[];
+ for(const item of results){snapData[item.i]=item.features?{type:'FeatureCollection',features:item.features}:null;if(item.error)errors.push(snapConfig[item.i].name+': '+item.error)}
+ paintSnapshots();
+ if(errors.length)ids('snapHits').textContent+=' | 미수신: '+errors.join(' / ');
+}
+for(let i=0;i<4;i++)ids('snap'+i).addEventListener('change',paintSnapshots);
+ids('snapRetry').addEventListener('click',getPublicSnapshots);
+
 ids('workerUrl').textContent=API;
 run();
+getPublicSnapshots();
 })();
 </script>
 </body></html>
