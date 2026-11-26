@@ -69,7 +69,7 @@ jobs:
               });
               Object.assign(entry,nav);
               entry.pass=entry.http===200&&!entry.overflow&&nav.left>=-1&&nav.right<=width+1&&nav.links.length>=6&&nav.links.every(a=>a.visible&&a.left>=-1&&a.right<=width+1)&&errors.length===0&&entry.courseEntry!=='direct diagnostic only';
-              await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'.png',timeout:10000});
+              await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'.png',timeout:30000,animations:'disabled'}).catch(async()=>{await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'.png',timeout:30000,animations:'disabled'});});
             } catch(e) {entry.pass=false;entry.failure=String(e);await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'-failure.png',timeout:10000}).catch(()=>{});}
             result.push(entry); console.log(JSON.stringify(entry));await context.close();
           }
