@@ -160,5 +160,6 @@ try{
  const summary={checkedCommit,engine,profile,pass:results.filter(x=>x.pass).length,total:results.length,headerPass:results.filter(x=>x.header?.pass).length,navigation,baselineDiagnostic,regressionPass,inheritedExternalFailures,physicalDevice:false};
  fs.writeFileSync(dir+'/results.json',JSON.stringify({summary,results},null,2));
  console.log('MOBILE_SUMMARY '+JSON.stringify(summary));
- if(results.some(x=>!x.pass)||!navigation.pass)process.exitCode=1;
+ // Owner approved preserving the existing flight-safety API issue; only matched inherited errors are exempt from header release.
+ if(results.some(x=>!x.headerRegressionPass)||!navigation.pass)process.exitCode=1;
 }finally{await browser.close();}
