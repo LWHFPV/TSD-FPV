@@ -818,13 +818,6 @@ ids('clear').addEventListener('click',()=>{collection=[];kind='none';ids('geoFil
 ids('preset').addEventListener('change',e=>{if(e.target.value==='custom')return;const [lat,lon]=e.target.value.split(',').map(Number);ids('lat').value=lat;ids('lon').value=lon;moveMap();});
 ['lat','lon'].forEach(id=>ids(id).addEventListener('change',()=>{ids('preset').value='custom';moveMap();}));
 ids('run').addEventListener('click',run);
-if(window.L){try{
- map=L.map('map',{zoomControl:true}).setView([35.9483,126.9576],11);
- L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
- map.on('click',e=>{ids('lat').value=e.latlng.lat.toFixed(6);ids('lon').value=e.latlng.lng.toFixed(6);ids('preset').value='custom';moveMap();});
- moveMap();
- }catch(e){ids('map').style.display='none';ids('mapFallback').style.display='grid';}}
-else{ids('map').style.display='none';ids('mapFallback').style.display='grid';}
 
 const snapLayers=[];
 const snapData=[];
@@ -899,6 +892,39 @@ async function getPublicSnapshots(){
 }
 for(let i=0;i<4;i++)ids('snap'+i).addEventListener('change',paintSnapshots);
 ids('snapRetry').addEventListener('click',getPublicSnapshots);
+
+
+function initMapAfterDataReady(){
+  const fallback=ids('mapFallback');
+  const el=ids('map');
+  if(!window.L || typeof window.L.map!=='function'){
+    el.style.display='none';
+    fallback.style.display='grid';
+    fallback.textContent='지도 엔진 초기화 실패: Leaflet 객체(window.L)를 사용할 수 없습니다. 다른 공역 데이터 검사 기능은 계속 작동합니다.';
+    return false;
+  }
+  try{
+    map=L.map('map',{zoomControl:true}).setView([35.9483,126.9576],11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      maxZoom:18,attribution:'&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    map.on('click',e=>{
+      ids('lat').value=e.latlng.lat.toFixed(6);
+      ids('lon').value=e.latlng.lng.toFixed(6);
+      ids('preset').value='custom';
+      moveMap();
+    });
+    moveMap();
+    el.style.display='block';fallback.style.display='none';
+    return true;
+  }catch(e){
+    el.style.display='none';fallback.style.display='grid';
+    fallback.textContent='지도 초기화 오류: '+String(e&&e.message||e).slice(0,300);
+    console.error('TSD airspace map init error',e);
+    return false;
+  }
+}
+initMapAfterDataReady();
 
 ids('workerUrl').textContent=API;
 run();
