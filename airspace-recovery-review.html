@@ -104,7 +104,7 @@ function drawData(){
  try{geoLayer=L.geoJSON({type:'FeatureCollection',features:collection},{style:()=>({color:kind==='sample'?'#d88c07':'#bd2b28',weight:2,opacity:.85,fillOpacity:.13,dashArray:kind==='sample'?'6 5':undefined})}).addTo(map);}
  catch(e){setRes('fileResult','bad','도형 렌더링 실패',String(e.message));}
 }
-function moveMap(){const c=getCoord();if(!goodCoord(c))return;if(map){map.setView([c.lat,c.lon],Math.max(map.getZoom(),11));if(marker)marker.setLatLng([c.lat,c.lon]);else marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#fff',weight:2,fillColor:'#1176c7',fillOpacity:1}).addTo(map).bindPopup('현재 조회 좌표');}updateFile();updateSummary();}
+function moveMap(){const c=getCoord();if(!goodCoord(c))return;if(map){map.setView([c.lat,c.lon],Math.max(map.getZoom(),11));if(marker)marker.setLatLng([c.lat,c.lon]);else marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#fff',weight:2,fillColor:'#1176c7',fillOpacity:1}).addTo(map).bindPopup('현재 조회 좌표');}updateFile();updateSummary();if(typeof snapshotStats==='function')snapshotStats();}
 function updateSummary(){
  if(lastLive&&lastLive.complete===true&&lastLive.status==='ok'){setRes('summary','good','공식 5종 조회 결과 수신','공식 API 응답을 수신했습니다. 다만 NOTAM·고도·시간 조건을 별도로 확인해야 합니다.');return;}
  if(kind==='none'){setRes('summary','warn','실시간 공역 미확인','파일 자료도 없습니다. 공식 공역 조회가 실패하면 비행 가능 여부를 판정할 수 없습니다.');return;}
