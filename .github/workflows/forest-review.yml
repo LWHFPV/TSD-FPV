@@ -1,0 +1,68 @@
+name: Forest review diagnostics
+on:
+  push:
+    branches: ['review/forest-patrol-planning']
+    paths:
+      - 'tools/forest/**'
+      - '.github/workflows/forest-review.yml'
+      - 'forest-patrol-planning.html'
+      - 'tsd-forest-survey-preview-v10.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Synthetic metadata contract tests
+        run: python3 -m unittest discover -s tools/forest -p 'test_*.py' -v
+      - name: Live official catalog probe (metadata only)
+        run: python3 tools/forest/catalog_probe.py --output forest-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forest-catalog-evidence
+          path: forest-evidence/
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.52.0
+          npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Browser environment smoke, then actual V10 gate
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: |
+          mkdir -p forest-browser-evidence
+          node --input-type=module <<'JS'
+          import { chromium, firefox, webkit } from 'playwright';
+          import fs from 'node:fs';
+          const engine = {chromium,firefox,webkit}[process.env.BROWSER];
+          const browser = await engine.launch({headless:true});
+          try {
+            const page = await browser.newPage({viewport:{width:1280,height:800}});
+            await page.setContent('<h1>TSD browser environment smoke only</h1>');
+            if(await page.locator('h1').innerText() !== 'TSD browser environment smoke only') throw Error('Smoke failed');
+            await page.screenshot({path:'forest-browser-evidence/environment-smoke.png'});
+            fs.writeFileSync('forest-browser-evidence/status.json',JSON.stringify({environment:'passed',v10E2E:'not_run',reason:'V10 end-to-end test not implemented; standalone page not a substitute'}));
+            console.error('V10 end-to-end validation remains incomplete; failing review gate intentionally.');
+            process.exitCode=1;
+          } finally {await browser.close();}
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forest-browser-${{ matrix.browser }}
+          path: forest-browser-evidence/
