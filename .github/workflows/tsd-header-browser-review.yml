@@ -45,7 +45,7 @@ jobs:
               const contact=get(home?'.tsd-contact':'[data-tsd-common-contact]');
               const rect=h.getBoundingClientRect();
               const pick=(el,props)=>{if(!el)return null;const s=getComputedStyle(el);const r=el.getBoundingClientRect();return {rect:[r.x-rect.x,r.y-rect.y,r.width,r.height].map(x=>Math.round(x*100)/100),css:Object.fromEntries(props.map(p=>[p,s[p]]))};};
-              const links=[...h.querySelectorAll('a')].map(a=>({label:a.textContent.replace(/\\s+/g,' ').trim(),url:new URL(a.href).pathname.split('/').pop(),hash:new URL(a.href).hash}));
+              const links=[...h.querySelectorAll('a')].map(a=>({label:a.textContent.replace(/\s+/g,' ').trim(),url:new URL(a.href).pathname.split('/').pop(),hash:new URL(a.href).hash}));
               return {header:pick(h,['backgroundColor','borderBottomColor','borderBottomWidth']),bar:pick(bar,['display','gridTemplateColumns','gap','minHeight']),brand:pick(brand,['fontFamily','fontSize','fontWeight','color','gap']),mark:pick(mark,['backgroundColor','color','borderRadius','fontSize']),nav:pick(nav,['display','justifyContent','gap','flexWrap']),menu:pick(nav?.querySelector('a'),['fontFamily','fontSize','fontWeight','color','minHeight']),contact:pick(contact,['fontFamily','fontSize','fontWeight','color','borderColor','borderRadius','minHeight']),links,hero:(()=>{const e=document.querySelector(home?'#tsd-fpv-preview .tsd-hero':'[data-tsd-common-hero]');if(!e)return null;const s=getComputedStyle(e);return {background:s.backgroundImage,color:s.color,pattern:getComputedStyle(e,'::before').backgroundImage};})()};
             },home);
           }
@@ -110,10 +110,13 @@ jobs:
               Object.assign(entry,nav);
               entry.pass=entry.http===200&&!entry.overflow&&nav.left>=-1&&nav.right<=width+1&&nav.links.length>=6&&nav.links.every(a=>a.visible&&a.left>=-1&&a.right<=width+1)&&errors.length===0&&entry.courseEntry!=='direct diagnostic only';
               entry.fingerprint=await fingerprint(header);
+              entry.styleSheets=await page.evaluate(()=>[...document.styleSheets].map(s=>({href:s.href,inlineCommon:!!s.ownerNode?.hasAttribute('data-tsd-common-inline')})));
+              entry.cssSource=await page.evaluate(()=>[...document.querySelectorAll('link[rel=stylesheet]')].filter(l=>l.href.includes('tsd-aero-common.css')).map(l=>({href:l.href,loaded:!!l.sheet})));
+              entry.commonCssResponse=await page.request.get('http://127.0.0.1:8765/tsd-aero-common.css').then(async res=>({status:res.status(),length:(await res.body()).length}));
               entry.visualDifferences=compare(baselines[width],entry.fingerprint);
               entry.heroBackgroundMatch=entry.fingerprint.hero?.background===baselines[width].hero?.background;
               entry.heroPatternMatch=entry.fingerprint.hero?.pattern===baselines[width].hero?.pattern;
-              entry.menuLabelsMatch=entry.fingerprint.links.map(x=>x.label.replace(/\\s/g,'')).join('|')===baselines[width].links.map(x=>x.label.replace(/\\s/g,'')).join('|');
+              entry.menuLabelsMatch=entry.fingerprint.links.map(x=>x.label.replace(/\s/g,'')).join('|')===baselines[width].links.map(x=>x.label.replace(/\s/g,'')).join('|');
               entry.menuTargetsMatch=entry.fingerprint.links.map(x=>x.url).join('|')===baselines[width].links.map(x=>x.url).join('|');
               entry.linkChecks=[];
               for(const link of await header.locator('a').all()){
@@ -126,8 +129,13 @@ jobs:
               }
               await page.addScriptTag({content:axeSource});
               entry.axe=await header.evaluate(async h=>{const result=await window.axe.run(h,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));});
-              await header.screenshot({path:'/tmp/tsd-header-results/header-'+file+'-'+width+'.png',timeout:30000});
-              entry.designPass=entry.pass&&entry.visualDifferences.length===0&&entry.heroBackgroundMatch&&entry.heroPatternMatch&&entry.menuLabelsMatch&&entry.menuTargetsMatch&&entry.linkChecks.every(x=>x.status===200)&&entry.axe.length===0;
+              const box=await header.boundingBox();
+              if(!box||box.width<=0||box.height<=0)throw Error('Header has no drawable bounds');
+              const clip={x:Math.max(0,box.x),y:Math.max(0,box.y),width:Math.min(width-Math.max(0,box.x),box.width),height:Math.min(900-Math.max(0,box.y),box.height)};
+              if(clip.width<=0||clip.height<=0)throw Error('Header outside viewport');
+              await page.screenshot({path:'/tmp/tsd-header-results/header-'+file+'-'+width+'.png',clip,timeout:30000,animations:'disabled'});
+              entry.headerCapture=true;
+              entry.designPass=entry.pass&&entry.visualDifferences.length===0&&entry.heroBackgroundMatch&&entry.heroPatternMatch&&entry.menuLabelsMatch&&entry.menuTargetsMatch&&entry.linkChecks.every(x=>x.status===200)&&entry.axe.length===0&&entry.headerCapture===true&&entry.commonCssResponse.status===200;
               await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'.png',timeout:30000,animations:'disabled'}).catch(async()=>{await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'.png',timeout:30000,animations:'disabled'});});
             } catch(e) {entry.pass=false;entry.failure=String(e);await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'-failure.png',timeout:10000}).catch(()=>{});}
             result.push(entry); console.log(JSON.stringify(entry));await context.close();
@@ -143,4 +151,4 @@ jobs:
         with:
           name: tsd-header-browser-results
           path: /tmp/tsd-header-results
-          retention-days: 7
+          retention-days: 30
