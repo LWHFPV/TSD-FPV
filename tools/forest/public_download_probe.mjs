@@ -1,7 +1,6 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 const source='https://www.data.go.kr/data/15120580/fileData.do';
 const dir='forest-download-evidence';
@@ -27,23 +26,21 @@ try {
   const downloadUrl=new URL(download.url());
   if(downloadUrl.protocol!=='https:'||!(downloadUrl.hostname==='www.data.go.kr'||downloadUrl.hostname.endsWith('.data.go.kr'))) throw Error('Unverified file origin');
   const filename=download.suggestedFilename();
-  if(!/\.csv$/i.test(filename)) throw Error('Unexpected file type');
-  const local=path.join(dir,'temporary.csv');
-  await download.saveAs(local);
+  status.filename=filename.slice(0,300);
+  status.downloadHost=downloadUrl.hostname;
+  const local=path.join(dir,'temporary-download.bin');
   try {
+    await download.saveAs(local);
     const {size}=await fs.stat(local);
+    status.size=size;
     if(size===0||size>200*1024*1024) throw Error('Unexpected file size');
-    const hash=createHash('sha256');
-    for await(const chunk of createReadStream(local)) hash.update(chunk);
-    const head=Buffer.alloc(8192);
     const handle=await fs.open(local,'r');
-    let n;
-    try {n=(await handle.read(head,0,head.length,0)).bytesRead;} finally {await handle.close();}
-    const headerCandidates=['utf-8','euc-kr'].map(encoding=>({encoding,header:new TextDecoder(encoding).decode(head.subarray(0,n)).split(/\r?\n/)[0]}));
-    const required=['지역X좌표','지역Y좌표','감염목구분'];
-    const matched=headerCandidates.find(v=>required.every(k=>v.header.replaceAll(/\s/g,'').includes(k)));
-    if(!matched) throw Error('Expected CSV columns not verified');
-    Object.assign(status,{downloadStatus:'raw_csv_obtained',filename,size,sha256:hash.digest('hex'),encodingCandidate:matched.encoding,header:matched.header.slice(0,1000),sourceCrsVerified:false});
+    try {const head=Buffer.alloc(8);const {bytesRead}=await handle.read(head,0,8,0);status.magicHex=head.subarray(0,bytesRead).toString('hex');} finally {await handle.close();}
+    const result=spawnSync('python3',['tools/forest/inspect_download.py',local],{encoding:'utf8',timeout:90000,maxBuffer:65536});
+    if(result.error) throw result.error;
+    const info=JSON.parse(result.stdout);
+    if(result.status!==0||info.schemaVerified!==true) throw Error(info.inspectionError||'CSV content inspection failed');
+    Object.assign(status,info,{downloadStatus:'raw_csv_obtained',sourceCrsVerified:false});
   } finally {await fs.rm(local,{force:true});}
 } catch(e) {
   status.error=String(e.message).slice(0,500);
