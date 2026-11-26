@@ -1,0 +1,96 @@
+name: Forest actual DEM collection (review only)
+on:
+  push:
+    branches: ['review/forest-patrol-planning']
+    paths: ['.github/workflows/forest-real-dem.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: forest-real-dem-review
+  cancel-in-progress: false
+jobs:
+  collect:
+    if: github.ref == 'refs/heads/review/forest-patrol-planning'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PNG reader
+        run: python -m pip install 'Pillow==11.3.0'
+      - name: Collect real DEM and weather snapshots; no synthetic substitution
+        run: |
+          mkdir -p forest-real-evidence/tiles
+          python - <<'PY'
+          import csv, datetime, hashlib, io, json, math, pathlib, urllib.parse, urllib.request
+          from PIL import Image
+          out = pathlib.Path("forest-real-evidence")
+          stamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+          # Candidate anchor from V13 location database; not an approved takeoff.
+          anchor = (37.711934, 127.079118)
+          z = 13
+          n = 256 * 2**z
+          cache = {}
+          sources = []
+          def get(url):
+              request = urllib.request.Request(url, headers={"User-Agent":"TSD-forest-review/1.0"})
+              with urllib.request.urlopen(request, timeout=25) as response:
+                  data = response.read(5_000_001)
+                  if len(data)>5_000_000: raise ValueError("response too large")
+                  return data, response.headers
+          def elev(lat, lon):
+              x = int((lon+180)/360*n)
+              y = int((1-math.asinh(math.tan(math.radians(lat)))/math.pi)/2*n)
+              key = (x//256,y//256)
+              if key not in cache:
+                  failures = []
+                  for base in ("https://s3.amazonaws.com/elevation-tiles-prod/terrarium/", "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/"):
+                      url = f"{base}{z}/{key[0]}/{key[1]}.png"
+                      try:
+                          raw, headers = get(url)
+                          image = Image.open(io.BytesIO(raw))
+                          if image.format != "PNG" or image.size != (256,256): raise ValueError("invalid tile")
+                          image.load()
+                          cache[key] = image.convert("RGB")
+                          file = f"tiles/{z}-{key[0]}-{key[1]}.png"
+                          (out/file).write_bytes(raw)
+                          sources.append({"url":url,"file":file,"sha256":hashlib.sha256(raw).hexdigest(),"imagerySources":headers.get("X-Imagery-Sources"),"etag":headers.get("ETag")})
+                          break
+                      except Exception as exc:
+                          failures.append(str(exc))
+                  else: raise RuntimeError("; ".join(failures))
+              r,g,b = cache[key].getpixel((x%256,y%256))
+              return r*256+g+b/256-32768
+          def geo(e,north):
+              return (anchor[0]+north/111320,anchor[1]+e/(111320*math.cos(math.radians(anchor[0]))))
+          # 4.2 km square supplies candidate screening, not a claim of approved sites.
+          rows = []
+          for north in range(-2100,2101,50):
+              for east in range(-2100,2101,50):
+                  lat,lon = geo(east,north)
+                  rows.append([east,north,lat,lon,elev(lat,lon)])
+          with (out/"dem-screen.csv").open("w",newline="",encoding="utf-8") as file:
+              writer=csv.writer(file)
+              writer.writerow(["east_m","north_m","latitude","longitude","elevation_m"])
+              writer.writerows(rows)
+          (out/"dem-provenance.json").write_text(json.dumps({"retrievedAt":stamp,"anchor":anchor,"zoom":z,"sampleCount":len(rows),"tiles":sources,"source":"Mapzen/AWS Terrain Tiles","format":"Terrarium","sourceResolution":"varies; grid step is not source resolution","purpose":"terrain screening only; no flight approval"},indent=2),encoding="utf-8")
+          # Keep raw forecast response; it is model output, not an on-site observation.
+          params={"latitude":anchor[0],"longitude":anchor[1],"hourly":"temperature_2m,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,rain,snowfall,visibility,weather_code","timezone":"Asia/Seoul","wind_speed_unit":"ms","forecast_days":7}
+          url="https://api.open-meteo.com/v1/forecast?"+urllib.parse.urlencode(params)
+          raw,headers=get(url)
+          (out/"weather-raw.json").write_bytes(raw)
+          data=json.loads(raw)
+          h=data["hourly"]; units=data["hourly_units"]
+          if not h["time"] or any(len(h[k])!=len(h["time"]) for k in params["hourly"].split(",")): raise ValueError("weather array mismatch")
+          if units["wind_speed_10m"]!="m/s" or units["wind_gusts_10m"]!="m/s": raise ValueError("unexpected wind units")
+          (out/"weather-provenance.json").write_text(json.dumps({"url":url,"retrievedAt":stamp,"sha256":hashlib.sha256(raw).hexdigest(),"kind":"model forecast, not observed mountain wind","hours":len(h["time"])},indent=2),encoding="utf-8")
+          print(json.dumps({"realDemSamples":len(rows),"tiles":len(sources),"forecastHours":len(h["time"]),"simulation":"not run"},ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forest-real-dem-weather-evidence
+          path: forest-real-evidence/
+          retention-days: 30
