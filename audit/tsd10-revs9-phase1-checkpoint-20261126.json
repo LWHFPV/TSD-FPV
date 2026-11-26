@@ -1,0 +1,1059 @@
+{
+  "revision": "RevS9 pre-print checkpoint",
+  "sourceRevS9ZipSHA256": "19ff38787e0152b3ca2f6d8c17c37c57af713c3ac6fdac927b48bfb2c90c968a",
+  "sourceSeparatedZipSHA256": "7a2c43d3094ddb1becd15c7d36cd01be59ad2e3178ff6a6d60b9f275cbc37277",
+  "sourceWebCommit": "38eae7931ba9cdb02bd521294b24f25c1e3a46c0",
+  "sourceHeadBefore": "2f33747c2055aaefd8d958de14eaf9004bf83098",
+  "manufacturingApproved": false,
+  "preprintReady": false,
+  "physicalStageDeferred": "2-0000",
+  "mappingMethod": "82 unique matches by BRep volume, bbox extents, centroid translation, face type/area signature, and documented source index where available. All 142 legacy web labels matched by unique position/bounds, maximum delta 0.01651 mm. Names are not proof of real hardware or Boolean shape equivalence.",
+  "variants": [
+    {
+      "variant": "상부_XT60",
+      "count": 35,
+      "sourceWebCount": 35,
+      "named": 20,
+      "uniqueMapped": 15,
+      "triangles": 87412,
+      "packedBase64Bytes": 1401136,
+      "plug": 10,
+      "adapter": 20,
+      "rf": 24,
+      "fc": 25,
+      "bush": 27,
+      "shim": 33,
+      "rx": 34,
+      "unmappedManufacturingReferenceCount": 15,
+      "excludedOldWebIndices": [],
+      "parts": [
+        {
+          "id": "p00",
+          "oldWebIndex": 0,
+          "manufacturingReferenceName": "하판_A_음각형VTX_공통",
+          "commonBOM": "TSD10-COM-001"
+        },
+        {
+          "id": "p01",
+          "oldWebIndex": 1,
+          "manufacturingReferenceName": "상판_공통",
+          "commonBOM": null
+        },
+        {
+          "id": "p02",
+          "oldWebIndex": 2,
+          "manufacturingReferenceName": "왼쪽_C형_보호판",
+          "commonBOM": "TSD10-COM-002"
+        },
+        {
+          "id": "p03",
+          "oldWebIndex": 3,
+          "manufacturingReferenceName": "오른쪽_C형_보호판",
+          "commonBOM": "TSD10-COM-003"
+        },
+        {
+          "id": "p04",
+          "oldWebIndex": 4,
+          "manufacturingReferenceName": "전방_카메라_외부브래킷",
+          "commonBOM": null
+        },
+        {
+          "id": "p05",
+          "oldWebIndex": 5,
+          "manufacturingReferenceName": "카메라_내부_각도조절홀더",
+          "commonBOM": null
+        },
+        {
+          "id": "p06",
+          "oldWebIndex": 6,
+          "manufacturingReferenceName": "후방_RF_안테나홀유지_중앙커넥터통로_RevZ1",
+          "commonBOM": "TSD10-COM-004"
+        },
+        {
+          "id": "p07",
+          "oldWebIndex": 7,
+          "manufacturingReferenceName": "GPS_후방막음유지_커넥터연속통로_RevZ1",
+          "commonBOM": null
+        },
+        {
+          "id": "p08",
+          "oldWebIndex": 8,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p09",
+          "oldWebIndex": 9,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p10",
+          "oldWebIndex": 10,
+          "manufacturingReferenceName": "상부형_하판_미사용단자_개구부마개",
+          "commonBOM": null
+        },
+        {
+          "id": "p11",
+          "oldWebIndex": 11,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p12",
+          "oldWebIndex": 12,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p13",
+          "oldWebIndex": 13,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p14",
+          "oldWebIndex": 14,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p15",
+          "oldWebIndex": 15,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p16",
+          "oldWebIndex": 16,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p17",
+          "oldWebIndex": 17,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p18",
+          "oldWebIndex": 18,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p19",
+          "oldWebIndex": 19,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p20",
+          "oldWebIndex": 20,
+          "manufacturingReferenceName": "상부형_XT60_변환어댑터",
+          "commonBOM": null
+        },
+        {
+          "id": "p21",
+          "oldWebIndex": 21,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p22",
+          "oldWebIndex": 22,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p23",
+          "oldWebIndex": 23,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p24",
+          "oldWebIndex": 24,
+          "manufacturingReferenceName": "RF_전방트레이_RevC",
+          "commonBOM": null
+        },
+        {
+          "id": "p25",
+          "oldWebIndex": 25,
+          "manufacturingReferenceName": "CUAV7Nano_전용브라켓_RevA",
+          "commonBOM": null
+        },
+        {
+          "id": "p26",
+          "oldWebIndex": 26,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p27",
+          "oldWebIndex": 27,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p28",
+          "oldWebIndex": 28,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p29",
+          "oldWebIndex": 29,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p30",
+          "oldWebIndex": 30,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p31",
+          "oldWebIndex": 31,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p32",
+          "oldWebIndex": 32,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p33",
+          "oldWebIndex": 33,
+          "manufacturingReferenceName": "GPS_안착심_0p5mm",
+          "commonBOM": null
+        },
+        {
+          "id": "p34",
+          "oldWebIndex": 34,
+          "manufacturingReferenceName": "RX_전용트레이_가상30x16",
+          "commonBOM": null
+        }
+      ]
+    },
+    {
+      "variant": "상부_XT90",
+      "count": 34,
+      "sourceWebCount": 34,
+      "named": 19,
+      "uniqueMapped": 14,
+      "triangles": 84692,
+      "packedBase64Bytes": 1356424,
+      "plug": 10,
+      "rf": 23,
+      "fc": 24,
+      "bush": 26,
+      "shim": 32,
+      "rx": 33,
+      "unmappedManufacturingReferenceCount": 15,
+      "excludedOldWebIndices": [],
+      "parts": [
+        {
+          "id": "p00",
+          "oldWebIndex": 0,
+          "manufacturingReferenceName": "하판_A_음각형VTX_공통",
+          "commonBOM": "TSD10-COM-001"
+        },
+        {
+          "id": "p01",
+          "oldWebIndex": 1,
+          "manufacturingReferenceName": "상판_공통",
+          "commonBOM": null
+        },
+        {
+          "id": "p02",
+          "oldWebIndex": 2,
+          "manufacturingReferenceName": "왼쪽_C형_보호판",
+          "commonBOM": "TSD10-COM-002"
+        },
+        {
+          "id": "p03",
+          "oldWebIndex": 3,
+          "manufacturingReferenceName": "오른쪽_C형_보호판",
+          "commonBOM": "TSD10-COM-003"
+        },
+        {
+          "id": "p04",
+          "oldWebIndex": 4,
+          "manufacturingReferenceName": "전방_카메라_외부브래킷",
+          "commonBOM": null
+        },
+        {
+          "id": "p05",
+          "oldWebIndex": 5,
+          "manufacturingReferenceName": "카메라_내부_각도조절홀더",
+          "commonBOM": null
+        },
+        {
+          "id": "p06",
+          "oldWebIndex": 6,
+          "manufacturingReferenceName": "후방_RF_안테나홀유지_중앙커넥터통로_RevZ1",
+          "commonBOM": "TSD10-COM-004"
+        },
+        {
+          "id": "p07",
+          "oldWebIndex": 7,
+          "manufacturingReferenceName": "GPS_후방막음유지_커넥터연속통로_RevZ1",
+          "commonBOM": null
+        },
+        {
+          "id": "p08",
+          "oldWebIndex": 8,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p09",
+          "oldWebIndex": 9,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p10",
+          "oldWebIndex": 10,
+          "manufacturingReferenceName": "상부형_하판_미사용단자_개구부마개",
+          "commonBOM": null
+        },
+        {
+          "id": "p11",
+          "oldWebIndex": 11,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p12",
+          "oldWebIndex": 12,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p13",
+          "oldWebIndex": 13,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p14",
+          "oldWebIndex": 14,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p15",
+          "oldWebIndex": 15,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p16",
+          "oldWebIndex": 16,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p17",
+          "oldWebIndex": 17,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p18",
+          "oldWebIndex": 18,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p19",
+          "oldWebIndex": 19,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p20",
+          "oldWebIndex": 20,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p21",
+          "oldWebIndex": 21,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p22",
+          "oldWebIndex": 22,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p23",
+          "oldWebIndex": 23,
+          "manufacturingReferenceName": "RF_전방트레이_RevC",
+          "commonBOM": null
+        },
+        {
+          "id": "p24",
+          "oldWebIndex": 24,
+          "manufacturingReferenceName": "CUAV7Nano_전용브라켓_RevA",
+          "commonBOM": null
+        },
+        {
+          "id": "p25",
+          "oldWebIndex": 25,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p26",
+          "oldWebIndex": 26,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p27",
+          "oldWebIndex": 27,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p28",
+          "oldWebIndex": 28,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p29",
+          "oldWebIndex": 29,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p30",
+          "oldWebIndex": 30,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p31",
+          "oldWebIndex": 31,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p32",
+          "oldWebIndex": 32,
+          "manufacturingReferenceName": "GPS_안착심_0p5mm",
+          "commonBOM": null
+        },
+        {
+          "id": "p33",
+          "oldWebIndex": 33,
+          "manufacturingReferenceName": "RX_전용트레이_가상30x16",
+          "commonBOM": null
+        }
+      ]
+    },
+    {
+      "variant": "하부_XT60",
+      "count": 37,
+      "sourceWebCount": 41,
+      "named": 22,
+      "uniqueMapped": 17,
+      "triangles": 95232,
+      "packedBase64Bytes": 1508800,
+      "plug": 12,
+      "adapter": 22,
+      "rf": 26,
+      "fc": 27,
+      "bush": 29,
+      "shim": 35,
+      "rx": 36,
+      "unmappedManufacturingReferenceCount": 15,
+      "excludedOldWebIndices": [
+        11,
+        12,
+        13,
+        14
+      ],
+      "parts": [
+        {
+          "id": "p00",
+          "oldWebIndex": 0,
+          "manufacturingReferenceName": "하판_A_음각형VTX_공통",
+          "commonBOM": "TSD10-COM-001"
+        },
+        {
+          "id": "p01",
+          "oldWebIndex": 1,
+          "manufacturingReferenceName": "상판_공통",
+          "commonBOM": null
+        },
+        {
+          "id": "p02",
+          "oldWebIndex": 2,
+          "manufacturingReferenceName": "왼쪽_C형_보호판",
+          "commonBOM": "TSD10-COM-002"
+        },
+        {
+          "id": "p03",
+          "oldWebIndex": 3,
+          "manufacturingReferenceName": "오른쪽_C형_보호판",
+          "commonBOM": "TSD10-COM-003"
+        },
+        {
+          "id": "p04",
+          "oldWebIndex": 4,
+          "manufacturingReferenceName": "전방_카메라_외부브래킷",
+          "commonBOM": null
+        },
+        {
+          "id": "p05",
+          "oldWebIndex": 5,
+          "manufacturingReferenceName": "카메라_내부_각도조절홀더",
+          "commonBOM": null
+        },
+        {
+          "id": "p06",
+          "oldWebIndex": 6,
+          "manufacturingReferenceName": "후방_RF_안테나홀유지_중앙커넥터통로_RevZ1",
+          "commonBOM": "TSD10-COM-004"
+        },
+        {
+          "id": "p07",
+          "oldWebIndex": 7,
+          "manufacturingReferenceName": "GPS_후방막음유지_커넥터연속통로_RevZ1",
+          "commonBOM": null
+        },
+        {
+          "id": "p08",
+          "oldWebIndex": 8,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p09",
+          "oldWebIndex": 9,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p10",
+          "oldWebIndex": 10,
+          "manufacturingReferenceName": "하부형_배터리_스키드",
+          "commonBOM": null
+        },
+        {
+          "id": "p11",
+          "oldWebIndex": 15,
+          "manufacturingReferenceName": "하부형_스키드_후방가드",
+          "commonBOM": null
+        },
+        {
+          "id": "p12",
+          "oldWebIndex": 16,
+          "manufacturingReferenceName": "하부형추가_상부후방_미사용XT90개구부_시험마개_실물체결미검증",
+          "commonBOM": null
+        },
+        {
+          "id": "p13",
+          "oldWebIndex": 17,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p14",
+          "oldWebIndex": 18,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p15",
+          "oldWebIndex": 19,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p16",
+          "oldWebIndex": 20,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p17",
+          "oldWebIndex": 21,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p18",
+          "oldWebIndex": 22,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p19",
+          "oldWebIndex": 23,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p20",
+          "oldWebIndex": 24,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p21",
+          "oldWebIndex": 25,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p22",
+          "oldWebIndex": 26,
+          "manufacturingReferenceName": "하부형_XT60_개구부_어댑터",
+          "commonBOM": null
+        },
+        {
+          "id": "p23",
+          "oldWebIndex": 27,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p24",
+          "oldWebIndex": 28,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p25",
+          "oldWebIndex": 29,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p26",
+          "oldWebIndex": 30,
+          "manufacturingReferenceName": "RF_전방트레이_RevC",
+          "commonBOM": null
+        },
+        {
+          "id": "p27",
+          "oldWebIndex": 31,
+          "manufacturingReferenceName": "CUAV7Nano_전용브라켓_RevA",
+          "commonBOM": null
+        },
+        {
+          "id": "p28",
+          "oldWebIndex": 32,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p29",
+          "oldWebIndex": 33,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p30",
+          "oldWebIndex": 34,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p31",
+          "oldWebIndex": 35,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p32",
+          "oldWebIndex": 36,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p33",
+          "oldWebIndex": 37,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p34",
+          "oldWebIndex": 38,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p35",
+          "oldWebIndex": 39,
+          "manufacturingReferenceName": "GPS_안착심_0p5mm",
+          "commonBOM": null
+        },
+        {
+          "id": "p36",
+          "oldWebIndex": 40,
+          "manufacturingReferenceName": "RX_전용트레이_가상30x16",
+          "commonBOM": null
+        }
+      ]
+    },
+    {
+      "variant": "하부_XT90",
+      "count": 36,
+      "sourceWebCount": 40,
+      "named": 21,
+      "uniqueMapped": 16,
+      "triangles": 92496,
+      "packedBase64Bytes": 1462616,
+      "plug": 12,
+      "rf": 25,
+      "fc": 26,
+      "bush": 28,
+      "shim": 34,
+      "rx": 35,
+      "unmappedManufacturingReferenceCount": 15,
+      "excludedOldWebIndices": [
+        11,
+        12,
+        13,
+        14
+      ],
+      "parts": [
+        {
+          "id": "p00",
+          "oldWebIndex": 0,
+          "manufacturingReferenceName": "하판_A_음각형VTX_공통",
+          "commonBOM": "TSD10-COM-001"
+        },
+        {
+          "id": "p01",
+          "oldWebIndex": 1,
+          "manufacturingReferenceName": "상판_공통",
+          "commonBOM": null
+        },
+        {
+          "id": "p02",
+          "oldWebIndex": 2,
+          "manufacturingReferenceName": "왼쪽_C형_보호판",
+          "commonBOM": "TSD10-COM-002"
+        },
+        {
+          "id": "p03",
+          "oldWebIndex": 3,
+          "manufacturingReferenceName": "오른쪽_C형_보호판",
+          "commonBOM": "TSD10-COM-003"
+        },
+        {
+          "id": "p04",
+          "oldWebIndex": 4,
+          "manufacturingReferenceName": "전방_카메라_외부브래킷",
+          "commonBOM": null
+        },
+        {
+          "id": "p05",
+          "oldWebIndex": 5,
+          "manufacturingReferenceName": "카메라_내부_각도조절홀더",
+          "commonBOM": null
+        },
+        {
+          "id": "p06",
+          "oldWebIndex": 6,
+          "manufacturingReferenceName": "후방_RF_안테나홀유지_중앙커넥터통로_RevZ1",
+          "commonBOM": "TSD10-COM-004"
+        },
+        {
+          "id": "p07",
+          "oldWebIndex": 7,
+          "manufacturingReferenceName": "GPS_후방막음유지_커넥터연속통로_RevZ1",
+          "commonBOM": null
+        },
+        {
+          "id": "p08",
+          "oldWebIndex": 8,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p09",
+          "oldWebIndex": 9,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p10",
+          "oldWebIndex": 10,
+          "manufacturingReferenceName": "하부형_배터리_스키드",
+          "commonBOM": null
+        },
+        {
+          "id": "p11",
+          "oldWebIndex": 15,
+          "manufacturingReferenceName": "하부형_스키드_후방가드",
+          "commonBOM": null
+        },
+        {
+          "id": "p12",
+          "oldWebIndex": 16,
+          "manufacturingReferenceName": "하부형추가_상부후방_미사용XT90개구부_시험마개_실물체결미검증",
+          "commonBOM": null
+        },
+        {
+          "id": "p13",
+          "oldWebIndex": 17,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p14",
+          "oldWebIndex": 18,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p15",
+          "oldWebIndex": 19,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p16",
+          "oldWebIndex": 20,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p17",
+          "oldWebIndex": 21,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p18",
+          "oldWebIndex": 22,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p19",
+          "oldWebIndex": 23,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p20",
+          "oldWebIndex": 24,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p21",
+          "oldWebIndex": 25,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p22",
+          "oldWebIndex": 26,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p23",
+          "oldWebIndex": 27,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p24",
+          "oldWebIndex": 28,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p25",
+          "oldWebIndex": 29,
+          "manufacturingReferenceName": "RF_전방트레이_RevC",
+          "commonBOM": null
+        },
+        {
+          "id": "p26",
+          "oldWebIndex": 30,
+          "manufacturingReferenceName": "CUAV7Nano_전용브라켓_RevA",
+          "commonBOM": null
+        },
+        {
+          "id": "p27",
+          "oldWebIndex": 31,
+          "manufacturingReferenceName": null,
+          "commonBOM": null
+        },
+        {
+          "id": "p28",
+          "oldWebIndex": 32,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p29",
+          "oldWebIndex": 33,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p30",
+          "oldWebIndex": 34,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p31",
+          "oldWebIndex": 35,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p32",
+          "oldWebIndex": 36,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p33",
+          "oldWebIndex": 37,
+          "manufacturingReferenceName": "F06_중앙관통부싱_OD5p5_ID3p4_L35",
+          "commonBOM": null
+        },
+        {
+          "id": "p34",
+          "oldWebIndex": 38,
+          "manufacturingReferenceName": "GPS_안착심_0p5mm",
+          "commonBOM": null
+        },
+        {
+          "id": "p35",
+          "oldWebIndex": 39,
+          "manufacturingReferenceName": "RX_전용트레이_가상30x16",
+          "commonBOM": null
+        }
+      ]
+    }
+  ],
+  "phase1": {
+    "1-1000": {
+      "result": "common trial retained; no red extension without evidence"
+    },
+    "1-2000": {
+      "motorHoles": 16,
+      "diameter_mm": 3.2,
+      "pcd_mm": 19.00000163688946,
+      "pitch_mm": 13.43503,
+      "pocketSamples": [
+        {
+          "part": "하판",
+          "hits": 34,
+          "adjacentRetained": 34,
+          "minSampled_mm": 6.65
+        },
+        {
+          "part": "좌 C형",
+          "hits": 99,
+          "adjacentRetained": 90,
+          "minSampled_mm": 2.65
+        },
+        {
+          "part": "우 C형",
+          "hits": 99,
+          "adjacentRetained": 90,
+          "minSampled_mm": 2.65
+        },
+        {
+          "part": "RF",
+          "hits": 34,
+          "adjacentRetained": 34,
+          "minSampled_mm": 4.65,
+          "maxSampled_mm": 16.10666666666677
+        }
+      ],
+      "note": "99 axial grid points per part; 9 points in each C cover lacked adjacent retained interval. Not a global minimum. Measurement run timed out before detailed JSON export; actual console measurements recorded."
+    },
+    "1-3000": {
+      "gpsVariants": 4,
+      "bodyTray_mm": 0.608399310092117,
+      "bodyShim_mm": 0.10828369699465892,
+      "trayShim_mm": 0.0001156130516517032,
+      "realHardwareVerified": false
+    },
+    "1-4000": {
+      "validBRep": 142,
+      "fusion360": "not executed"
+    },
+    "1-5000": {
+      "sampledSections": 128,
+      "valid": 128,
+      "minI_mm4": 432.7203279718326,
+      "minI_r_mm": 195,
+      "conditionalBeamDeflection_mm_35N_E40GPa": [
+        0.46458537108114517,
+        0.47491949259875255
+      ],
+      "note": "Assumed fixed r65 load r220; simplified section/beam screening, not FEA."
+    },
+    "1-6000": {
+      "candidateSTL": 124,
+      "watertightWindingPositiveVolume": 124,
+      "maxScalingVolumeErrorPercent": 0.000030862604247711413,
+      "maxDimension100pct_mm": 350.1269836425781,
+      "maxDimension50pct_mm": 175.06349182128906,
+      "slicer": "not executed"
+    },
+    "1-7000": {
+      "matchedPartTypeRows": 62,
+      "referenceSTEP": 62,
+      "STL50pct": 62,
+      "STL100pct": 62,
+      "assemblyInstanceCountNamed": 82,
+      "remainingReferenceInstances": 60,
+      "completeManufacturingBOM": false
+    },
+    "1-8000": {
+      "webPackedVariants": 4,
+      "displayMatched": 142,
+      "triangles": 359832,
+      "compressedRoundtrip": "pass",
+      "oldLowerExtraVisualizationEntries": 8,
+      "legacyBatteryLabelCorrected": true,
+      "actualDataUploadedToGithub": false,
+      "browserTest": false
+    },
+    "1-9000": {
+      "ready": false,
+      "reason": "red extension, C-cover unresolved samples, tolerance/structural/real equipment evidence, slicer/browser and independent Fusion audit not complete"
+    }
+  },
+  "artifact": {
+    "filename": "TSD10_RevS9_1단계_출력준비_중간검토_비승인.zip",
+    "bytes": 25536860,
+    "entries": 214,
+    "manifestVerified": 213,
+    "sha256": "d86b696c5f364581a70e41ff6617610b587f49d70f660a8cdbb003dde34e4689",
+    "githubBinaryUpload": false
+  },
+  "priorCI": {
+    "run": 45818124265,
+    "result": "success",
+    "scope": "RevS8 mesh/category audit",
+    "cloudflare": "unverified"
+  }
+}
