@@ -9,6 +9,8 @@ import sys
 import zipfile
 
 LIMIT = 200 * 1024 * 1024
+EXPANDED_LIMIT = 2 * 1024 * 1024 * 1024
+MAX_RATIO = 100
 REQUIRED = {"지역X좌표", "지역Y좌표", "감염목구분"}
 
 def normalize(s):
@@ -41,8 +43,11 @@ def inspect_download(file):
     if zipfile.is_zipfile(file):
         with zipfile.ZipFile(file) as z:
             infos = z.infolist()
-            if len(infos) > 1000 or sum(i.file_size for i in infos) > LIMIT:
-                raise ValueError("Archive exceeds inspection limits")
+            expanded = sum(i.file_size for i in infos)
+            compressed = sum(i.compress_size for i in infos)
+            if len(infos) > 1000 or expanded > EXPANDED_LIMIT or expanded > MAX_RATIO * max(1, compressed):
+                raise ValueError(f"Archive limits: members={len(infos)}, expanded={expanded}, compressed={compressed}")
+            base.update({"expandedSize": expanded, "memberCount": len(infos)})
             candidates = [i for i in infos if not i.is_dir() and i.filename.lower().endswith(".csv")]
             base.update({"container":"zip", "csvMemberCount":len(candidates)})
             if len(candidates) != 1:
@@ -50,15 +55,21 @@ def inspect_download(file):
             item = candidates[0]
             if item.flag_bits & 1:
                 raise ValueError("Encrypted archive not supported")
-            if item.file_size <= 0 or item.file_size > LIMIT:
+            if item.file_size <= 0 or item.file_size > EXPANDED_LIMIT or item.file_size > MAX_RATIO * max(1, item.compress_size):
                 raise ValueError("CSV member size invalid")
             # No extractall, no paths from archive are used to write files.
             with z.open(item) as stream:
                 raw = stream.read(8192)
                 schema = inspect_header(raw)
                 csv_hash = hashlib.sha256(raw)
+                streamed = len(raw)
                 for chunk in iter(lambda: stream.read(1024*1024), b""):
+                    streamed += len(chunk)
+                    if streamed > EXPANDED_LIMIT or streamed > item.file_size:
+                        raise ValueError("Expanded stream exceeds declared or permitted size")
                     csv_hash.update(chunk)
+                if streamed != item.file_size:
+                    raise ValueError("Expanded size mismatch")
             return {**base, **schema, "csvSha256":csv_hash.hexdigest(), "csvSize":item.file_size,
                     "csvMember":pathlib.PurePosixPath(item.filename).name}
     return {**base, "container":"plain", **inspect_header(head), "csvSha256":digest.hexdigest(), "csvSize":size}
