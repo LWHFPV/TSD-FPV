@@ -45,7 +45,12 @@ jobs:
                 await page.waitForLoadState('load',{timeout:30000}).catch(()=>{});
                 entry.qgcInitial=await page.evaluate(()=>({ready:document.readyState,course:document.getElementById('courseHome')?.className,openCourseType:typeof openCourse,buttons:[...document.querySelectorAll('button')].filter(b=>b.getBoundingClientRect().width>0).map(b=>({id:b.id,text:b.textContent.trim().slice(0,70),handler:b.getAttribute('onclick')})).slice(0,80)}));
                 if(!await header.count()){
-                  const courseButton=page.locator('button:visible').filter({hasText:/^(교육 과정|교육과정|교육 홈|실습 과정|실습과정|실습 홈|교육 시작|단계별 실습|튜토리얼|처음부터 배우기|학습 과정|교육 목록|실습 목록)$/}).first();
+                  const menu=page.locator('#menuButton:visible');
+                  if(await menu.count()){
+                    await menu.click({timeout:5000});
+                    entry.qgcMenu=await page.evaluate(()=>[...document.querySelectorAll('button,a,[role=menuitem]')].filter(b=>b.getBoundingClientRect().width>0&&b.getBoundingClientRect().height>0&&getComputedStyle(b).visibility!=='hidden').map(b=>({id:b.id,text:b.textContent.trim().slice(0,100)})).slice(0,120));
+                  }
+                  const courseButton=page.locator('button:visible,a:visible,[role=menuitem]:visible').filter({hasText:/^(교육 과정|교육과정|교육 홈|실습 과정|실습과정|실습 홈|교육 시작|단계별 실습|튜토리얼|처음부터 배우기|학습 과정|교육 목록|실습 목록|교육 과정으로|교육 과정으로 돌아가기|교육 과정 홈|교육 홈으로|교육 과정 보기|교육 과정 열기|교육 안내|교육 메뉴|교육·실습|실습 안내|실습 메뉴|과정 선택|교육 과정 선택|학습 홈|교육과정 선택)$/}).first();
                   if(await courseButton.count()){
                     entry.courseEntry='visible UI button';
                     await courseButton.click({timeout:5000}).catch(e=>entry.courseClickError=String(e));
