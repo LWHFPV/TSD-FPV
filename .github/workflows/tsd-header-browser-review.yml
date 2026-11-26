@@ -25,6 +25,8 @@ jobs:
       - run: npm install --no-save playwright@1.51.1 axe-core@4.10.3 pngjs@7.0.0
       - run: npx playwright install --with-deps chromium
       - name: Run desktop and mobile header smoke checks
+        env:
+          TSD_EQUIPMENT_QA_PASSWORD: ${{ secrets.TSD_EQUIPMENT_QA_PASSWORD }}
         shell: bash
         run: |
           mkdir -p /tmp/tsd-header-results
@@ -39,6 +41,24 @@ jobs:
           const paths=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','simulator.html','tsd-qgc-mission-lab.html','prop-vibration-lab.html'];
           const result=[];
           const baseCommit=execFileSync('git',['rev-parse','refs/remotes/origin/main'],{encoding:'utf8'}).trim();
+          // Only these exact, reviewed presentation substitutions are permitted.
+          const approvedHeaderEdits={
+            'equipment-lab.html':[["const LAB_HEADER=\"<header class=\\\"tsd-header\\\"><div class=\\\"tsd-wrap tsd-header-inner\\\"><a class=\\\"tsd-brand\\\" href=\\\"https://lwhfpv.github.io/TSD-FPV/index.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\"><span aria-hidden=\\\"true\\\">TSD</span>TSD Aero Systems</a><nav class=\\\"tsd-nav\\\" aria-label=\\\"주 메뉴\\\"><a href=\\\"https://lwhfpv.github.io/TSD-FPV/education.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">체험교육</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/index.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">기술연구소</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/index.html#technology\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">실습·계산기</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/equipment-lab.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" aria-current=\\\"page\\\">장비연구실</a></nav><button id=\\\"lock\\\" type=\\\"button\\\">잠그기</button></div></header>\";","const LAB_HEADER=\"<header data-tsd-common-header class=\\\"tsd-header\\\"><div class=\\\"tsd-wrap tsd-header-inner\\\" data-tsd-common-bar><a class=\\\"tsd-brand\\\" data-tsd-common-brand href=\\\"https://lwhfpv.github.io/TSD-FPV/index.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\"><span aria-hidden=\\\"true\\\">TSD</span>TSD Aero Systems</a><nav class=\\\"tsd-nav\\\" data-tsd-common-nav aria-label=\\\"주 메뉴\\\"><a href=\\\"https://lwhfpv.github.io/TSD-FPV/education.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">체험교육</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/simulator.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">시뮬레이터 체험</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/drone-design.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">드론설계</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/flight-safety.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">비행안전정보</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/contact.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">문의</a></nav><button id=\\\"lock\\\" data-tsd-common-contact type=\\\"button\\\">잠그기</button></div></header>\";"],["const LAB_BANNER=\"<section class=\\\"tsd-hero\\\" aria-label=\\\"페이지 소개\\\"><div class=\\\"tsd-wrap\\\"><h1>8대 장비 연결 연구실</h1><p>기체별 영상·조종 경로를 구성하고 두 대의 모니터 연결을 점검하세요.</p></div></section>\";","const LAB_BANNER=\"<section data-tsd-common-hero class=\\\"tsd-hero\\\" aria-label=\\\"페이지 소개\\\"><div class=\\\"tsd-wrap\\\"><h1>8대 장비 연결 연구실</h1><p>기체별 영상·조종 경로를 구성하고 두 대의 모니터 연결을 점검하세요.</p></div></section>\";"],["  style.textContent = LAB_STYLE;","  style.textContent = LAB_STYLE + \"\\n/* TSD Aero: scoped homepage header contract. Do not apply to simulator controls. */\\n[data-tsd-common-header][data-tsd-common-header]{box-sizing:border-box!important;display:block!important;background:#fff!important;color:#172844!important;border:0!important;border-bottom:1px solid #dce5f1!important;margin:0!important;padding:0!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;font:400 15px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;letter-spacing:normal!important;text-align:left!important;}\\n[data-tsd-common-header] [data-tsd-common-bar][data-tsd-common-bar]{box-sizing:border-box!important;width:min(calc(100% - 2 * clamp(16px,4vw,40px)),1180px)!important;max-width:none!important;margin:0 auto!important;display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;grid-template-areas:\\\"brand nav contact\\\"!important;align-items:center!important;justify-content:normal!important;gap:20px!important;min-height:66px!important;height:auto!important;padding:0!important;}\\n[data-tsd-common-header] [data-tsd-common-brand][data-tsd-common-brand]{box-sizing:border-box!important;grid-area:brand!important;order:0!important;justify-self:start!important;display:flex!important;align-items:center!important;gap:9px!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;font:650 15px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;color:#172844!important;letter-spacing:normal!important;white-space:nowrap!important;text-decoration:none!important;}\\n[data-tsd-common-header] [data-tsd-common-brand] span:first-child{box-sizing:border-box!important;display:grid!important;place-items:center!important;width:37px!important;height:31px!important;min-width:37px!important;min-height:31px!important;flex:0 0 37px!important;margin:0!important;padding:0!important;border:0!important;border-radius:6px!important;background:#194cb9!important;color:#fff!important;font:650 13px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;letter-spacing:normal!important;}\\n[data-tsd-common-header] [data-tsd-common-nav][data-tsd-common-nav]{box-sizing:border-box!important;grid-area:nav!important;order:0!important;display:flex!important;align-items:center!important;justify-content:center!important;flex-wrap:nowrap!important;gap:clamp(10px,3vw,34px)!important;width:auto!important;min-width:0!important;height:auto!important;background:transparent!important;border:0!important;padding:0!important;margin:0!important;}\\n[data-tsd-common-header] [data-tsd-common-nav] a{box-sizing:border-box!important;display:grid!important;align-items:center!important;min-height:44px!important;margin:0!important;padding:0!important;color:#172844!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;font:550 15px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;letter-spacing:normal!important;white-space:nowrap!important;text-decoration:none!important;}\\n[data-tsd-common-header] [data-tsd-common-contact][data-tsd-common-contact]{box-sizing:border-box!important;grid-area:contact!important;order:0!important;justify-self:end!important;display:grid!important;place-items:center!important;min-height:44px!important;margin:0!important;padding:0 13px!important;background:#fff!important;color:#172844!important;border:1px solid #dce5f1!important;border-radius:6px!important;white-space:nowrap!important;text-decoration:none!important;font:400 15px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;letter-spacing:normal!important;}\\n[data-tsd-common-header] a:focus-visible{outline:2px solid #1763db!important;outline-offset:3px!important;}\\n[data-tsd-common-header] [data-tsd-common-nav] a:hover,[data-tsd-common-header] [data-tsd-common-brand]:hover,[data-tsd-common-header] [data-tsd-common-contact]:hover{color:#164fb9!important;}\\n[data-tsd-common-hero]{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(105deg,#eaf6ff 0%,#c5e2fa 30%,#83b8eb 65%,#347bc3 100%)!important;color:#153b65!important;box-shadow:inset 0 -3px #347bc3;text-align:center;}\\n[data-tsd-common-hero]::before{content:\\\"\\\"!important;position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:1!important;background-image:url(\\\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22680%22%20height%3D%22100%22%20viewBox%3D%220%200%20680%20100%22%3E%3Cg%20stroke%3D%22white%22%20fill%3D%22none%22%20opacity%3D%22.6%22%3E%3Ccircle%20cx%3D%22624%22%20cy%3D%2250%22%20r%3D%2238%22%2F%3E%3Ccircle%20cx%3D%22624%22%20cy%3D%2250%22%20r%3D%2228%22%2F%3E%3Ccircle%20cx%3D%22624%22%20cy%3D%2250%22%20r%3D%2215%22%2F%3E%3Cpath%20d%3D%22M580%2050H668M624%206V94M597%2023L651%2077M651%2023L597%2077%22%20stroke-dasharray%3D%223%204%22%2F%3E%3Cpath%20d%3D%22M0%2075H80L110%2045H158M0%2085H90L120%2055H170M510%200L550%2040H575%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E\\\"),linear-gradient(to right,#ffffff4d 1px,transparent 1px),linear-gradient(to bottom,#ffffff4d 1px,transparent 1px)!important;background-size:100% 100%,18px 18px,18px 18px!important;background-position:center!important;}\\n[data-tsd-common-hero]::after{content:none!important;}\\n[data-tsd-common-hero] h1,[data-tsd-common-hero] p,[data-tsd-common-hero] .sub{color:#153b65!important;text-shadow:none!important;}\\n@media(max-width:580px){\\n[data-tsd-common-header] [data-tsd-common-bar][data-tsd-common-bar]{grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:\\\"brand brand\\\" \\\"nav contact\\\"!important;gap:3px 8px!important;padding:8px 0!important;}\\n[data-tsd-common-header] [data-tsd-common-nav][data-tsd-common-nav]{justify-content:start!important;flex-wrap:wrap!important;gap:4px 12px!important;}\\n[data-tsd-common-header] [data-tsd-common-nav] a{font-size:13px!important;min-height:36px!important;}\\n[data-tsd-common-header] [data-tsd-common-contact][data-tsd-common-contact]{font-size:13px!important;padding-inline:8px!important;}\\n}\\n\";"]],
+            'tsd-qgc-mission-lab.html':[["<div class=\"course-top\"><div class=\"course-nav course-wrap\"><a class=\"course-brand\" href=\"./index.html\"><span aria-hidden=\"true\">TSD</span>TSD Aero Systems</a><a class=\"course-contact\" href=\"./contact.html\">문의</a></div></div><section class=\"course-hero\" aria-labelledby=\"courseTitle\">","<div class=\"course-top\" data-tsd-common-header><div class=\"course-nav course-wrap\" data-tsd-common-bar><a class=\"course-brand\" data-tsd-common-brand href=\"./index.html\"><span aria-hidden=\"true\">TSD</span>TSD Aero Systems</a><div data-tsd-common-nav role=\"navigation\" aria-label=\"주 메뉴\"><a href=\"./education.html\">체험교육</a><a href=\"./simulator.html\">시뮬레이터 체험</a><a href=\"./drone-design.html\">드론설계</a><a href=\"./flight-safety.html\">비행안전정보</a></div><a class=\"course-contact\" data-tsd-common-contact href=\"./contact.html\">문의</a></div></div><section class=\"course-hero\" data-tsd-common-hero aria-labelledby=\"courseTitle\">"]]
+          };
+          function equivalentOutsideReviewedHeader(file,before,after){
+            const edits=approvedHeaderEdits[file]||[];
+            let expected=JSON.stringify(before);
+            if(!edits.length)return expected===JSON.stringify(after);
+            const copy=[...before];
+            for(const [oldText,newText] of edits){
+              const indices=copy.map((s,i)=>s.includes(oldText)?i:-1).filter(i=>i>=0);
+              if(indices.length!==1)return false;
+              const i=indices[0];if(copy[i].split(oldText).length!==2)return false;
+              copy[i]=copy[i].replace(oldText,()=>newText);
+            }
+            return JSON.stringify(copy)===JSON.stringify(after);
+          }
           const sourceAudit=paths.filter(f=>f!=='prop-vibration-lab.html').map(file=>{
             const baseline=execFileSync('git',['show',baseCommit+':'+file],{encoding:'utf8',maxBuffer:100*1024*1024});
             const candidate=fs.readFileSync(file,'utf8');
@@ -50,7 +70,7 @@ jobs:
               let q=0;while(q<Math.min(x.length,y.length)-p&&x[x.length-1-q]===y[y.length-1-q])q++;
               return {index:i,beforeLength:x.length,afterLength:y.length,firstDifference:p,before:x.slice(Math.max(0,p-100),Math.min(x.length-q+100,p+700)),after:y.slice(Math.max(0,p-100),Math.min(y.length-q+100,p+700))};
             }).filter(Boolean);
-            return {file,baselineScripts:before.length,candidateScripts:after.length,scriptsIdentical:JSON.stringify(before)===JSON.stringify(after),differences};
+            return {file,baselineScripts:before.length,candidateScripts:after.length,scriptsIdentical:JSON.stringify(before)===JSON.stringify(after),functionalSourcePreserved:equivalentOutsideReviewedHeader(file,before,after),differences};
           });
           fs.writeFileSync('/tmp/tsd-header-results/source-audit.json',JSON.stringify({baseCommit,checkedCommit,sourceAudit},null,2));
           console.log(JSON.stringify({baseCommit,checkedCommit,sourceAudit}));
@@ -244,16 +264,40 @@ jobs:
           fs.writeFileSync('/tmp/tsd-header-results/external-prop-audit.json',JSON.stringify(external,null,2));
           console.log(JSON.stringify({externalPropAudit:external}));
           await externalPage.close();
+          const unlockedAudit={configured:!!process.env.TSD_EQUIPMENT_QA_PASSWORD,pass:false};
+          if(unlockedAudit.configured){
+            const c=await browser.newContext({viewport:{width:1440,height:900}});
+            try{
+              const p=await c.newPage();
+              await p.goto('http://127.0.0.1:8765/equipment-lab.html',{waitUntil:'domcontentloaded'});
+              await p.locator('#password').fill(process.env.TSD_EQUIPMENT_QA_PASSWORD);
+              await p.locator('#enter').click();
+              const f=p.frameLocator('iframe[title="TSD 장비 연결 연구실"]');
+              const h=f.locator('[data-tsd-common-header]');
+              await h.waitFor({state:'visible',timeout:20000});
+              unlockedAudit.header=true;
+              unlockedAudit.links=await h.locator('a').count();
+              unlockedAudit.lock=await f.locator('#lock').isVisible();
+              unlockedAudit.hasMain=await f.locator('main').count()>0;
+              await f.locator('#lock').click();
+              await p.locator('#password').waitFor({state:'visible',timeout:20000});
+              unlockedAudit.relocked=true;
+              unlockedAudit.pass=unlockedAudit.links>=6&&unlockedAudit.lock&&unlockedAudit.hasMain&&unlockedAudit.relocked;
+            }catch{unlockedAudit.failure='Unlock, internal layout, or relock verification failed';}
+            finally{await c.close();}
+          }else unlockedAudit.failure='Repository QA secret is not configured';
+          fs.writeFileSync('/tmp/tsd-header-results/equipment-unlock-audit.json',JSON.stringify(unlockedAudit,null,2));
+          console.log(JSON.stringify({unlockedAudit}));
           await browser.close();
           fs.writeFileSync('/tmp/tsd-header-results/results.json',JSON.stringify(result,null,2));
           fs.writeFileSync('/tmp/tsd-header-results/design-audit.json',JSON.stringify({checkedCommit,baselines,summary:{smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length},results:result},null,2));
           console.log(JSON.stringify({checkedCommit,smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length,total:result.length}));
-          const unresolvedScripts=sourceAudit.filter(x=>!x.scriptsIdentical).map(x=>x.file);
+          const unresolvedScripts=sourceAudit.filter(x=>!x.functionalSourcePreserved).map(x=>x.file);
           const externalPassed=external.comparable===true;
           const propRoundTrips=result.filter(x=>x.file==='simulator.html'&&x.propCardRoundTrip===true).length;
           const propFunctional=result.filter(x=>x.file==='prop-vibration-lab.html'&&x.propFunctionalPass===true).length;
-          console.log(JSON.stringify({releaseGate:{unresolvedScripts,externalPassed,propRoundTrips,propFunctional,allHeaderTestsPassed:result.every(x=>x.pass&&x.designPass)}}));
-          if(result.some(x=>!x.pass||!x.designPass)||unresolvedScripts.length||!externalPassed||propRoundTrips!==4||propFunctional!==4) process.exitCode=1;
+          console.log(JSON.stringify({releaseGate:{unresolvedScripts,externalPassed,propRoundTrips,propFunctional,unlockedAudit,allHeaderTestsPassed:result.every(x=>x.pass&&x.designPass)}}));
+          if(result.some(x=>!x.pass||!x.designPass)||unresolvedScripts.length||!externalPassed||propRoundTrips!==4||propFunctional!==4||!unlockedAudit.pass) process.exitCode=1;
           JS
       - uses: actions/upload-artifact@v4
         if: always()
