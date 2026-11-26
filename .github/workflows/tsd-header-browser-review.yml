@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-save playwright@1.51.1
+      - run: npm install --no-save playwright@1.51.1 axe-core@4.10.3
       - run: npx playwright install --with-deps chromium
       - name: Run desktop and mobile header smoke checks
         shell: bash
@@ -29,9 +29,49 @@ jobs:
           node --input-type=module <<'JS'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          const checkedCommit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          const axeSource=fs.readFileSync('node_modules/axe-core/axe.min.js','utf8');
           const paths=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','simulator.html','tsd-qgc-mission-lab.html'];
           const result=[];
           const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          async function fingerprint(header,home=false){
+            return header.evaluate((h,home)=>{
+              const get=(q)=>h.querySelector(q);
+              const bar=get(home?'.tsd-bar':'[data-tsd-common-bar]');
+              const brand=get(home?'.tsd-brand':'[data-tsd-common-brand]');
+              const mark=brand?.querySelector('span');
+              const nav=get(home?'nav':'[data-tsd-common-nav]');
+              const contact=get(home?'.tsd-contact':'[data-tsd-common-contact]');
+              const rect=h.getBoundingClientRect();
+              const pick=(el,props)=>{if(!el)return null;const s=getComputedStyle(el);const r=el.getBoundingClientRect();return {rect:[r.x-rect.x,r.y-rect.y,r.width,r.height].map(x=>Math.round(x*100)/100),css:Object.fromEntries(props.map(p=>[p,s[p]]))};};
+              const links=[...h.querySelectorAll('a')].map(a=>({label:a.textContent.replace(/\\s+/g,' ').trim(),url:new URL(a.href).pathname.split('/').pop(),hash:new URL(a.href).hash}));
+              return {header:pick(h,['backgroundColor','borderBottomColor','borderBottomWidth']),bar:pick(bar,['display','gridTemplateColumns','gap','minHeight']),brand:pick(brand,['fontFamily','fontSize','fontWeight','color','gap']),mark:pick(mark,['backgroundColor','color','borderRadius','fontSize']),nav:pick(nav,['display','justifyContent','gap','flexWrap']),menu:pick(nav?.querySelector('a'),['fontFamily','fontSize','fontWeight','color','minHeight']),contact:pick(contact,['fontFamily','fontSize','fontWeight','color','borderColor','borderRadius','minHeight']),links,hero:(()=>{const e=document.querySelector(home?'#tsd-fpv-preview .tsd-hero':'[data-tsd-common-hero]');if(!e)return null;const s=getComputedStyle(e);return {background:s.backgroundImage,color:s.color,pattern:getComputedStyle(e,'::before').backgroundImage};})()};
+            },home);
+          }
+          const baselines={};
+          for(const width of [1440,768,390,320]){
+            const ctx=await browser.newContext({viewport:{width,height:900}});
+            const page=await ctx.newPage();
+            await page.goto('http://127.0.0.1:8765/index.html',{waitUntil:'domcontentloaded'});
+            const header=page.locator('#tsd-fpv-preview header').first();
+            await header.waitFor({state:'visible'});
+            baselines[width]=await fingerprint(header,true);
+            await header.screenshot({path:'/tmp/tsd-header-results/home-header-'+width+'.png',timeout:30000});
+            await ctx.close();
+          }
+          function compare(base,actual){
+            const out=[];
+            for(const name of ['header','bar','brand','mark','nav','menu','contact']){
+              if(!base[name]||!actual[name]){out.push({name,missing:true});continue;}
+              for(const [prop,val] of Object.entries(base[name].css)){
+                if(val!==actual[name].css[prop])out.push({name,prop,expected:val,actual:actual[name].css[prop]});
+              }
+              const delta=actual[name].rect.map((v,i)=>Math.round((v-base[name].rect[i])*100)/100);
+              if(delta.some(v=>Math.abs(v)>3))out.push({name,geometryDeltaPx:delta});
+            }
+            return out;
+          }
           for (const file of paths) for (const width of [1440,768,390,320]) {
             const context=await browser.newContext({viewport:{width,height:900}});
             const page=await context.newPage(); const errors=[];
@@ -69,13 +109,34 @@ jobs:
               });
               Object.assign(entry,nav);
               entry.pass=entry.http===200&&!entry.overflow&&nav.left>=-1&&nav.right<=width+1&&nav.links.length>=6&&nav.links.every(a=>a.visible&&a.left>=-1&&a.right<=width+1)&&errors.length===0&&entry.courseEntry!=='direct diagnostic only';
+              entry.fingerprint=await fingerprint(header);
+              entry.visualDifferences=compare(baselines[width],entry.fingerprint);
+              entry.heroBackgroundMatch=entry.fingerprint.hero?.background===baselines[width].hero?.background;
+              entry.heroPatternMatch=entry.fingerprint.hero?.pattern===baselines[width].hero?.pattern;
+              entry.menuLabelsMatch=entry.fingerprint.links.map(x=>x.label.replace(/\\s/g,'')).join('|')===baselines[width].links.map(x=>x.label.replace(/\\s/g,'')).join('|');
+              entry.menuTargetsMatch=entry.fingerprint.links.map(x=>x.url).join('|')===baselines[width].links.map(x=>x.url).join('|');
+              entry.linkChecks=[];
+              for(const link of await header.locator('a').all()){
+                const href=await link.evaluate(a=>a.href);
+                const url=new URL(href);
+                const filePath=url.pathname.split('/').pop()||'index.html';
+                const local='http://127.0.0.1:8765/'+filePath;
+                const response=await page.request.get(local,{timeout:10000});
+                entry.linkChecks.push({file:filePath,status:response.status(),hash:url.hash});
+              }
+              await page.addScriptTag({content:axeSource});
+              entry.axe=await header.evaluate(async h=>{const result=await window.axe.run(h,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));});
+              await header.screenshot({path:'/tmp/tsd-header-results/header-'+file+'-'+width+'.png',timeout:30000});
+              entry.designPass=entry.pass&&entry.visualDifferences.length===0&&entry.heroBackgroundMatch&&entry.heroPatternMatch&&entry.menuLabelsMatch&&entry.menuTargetsMatch&&entry.linkChecks.every(x=>x.status===200)&&entry.axe.length===0;
               await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'.png',timeout:30000,animations:'disabled'}).catch(async()=>{await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'.png',timeout:30000,animations:'disabled'});});
             } catch(e) {entry.pass=false;entry.failure=String(e);await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'-failure.png',timeout:10000}).catch(()=>{});}
             result.push(entry); console.log(JSON.stringify(entry));await context.close();
           }
           await browser.close();
           fs.writeFileSync('/tmp/tsd-header-results/results.json',JSON.stringify(result,null,2));
-          if(result.some(x=>!x.pass)) process.exitCode=1;
+          fs.writeFileSync('/tmp/tsd-header-results/design-audit.json',JSON.stringify({checkedCommit,baselines,summary:{smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length},results:result},null,2));
+          console.log(JSON.stringify({checkedCommit,smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length,total:result.length}));
+          if(result.some(x=>!x.pass||!x.designPass)) process.exitCode=1;
           JS
       - uses: actions/upload-artifact@v4
         if: always()
