@@ -1,0 +1,84 @@
+name: TSD secure gate and API origin diagnostics
+on:
+  push:
+    branches: [review/tsd-ui-compact-qa-20261127]
+    paths: ['.github/workflows/tsd-compact-security-diagnostics.yml']
+  pull_request:
+    branches: [review/tsd-ui-compact-20261127]
+    paths: ['.github/workflows/tsd-compact-security-diagnostics.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate-negative-and-origin:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0d577e95c4f978193ab039044b03468d16d2d416
+          persist-credentials: false
+          lfs: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browsers
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.51.1
+          npx playwright install --with-deps chromium webkit
+      - name: Negative gate and read-only health diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/tsd-diagnostic-http.log 2>&1 &
+          node --input-type=module <<'JS'
+          import {chromium,webkit} from 'playwright';
+          import {randomUUID} from 'node:crypto';
+          const targets=[['candidate','http://127.0.0.1:8765/'],['production','https://lwhfpv.github.io/TSD-FPV/']];
+          const endpoint='https://jolly-dawn-3ee1tsd-flight-airspace-api.flydragon103.workers.dev/health';
+          let failed=false;
+          for(const [engine,driver] of Object.entries({chromium,webkit})){
+            const b=await driver.launch({headless:true});
+            try{
+              for(const [target,root] of targets){
+                const ctx=await b.newContext({viewport:{width:390,height:844},hasTouch:true});
+                const p=await ctx.newPage();
+                const result={engine,target};
+                try{
+                  const res=await p.goto(root+'equipment-lab.html',{waitUntil:'domcontentloaded',timeout:45000});
+                  result.http=res?.status();
+                  result.secureContext=await p.evaluate(()=>window.isSecureContext && !!window.crypto?.subtle);
+                  result.gateBefore=await p.locator('#password').isVisible();
+                  await p.locator('#password').fill('invalid-qa-'+randomUUID());
+                  await p.locator('#enter').tap();
+                  await p.waitForFunction(()=>!document.getElementById('enter').disabled && document.getElementById('error').textContent.includes('비밀번호가 올바르지'),{},{timeout:25000});
+                  result.invalidRejected=await p.locator('#password').isVisible()&&await p.locator('iframe[title="TSD 장비 연결 연구실"]').count()===0;
+                  result.pass=result.http===200&&result.secureContext&&result.gateBefore&&result.invalidRejected;
+                }catch(e){result.pass=false;result.error=String(e).slice(0,250);}
+                if(!result.pass)failed=true;
+                console.log('GATE_NEGATIVE '+JSON.stringify(result));
+                await ctx.close();
+                // Separate health-only request from the public page's actual origin.
+                const hc=await b.newContext();
+                const hp=await hc.newPage();
+                const health={engine,target};
+                try{
+                  await hp.goto(root+'flight-safety.html',{waitUntil:'domcontentloaded',timeout:45000});
+                  health.pageOrigin=await hp.evaluate(()=>location.origin);
+                  health.fetch=await hp.evaluate(async url=>{try{const r=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(15000)});return{ok:r.ok,status:r.status,type:r.type};}catch(e){return{ok:false,error:String(e).slice(0,200)};}},endpoint);
+                }catch(e){health.error=String(e).slice(0,250);}
+                console.log('HEALTH_ORIGIN '+JSON.stringify(health));
+                await hc.close();
+              }
+            }finally{await b.close();}
+          }
+          console.log('GATE_POSITIVE NOT_RUN_REQUIRES_AUTHORIZED_SECRET');
+          if(failed)process.exitCode=1;
+          JS
+      - name: Inspect health response CORS headers without credentials
+        if: always()
+        run: |
+          for origin in 'https://lwhfpv.github.io' 'http://127.0.0.1:8765'; do
+            echo "HEALTH_HEADERS origin=$origin"
+            curl --silent --show-error --max-time 20 --proto '=https' -H "Origin: $origin" -D - -o /dev/null 'https://jolly-dawn-3ee1tsd-flight-airspace-api.flydragon103.workers.dev/health' | grep -Ei '^HTTP/|^access-control-allow-origin:|^vary:|^access-control-allow-credentials:' || true
+          done
