@@ -117,6 +117,9 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(-
 }
 </style>
 <link rel="stylesheet" href="./tsd-aero-common.css">
+<style id="tsd-compact-ui-20261127">
+@media(min-width:901px){#lab.layout{grid-template-areas:"airframe controls" "track spectrum" "lesson lesson";align-items:stretch;gap:14px;margin-block:14px 28px}#lab>.stack{display:contents}#lab .airframe-card{grid-area:airframe}#lab .control-card{grid-area:controls}#lab .track-card{grid-area:track}#lab .spectrum-card{grid-area:spectrum}#lab .lesson{grid-area:lesson}#lab .track-card,#lab .spectrum-card{display:flex;flex-direction:column;min-width:0}#lab .track-card .track,#lab .spectrum-card .plot{flex:1 0 150px;min-height:150px}#lab .track-card .track{margin-bottom:9px}#lab .track-card canvas,#lab .spectrum-card canvas{width:100%;height:100%}}
+</style>
 </head>
 <body>
 <a class="skip" href="#lab">본문 바로가기</a>
@@ -136,7 +139,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(-
  <section class="hero" data-tsd-common-hero aria-labelledby="pageTitle">
   <div class="wrap heroInner">
    <h1 id="pageTitle">프롭 진동 실습실</h1>
-   <p>스로틀·롤·피치·요를 조절하고 기체 자세, 모터별 RPM, 프롭 아래 공기 펄스를 함께 확인하세요.</p>
+   
   </div>
  </section>
 <div class="wrap layout" id="lab" tabindex="-1">
@@ -207,7 +210,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(-
 </div>
 </section>
 <section class="card spectrum-card" aria-labelledby="spectrumTitle">
-<div class="cap"><div class="help-title"><h2 id="spectrumTitle">주파수 스펙트럼 · <span id="selectedMotor">FL</span></h2></div><span class="unit">모델 계산</span></div>
+<div class="cap"><div class="help-title"><h2 id="spectrumTitle">주파수 스펙트럼 · <span id="selectedMotor">FL</span></h2></div></div>
 <div class="plot"><canvas id="spectrum" role="img" aria-label="선택 모터의 기본 회전과 날개 통과 성분의 예시 스펙트럼"></canvas></div>
 <div class="legend"><span class="key" style="--swatch:#1553ce">날개 통과</span><span class="key" style="--swatch:#a25b08">회전 기본파·고조파</span><span class="key" style="--swatch:#9841aa">520 Hz 진동 예시</span></div>
 <p id="markers" class="spectrum-markers"></p>
