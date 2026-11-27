@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: review/tsd-ui-compact-20261127
+          ref: 0d577e95c4f978193ab039044b03468d16d2d416 # exact compact UI candidate under test
           persist-credentials: false
           lfs: false
       - uses: actions/setup-node@v4
@@ -109,6 +109,13 @@ jobs:
                   record.checks.labelsPreserved=await p.locator('#locProvince[aria-label],#locDistrict[aria-label],#locTown[aria-label]').count()===3;
                   record.checks.applicationLinks=await p.locator('#application-section .quicklink').count()===3;
                   record.checks.applicationHeadingRemoved=await p.locator('#application-section h3').count()===0;
+                  if(width<=600){
+                    const geometry=await p.locator('#application-section .quicklink').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height,scroll:e.scrollWidth,client:e.clientWidth};}));
+                    record.applicationGeometry=geometry;
+                    record.checks.applicationSingleRow=geometry.length===3&&geometry.every(g=>Math.abs(g.y-geometry[0].y)<2);
+                    record.checks.applicationTouchTargets=geometry.length===3&&geometry.every(g=>g.h>=44&&g.w>=44);
+                    record.checks.applicationNoOverflow=geometry.length===3&&geometry.every(g=>g.x>=0&&g.x+g.w<=width+1&&g.scroll<=g.client+1);
+                  }
                 }
                 if(file==='equipment-lab.html'){
                   record.checks.gateVisible=await visible(p.locator('#password'));
