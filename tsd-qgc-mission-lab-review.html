@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.AU 검토본</title><style>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.AV 검토본</title><style>
 /* required styles */
 
 .leaflet-pane,
@@ -4876,19 +4876,36 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
  const posts=pts.filter((p,i)=>i%Math.max(1,Math.ceil(pts.length/30))===0&&Number.isFinite(p.ground)&&Number.isFinite(p.z)).map(p=>[pos(p,p.ground),pos(p,p.z)]);
  const waypoints=(input.waypoints||[]).map((p,i)=>{let nearest=null,best=Infinity;for(const q of pts){const d=Math.hypot(q.lat-p.lat,q.lng-p.lng);if(d<best&&Number.isFinite(q.z)){nearest=q;best=d;}}return nearest?{i,point:pos(p,nearest.z)}:null;}).filter(Boolean);
  const aircraft=input.aircraft&&Number.isFinite(input.aircraft.lat)&&Number.isFinite(input.aircraft.lng)&&Number.isFinite(input.aircraft.z)?pos(input.aircraft,input.aircraft.z):null;
- return {grid,gridLines,route:paths('z'),ground:paths('ground'),posts,waypoints,aircraft,hasGround:pts.some(p=>Number.isFinite(p.ground)),hasRoute:pts.some(p=>Number.isFinite(p.z))};
+ return {grid,gridLines,route:paths('z'),ground:paths('ground'),posts,waypoints,aircraft,project:pos,hasGround:pts.some(p=>Number.isFinite(p.ground)),hasRoute:pts.some(p=>Number.isFinite(p.z))};
 }
+  // Rev.AV: visualization of received simulated telemetry only, never flight control.
+  function avSceneSample(sample,kind,sameFlight,base){
+    if(!sameFlight||!sample||!['live','stale'].includes(kind)||sample.gps!==true)return null;
+    const lat=sample.pos?.lat,lng=sample.pos?.lng,z=base+sample.rel;
+    if(![lat,lng,base,sample.rel,z].every(Number.isFinite)||Math.abs(lat)>90||Math.abs(lng)>180)return null;
+    return {lat,lng,z,stale:kind==='stale'};
+  }
   function show3DPractice(){
  const shown=flight?.active?flight.plan:plan,profile=flight?.active?flight.profile:M.profile(shown,heights()),base=flight?.active?flight.homeZ:heights()?.[0]??shown.homeAMSL??0;
- const input={points:profile,waypoints:shown.points,base,aircraft:flight?.active?{...flight.pos}:null};
- modal('3D 경로 · 지형 단면',`<div class="as-3d-controls"><label>회전 <input id="rotate3D" type="range" min="-180" max="180" value="-28"></label><label>시점 <input id="pitch3D" type="range" min="10" max="85" value="35"></label><label>확대 <input id="asZoom3D" type="range" min="50" max="200" value="100"></label><button id="asReset3D">초기 시점</button></div><div id="plot3D" tabindex="0" aria-label="터치 드래그 또는 방향키로 시점 회전"></div><p class="micro" id="as3DInfo"></p><p class="micro">경로 주변 DEM 단면의 공간 투영입니다. 실제 3D 지형 메시·건물·충돌 검증이 아닙니다. 비행 중에는 창을 연 시점의 기체 위치를 표시합니다.</p>`);
- const el=$('plot3D'),rot=$('rotate3D'),pitch=$('pitch3D'),zoom=$('asZoom3D');let scheduled=0;
+ const openedFlight=flight?.active?flight:null;
+ const input={points:profile,waypoints:shown.points,base,aircraft:null};
+ modal('3D 경로 · 지형 단면',`<div class="as-3d-controls"><label>회전 <input id="rotate3D" type="range" min="-180" max="180" value="-28"></label><label>시점 <input id="pitch3D" type="range" min="10" max="85" value="35"></label><label>확대 <input id="asZoom3D" type="range" min="50" max="200" value="100"></label><button id="asReset3D">초기 시점</button></div><div id="plot3D" tabindex="0" aria-label="터치 드래그 또는 방향키로 시점 회전"></div><p class="micro" id="as3DInfo"></p><p class="micro">경로 주변 DEM 단면의 공간 투영입니다. 실제 3D 지형 메시·건물·충돌 검증이 아닙니다. 비행 중 가상 수신 위치를 최대 초당 4회 표시합니다. 수신 중단 시 마지막 수신 위치를 유지하며 GPS 미확인 시 위치를 표시하지 않습니다.</p>`);
+ const el=$('plot3D'),rot=$('rotate3D'),pitch=$('pitch3D'),zoom=$('asZoom3D');let scheduled=0,sceneCache=null,markerKey=null;
+ const dialog=$("dialog");
  const num=p=>p.map(v=>v.toFixed(2)).join(',');
  const line=(p,stroke,width,other='')=>`<polyline points="${p.map(num).join(' ')}" fill="none" stroke="${stroke}" stroke-width="${width}" ${other}/>`;
- const draw=()=>{scheduled=0;if(!el.isConnected)return;const scene=asProjectScene(input,{angle:+rot.value,elev:+pitch.value,zoom:+zoom.value/100});if(!scene){el.textContent='표시 가능한 경로 데이터가 없습니다.';return;}
- const {gridLines,route,ground,posts,waypoints,aircraft}=scene;
- el.innerHTML=`<svg viewBox="0 0 640 404" role="img" aria-label="임무 경로 및 지형 단면 공간 투영"><defs><linearGradient id="as3DBG" x2="0" y2="1"><stop stop-color="#172d49"/><stop offset="1" stop-color="#081522"/></linearGradient></defs><rect width="640" height="404" rx="8" fill="url(#as3DBG)"/>${gridLines.map(p=>line(p,'#607993',.8,'opacity=".45"')).join('')}${posts.map(p=>line(p,'#9eabc2',1,'stroke-dasharray="3 4" opacity=".6"')).join('')}${ground.map(p=>line(p,'#5ce0a5',2.4)).join('')}${route.map(p=>line(p,'#79c7ff',3)).join('')}${waypoints.map(({i,point:p})=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="${i?'#ffce74':'#f6f8fa'}" stroke="#1b3048"/><text x="${p[0]+8}" y="${p[1]-8}" fill="#f5f8ff" font-size="12">${i?'WP '+i:'HOME'}</text>`).join('')}${aircraft?`<circle cx="${aircraft[0]}" cy="${aircraft[1]}" r="7" fill="#fff" stroke="#46b8f6" stroke-width="3"/>`:''}<text x="14" y="22" fill="#c8d8eb" font-size="12">기준 격자 ${scene.grid} m · ${scene.hasGround?'실측 DEM 단면':'지형 미확인 · 가상 기준면'}</text><text x="14" y="390" fill="#9cd4ff" font-size="11">청색: 계획 경로  ·  녹색: 확인된 지형 단면</text></svg>`;
- $('as3DInfo').textContent=scene.hasRoute?(scene.hasGround?'경로·확보된 DEM 샘플 표시':'상대·해발 계획 경로 표시 / DEM 미확인'):'지형 추종 경로 고도 미확정 · 먼저 지형 고도를 조회하세요.';};
+ const updateAircraft=()=>{if(!el.isConnected||!dialog.open||!sceneCache)return;
+  const marker=el.querySelector('[data-av-aircraft]'),status=el.querySelector('[data-av-status]');if(!marker||!status)return;
+  const sample=avSceneSample(lastTelemetry,auTelemetryKind,!!openedFlight&&flight===openedFlight,base);
+  const pt=sample?sceneCache.project(sample,sample.z):null;
+  const label=!openedFlight?'계획 경로 · 기체 없음':flight!==openedFlight?'새 비행 · 3D 창 다시 열기':!sample?'위치 데이터 없음':sample.stale?'LAST RX · 마지막 수신 위치':'LIVE · 가상 수신 위치';
+  const key=JSON.stringify([pt?.map(x=>Math.round(x*10)),label]);if(key===markerKey)return;markerKey=key;
+  status.textContent=label;marker.style.display=pt?'':'none';if(pt){marker.setAttribute('transform',`translate(${pt[0].toFixed(2)} ${pt[1].toFixed(2)})`);marker.setAttribute('opacity',sample.stale?'0.6':'1');}
+ };
+ const draw=()=>{scheduled=0;if(!el.isConnected||!dialog.open)return;const scene=asProjectScene(input,{angle:+rot.value,elev:+pitch.value,zoom:+zoom.value/100});if(!scene){el.textContent='표시 가능한 경로 데이터가 없습니다.';return;}
+ const {gridLines,route,ground,posts,waypoints}=scene;sceneCache=scene;markerKey=null;
+ el.innerHTML=`<svg viewBox="0 0 640 404" role="img" aria-label="임무 경로 및 지형 단면 공간 투영"><defs><linearGradient id="as3DBG" x2="0" y2="1"><stop stop-color="#172d49"/><stop offset="1" stop-color="#081522"/></linearGradient></defs><rect width="640" height="404" rx="8" fill="url(#as3DBG)"/>${gridLines.map(p=>line(p,'#607993',.8,'opacity=".45"')).join('')}${posts.map(p=>line(p,'#9eabc2',1,'stroke-dasharray="3 4" opacity=".6"')).join('')}${ground.map(p=>line(p,'#5ce0a5',2.4)).join('')}${route.map(p=>line(p,'#79c7ff',3)).join('')}${waypoints.map(({i,point:p})=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="${i?'#ffce74':'#f6f8fa'}" stroke="#1b3048"/><text x="${p[0]+8}" y="${p[1]-8}" fill="#f5f8ff" font-size="12">${i?'WP '+i:'HOME'}</text>`).join('')}<g data-av-aircraft style="display:none"><circle r="8" fill="#fff" stroke="#46b8f6" stroke-width="3"/><path d="M-11 0H11M0 -11V11" stroke="#46b8f6" stroke-width="1.5"/></g><text data-av-status x="14" y="40" fill="#d7eaff" font-size="11"></text><text x="14" y="22" fill="#c8d8eb" font-size="12">기준 격자 ${scene.grid} m · ${scene.hasGround?'실측 DEM 단면':'지형 미확인 · 가상 기준면'}</text><text x="14" y="390" fill="#9cd4ff" font-size="11">청색: 계획 경로  ·  녹색: 확인된 지형 단면</text></svg>`;
+ $('as3DInfo').textContent=scene.hasRoute?(scene.hasGround?'경로·확보된 DEM 샘플 표시':'상대·해발 계획 경로 표시 / DEM 미확인'):'지형 추종 경로 고도 미확정 · 먼저 지형 고도를 조회하세요.';updateAircraft();};
  const schedule=()=>{if(!scheduled)scheduled=requestAnimationFrame(draw);};rot.oninput=pitch.oninput=zoom.oninput=schedule;
  $('asReset3D').onclick=()=>{rot.value=-28;pitch.value=35;zoom.value=100;schedule();};
  let drag=null;el.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,a:+rot.value,t:+pitch.value};el.setPointerCapture(e.pointerId);e.preventDefault();});
@@ -4896,6 +4913,9 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
  for(const type of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(type,e=>{if(drag?.id===e.pointerId)drag=null;});
  el.addEventListener('keydown',e=>{const changes={ArrowLeft:[-5,0],ArrowRight:[5,0],ArrowUp:[0,5],ArrowDown:[0,-5]};if(!changes[e.key])return;e.preventDefault();const [a,b]=changes[e.key];rot.value=Math.max(-180,Math.min(180,+rot.value+a));pitch.value=Math.max(10,Math.min(85,+pitch.value+b));schedule();});
  draw();
+ const timer=setInterval(()=>{if(!dialog.open||!el.isConnected){clearInterval(timer);dialog.removeEventListener('close',stop);return;}if(!document.hidden)updateAircraft();},250);
+ function stop(){clearInterval(timer);if(scheduled)cancelAnimationFrame(scheduled);dialog.removeEventListener('close',stop);}
+ dialog.addEventListener('close',stop);
 }
   const analyzeBeforePractice=analyzePage;
   analyzePage=function(tab) {
