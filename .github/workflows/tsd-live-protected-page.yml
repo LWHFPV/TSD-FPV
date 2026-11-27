@@ -14,15 +14,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
-      - name: Confirm protected test secret is available
-        env:
-          TSD_QA_PASSWORD: ${{ secrets.TSD_EQUIPMENT_QA_PASSWORD }}
-        shell: bash
-        run: |
-          if [ -z "$TSD_QA_PASSWORD" ]; then
-            echo "::error::TSD_EQUIPMENT_QA_PASSWORD is not configured; live authentication test not executed"
-            exit 1
-          fi
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -64,6 +55,7 @@ jobs:
                 await p.locator('#enter').click();
                 await p.waitForFunction(()=>document.querySelector('#error').textContent.includes('올바르지'));
                 if(await p.locator('iframe').count())throw Error('unexpected unlock');
+                if(!password){records.push({width,pass:false,negativeAuthPass:true,positiveAuth:'NOT_RUN_SECRET_MISSING'});continue;}
                 step='real password unlock';
                 const unlock=async()=>{
                   await p.locator('#password').fill(password);
@@ -92,11 +84,11 @@ jobs:
                 step='final relock';
                 await f.locator('#lock').click();
                 await p.locator('#password').waitFor({state:'visible',timeout:20000});
-                records.push({width,pass:true});
+                records.push({width,pass:true,negativeAuthPass:true,positiveAuth:'PASS'});
               }catch{records.push({width,pass:false,step});}
               finally{await c.close();}
             }
           }finally{await browser.close();}
-          console.log(JSON.stringify({liveHTTPS:true,expectedBlob,records}));
+          console.log(JSON.stringify({liveHTTPS:true,expectedBlob,secretConfigured:!!password,negativeAuthPassed:records.filter(x=>x.negativeAuthPass).length,records}));
           if(records.length!==4||records.some(x=>!x.pass))process.exitCode=1;
           JS
