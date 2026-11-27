@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BD 검토본</title><style>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BE 검토본</title><style>
 /* required styles */
 
 .leaflet-pane,
@@ -8800,16 +8800,21 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
   };
   // Rev.BD: distinguish selected-unit completion from the continuous course.
   function bdNextUnit(index,count,continuous){
-    return Number.isInteger(index)&&Number.isInteger(count)&&index>=0&&index<count-1&&continuous===true?index+1:null;
+    return Number.isSafeInteger(index)&&Number.isSafeInteger(count)&&index>=0&&index<count-1&&continuous===true?index+1:null;
   }
   function bdProgress(done,count){
-    return [...new Set((Array.isArray(done)?done:[]).filter(n=>Number.isInteger(n)&&n>=0&&n<count))].sort((a,b)=>a-b);
+    return Number.isSafeInteger(count)&&count>0?[...new Set((Array.isArray(done)?done:[]).filter(n=>Number.isSafeInteger(n)&&n>=0&&n<count))].sort((a,b)=>a-b):[];
   }
   function bdCoursePosition(units,index,step){
-    return Number.isInteger(index)&&Number.isInteger(step)&&step>=0&&Array.isArray(units?.[index]?.steps)&&step<units[index].steps.length?{index,step,total:units[index].steps.length}:null;
+    return Array.isArray(units)&&Number.isSafeInteger(index)&&index>=0&&index<units.length&&Number.isSafeInteger(step)&&step>=0&&Array.isArray(units[index]?.steps)&&step<units[index].steps.length?{index,step,total:units[index].steps.length}:null;
   }
+  // Rev.BE: reject actions from an obsolete tutorial render.
+  function beCurrentStage(unit,step,activeUnit,activeStep){return unit===activeUnit&&step===activeStep;}
   renderTutorial=function(){
-    const l=lessons[lab.lesson],s=stageNow();
+    const unitAtRender=lab.lesson,stepAtRender=lab.step;
+    const position=bdCoursePosition(lessons,unitAtRender,stepAtRender);
+    if(!position)return;
+    const l=lessons[position.index],s=stageNow();
     if(!s)return;
     const panel=$('tutorial');
     panel.innerHTML=`<header><span>${lab.lesson+1} / ${lessons.length} · ${esc(l.title)}</span><button type="button" id="minimizeGuide" aria-label="안내 접기" aria-expanded="true">−</button></header>
@@ -8833,6 +8838,7 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
       $('minimizeGuide').setAttribute('aria-expanded','false');
     }
     $('nextStep').onclick=()=>{
+      if(!beCurrentStage(unitAtRender,stepAtRender,lab.lesson,lab.step)||panel.classList.contains('hidden')||!$('courseHome').classList.contains('hidden'))return;
       if(!s.test())return tutorialUpdate();
       if(lab.step+1<l.steps.length){
         lab.step++;
@@ -8853,7 +8859,7 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
         renderTutorial();
         return;
       }
-      lab.lesson=null;lab.all=false;panel.classList.add('hidden');
+      lab.lesson=null;lab.step=0;lab.all=false;panel.classList.add('hidden');
       document.querySelectorAll('.training-target').forEach(e=>e.classList.remove('training-target'));
       const remaining=lessons.map((unit,i)=>({title:unit.title,i})).filter(unit=>!lab.courseDone.includes(unit.i));
       const allDone=remaining.length===0;
@@ -9451,6 +9457,9 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
   // Rev.AG: current-flight education evidence, simulation only.
   let coursePartialMission=false,courseUserReturn=null,courseExamBaseline=null,courseLastExam=null;
   lab.courseDone=bdProgress(lab.courseDone,lessons.length);
+  // Rev.BE: normalize persisted unit credit at each write, not just at initialization.
+  const beSaveProgress=saveProgress;
+  saveProgress=function(){lab.courseDone=bdProgress(lab.courseDone,lessons.length);return beSaveProgress();};
   function courseInterventionComplete(){return !!flight&&!flight.guided&&!!lab.marks['course:paused']&&!!lab.marks.resumed&&courseUserReturn===flight;}
   const agRtl=rtlNow;
   rtlNow=function(reason='사용자 RTL'){
@@ -9515,6 +9524,7 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
     const modes=document.createElement('section');modes.className='config-card';modes.id='bdCourseModes';
     modes.innerHTML='<h3>실습 방식 선택</h3><p class="micro">처음부터 배우기와 개별 단원 시작은 가상 실습 상태를 새로 준비합니다. 기존 진행 중인 교육을 유지하려면 현재 실습으로 돌아가기를 선택하세요.</p><div class="course-actions"><button type="button" id="bdCurrentQuick">현재 계획 빠른 실습</button><button type="button" id="bdMobileHelp">모바일 조작 안내</button></div><p class="micro">빠른 실습은 정규 단원 이수와 별도입니다. 착륙 후에는 같은 임무 다시 비행 기능을 이용할 수 있습니다.</p>';
     section.after(modes);
+    const releaseNote=document.createElement('p');releaseNote.className='micro';releaseNote.id='beReleaseStatus';releaseNote.textContent='Rev.BE 검토본 · 교육용 웹 모델. 실제 브라우저 종단시험·휴대폰 연결 검증·외부 3D 엔진·정밀 비행동역학 엔진 통합은 미완료입니다. 지도·고도·휴대폰 중계는 외부 서비스에 의존합니다. 운영 배포 승인 전 검토용입니다.';modes.append(releaseNote);
     $('bdCurrentQuick').onclick=()=>{if(armed||flight?.active)return toast('현재 가상 비행 종료 후 선택하세요.');prepareQuickPractice(true);};
     $('bdMobileHelp').onclick=()=>modal('모바일 조작 안내','<p>상단 창 배치를 켜고 창 내부를 드래그하여 이동하거나 우하단을 드래그하여 크기를 변경합니다. 배치 편집을 끝낸 후 가상 조종을 사용하세요.</p><p>가로·세로 전환 시 저장된 창 위치와 크기를 화면에 맞춰 복원합니다. 명령 확인은 슬라이더를 끝까지 밀어 놓는 방식입니다.</p><p>휴대폰 실제 연결은 별도 검증 대상입니다. 본 교육 화면은 실제 기체를 제어하지 않습니다.</p>');
   };
