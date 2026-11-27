@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BF 검토본</title><style>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BG 검토본</title><style>
 /* required styles */
 
 .leaflet-pane,
@@ -2333,9 +2333,10 @@ function awValidSample(t){
 }
 function auReceive(previous,state,make){
  if(!state.connected)return {kind:'offline',sample:null};
- if(!state.link)return {kind:previous?'stale':'missing',sample:previous||null};
+ const last=awValidSample(previous)?previous:null;
+ if(!state.link)return {kind:last?'stale':'missing',sample:last};
  const sample=make();
- return awValidSample(sample)?{kind:'live',sample}:{kind:previous?'stale':'missing',sample:previous||null};
+ return awValidSample(sample)?{kind:'live',sample}:{kind:last?'stale':'missing',sample:last};
 }
 function updateOSD(){let f=flight,visible=view==='fly'&&preferences.osd;$('osdPanel').classList.toggle('hidden',!visible);let home=f?.home||plan.points[0],homeZ=f?.homeZ??awHomeZ(heights()?.[0],plan.homeAMSL),pos=f?.pos||{...home,z:homeZ};const received=auReceive(lastTelemetry,{connected,link:linkOK},()=>({heading:(((f?.heading??0)%360)+360)%360,turnRate:f?.turnRate??0,amslKnown:!!heights(),rel:pos.z-homeZ,amsl:pos.z,agl:f?.ground==null?null:Math.max(0,pos.z-f.ground),speed:f?.actualSpeed??0,vs:f?.vs??0,dist:M.distance(pos,home),homeBearing:Nav.bearing(pos,home),mode:f?.active?(f.manualStick?'POSITION':f.mode==='HOLD'&&f.manualGoto?(f.manualGoto.radius?'ORBIT':'GUIDED'):f.mode):armed?'ARMED':'DISARMED',target:f?.active?Math.min(f.plan.points.length-1,(M.at(f.profile,f.s).leg||0)+1):'—',battery,elapsed:f?.elapsed??0,pos:{lat:pos.lat,lng:pos.lng},gps:connected&&gpsOK,rc:connected&&rcOK}));lastTelemetry=received.sample;auTelemetryKind=received.kind;azUpdateDisplay(lastTelemetry,auTelemetryKind,f,!!f?.active);if(!visible)return;const panel=$('osdPanel');panel.dataset.auRx=received.kind;if(!lastTelemetry){const blank='<div class="osd-head"><span>VIRTUAL OSD</span><span>'+ (received.kind==='offline'?'OFFLINE':'NO RX')+'</span></div><div class="au-no-rx">수신 데이터 없음</div>';if(panel._atMarkup!==blank){panel.innerHTML=blank;panel._atMarkup=blank;}return;}let t=lastTelemetry,a=preferences.fields,cell=(name,value)=>`<div><small>${name}</small><strong>${value}</strong></div>`;const markup=`<div class="osd-head"><span>VIRTUAL OSD</span><span>${received.kind==='live'?'LIVE':'LAST RX'}</span></div>${a.compass?`<div class="compass"><small>HDG · 기수 방향</small><b>${awHeading(t.heading)}</b></div>`:''}<div class="osd-grid">${a.alt?cell('REL · 홈 기준',fmt(t.rel,1)+' m')+cell('AMSL · 해발',t.amslKnown?fmt(t.amsl,1)+' m':'가상 기준')+cell('AGL · 지면 위',t.agl===null?'미확인':fmt(t.agl,1)+' m'):''}${a.speed?cell('GS · 대지 속도',fmt(t.speed,1)+' m/s')+cell('V/S · 수직 속도',(t.vs>0?'+':'')+fmt(t.vs,1)+' m/s'):''}${a.home?cell('HOME · 거리',t.gps?fmt(t.dist)+' m':'GPS 없음')+cell('HOME BRG',t.gps&&t.dist>1?awHeading(t.homeBearing):'—'):''}${a.nav?cell('MODE',t.mode)+cell('TARGET',t.target==='—'?'—':'WP '+t.target):''}${a.power?cell('BATTERY',fmt(t.battery)+'%')+cell('TIME',time(t.elapsed))+cell('GPS / RC',`${t.gps?'FIX':'LOST'} / ${t.rc?'OK':'LOST'}`):''}</div>${a.position?`<div class="osd-pos">${t.gps?`${t.pos.lat.toFixed(6)}°, ${t.pos.lng.toFixed(6)}°`:'위치 추정 유효하지 않음'}</div>`:''}${received.kind==='stale'?'<div class="osd-warning">마지막 수신 값 · 현재 상태 미확인<br>지도는 교관 시점의 모의 실제 위치</div>':''}`;if(panel._atMarkup!==markup||!panel.firstElementChild){panel.innerHTML=markup;panel._atMarkup=markup;}}
 function trainingWindFactor(){return scenarioState?.kind==='wind'&&!scenarioState.resolved&&!scenarioState.ended?0.6:1;}
@@ -2372,7 +2373,7 @@ const originalTick=tick;tick=function(dt){if(!flight?.active)return;let f=flight
 const originalStatus=updateStatus;updateStatus=function(){originalStatus();$('gps').textContent=connected?(gpsOK?'◉ GPS 3D FIX':'◉ GPS LOST'):'◉ GPS —';$('gps').className=connected?(gpsOK?'good':'bad'):'';updateOSD();updateScenario();};
 const originalValidate=validateImport;validateImport=function(d){originalValidate(d);if(d.plan.yawMode!==undefined&&!['waypoint','home','fixed'].includes(d.plan.yawMode))throw Error('유효하지 않은 기수 방향 설정');if(d.plan.yawFixed!==undefined&&(!Number.isFinite(d.plan.yawFixed)||d.plan.yawFixed<0||d.plan.yawFixed>359))throw Error('고정 방위각은 0~359°입니다.');};
 const originalLogDownload=downloadLog;downloadLog=function(){download('mission-training-log-v2.json',JSON.stringify({type:'QGC-Mission-Lab-training-log',version:2,date:new Date().toISOString(),mission:plan,scenario:scenarioState,flight:flight?{elapsed:flight.elapsed,outcome:flight.outcome,heading:flight.heading}:null,battery,events},null,2));};
-const originalFinish=finish;finish=function(){originalFinish();if(!flight.active&&scenarioState){$('dialogBody').insertAdjacentHTML('beforeend','<p id="scenarioResult"></p>');$('scenarioResult').textContent='비상 훈련 결과: '+scenarioText();}};
+const originalFinish=finish;finish=function(){const f=flight,wasActive=!!f?.active;if(!wasActive)return;originalFinish();if(flight===f&&!f.active&&scenarioState&&$('dialog').open&&!$('scenarioResult')){$('dialogBody').insertAdjacentHTML('beforeend','<p id="scenarioResult"></p>');$('scenarioResult').textContent='비상 훈련 결과: '+scenarioText();}};
 const originalSettings=showSettings;showSettings=function(){modal('Application Settings · 표시 설정',`<p>지도 제공자와 좌표 형식은 지도 상단에서 바로 변경할 수 있습니다.</p><button id="settingsCoordinates" class="wide">좌표 형식 · 정밀도 · 좌표 입력</button><button id="settingsOSD" class="wide">OSD 표시 항목</button><button id="settingsAbout" class="wide">데모 범위 · 출처</button><p>일반지도: OpenStreetMap. 위성영상 및 지명: Esri World Imagery / Reference. Google 지도는 포함하지 않았습니다.</p>`);$('settingsCoordinates').onclick=coordinateDialog;$('settingsOSD').onclick=osdSettings;$('settingsAbout').onclick=showAbout;};
 const oldAbout=showAbout;showAbout=function(){oldAbout();$('dialogBody').insertAdjacentHTML('beforeend',`<h3>0.2 업데이트</h3><p>기수 방향 3종, 사용자 설정 OSD, DMS/UTM/MGRS 좌표 입력·이동, 표시 정밀도와 좌표 격자, 위성/혼합지도, 비상상황 7종과 예약 발생을 지원합니다.</p><p>GPS 상실 시 하강은 물리적 드리프트를 계산하지 않는 절차 훈련입니다. 강풍은 수평속도를 정상 설정의 60%로 제한하는 교육용 모델입니다. 장애물은 경고 및 설정된 거리 제한 동작을 훈련하며 실제 바람/충돌 물리 모델이 아닙니다. UTM/MGRS 격자는 현재 지도 중심의 UTM 존 기준입니다. 넓은 범위에서는 표시하지 않습니다.</p><p><a href="https://github.com/PX4/PX4-Autopilot/blob/main/src/modules/mc_pos_control/multicopter_autonomous_params.yaml" target="_blank" rel="noopener">PX4 기수 방향 참고</a> · <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer" target="_blank" rel="noopener">Esri 영상 출처</a></p>`);};$('help').onclick=()=>showAbout();
 const originalArm=arm;arm=function(){if(!rcOK)return reject('RC 조종 링크를 복구한 후 시동하세요.');originalArm();};$('arm').onclick=()=>arm();
@@ -9465,11 +9466,17 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
 
   // Rev.AG: current-flight education evidence, simulation only.
   let coursePartialMission=false,courseUserReturn=null,courseExamBaseline=null,courseLastExam=null;
+  // Rev.BG: bind assessment evidence to the exact simulated flight, not global flags.
+  const bgEvidence=new WeakMap();
+  function bgRecord(f,key){if(!f||typeof f!=='object')return;let set=bgEvidence.get(f);if(!set){set=new Set();bgEvidence.set(f,set);}set.add(key);}
+  function bgHas(f,key){return !!(f&&bgEvidence.get(f)?.has(key));}
+  function bgRouteComplete(f){if(!f||f.guided||f.outcome!=='임무 완료'||!Number.isFinite(f.s)||!Number.isFinite(f.total)||f.total<=0||f.s<f.total-.01||!Array.isArray(f.plan?.points)||f.plan.points.length<2||!(f.passed instanceof Set)||f.passed.size!==f.plan.points.length-1)return false;return f.plan.points.slice(1).every((_,i)=>f.passed.has(i+1));}
+  function bgEvaluate(f,baseline,landed){const current=!!f&&f!==baseline,done=!!(current&&landed),route=done&&bgRouteComplete(f),post=done&&bgHas(f,'postflight'),logs=done&&bgHas(f,'logs');return {landed:done,route,post,logs,passed:!!(route&&post&&logs)};}
   lab.courseDone=bdProgress(lab.courseDone,lessons.length);
   // Rev.BE: normalize persisted unit credit at each write, not just at initialization.
   const beSaveProgress=saveProgress;
   saveProgress=function(){lab.courseDone=bdProgress(lab.courseDone,lessons.length);return beSaveProgress();};
-  function courseInterventionComplete(){return !!flight&&!flight.guided&&!!lab.marks['course:paused']&&!!lab.marks.resumed&&courseUserReturn===flight;}
+  function courseInterventionComplete(){return !!flight&&!flight.guided&&bgHas(flight,'course:paused')&&bgHas(flight,'resumed')&&courseUserReturn===flight;}
   const agRtl=rtlNow;
   rtlNow=function(reason='사용자 RTL'){
     const f=flight,previous=f?.mode;
@@ -9479,11 +9486,7 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
   };
   function agLanded(){return !!flight&&complete&&!armed&&!flight.active;}
   function agExamResult(){
-    const f=flight, current=!!f&&f!==courseExamBaseline;
-    const landed=current&&agLanded();
-    const route=!!(landed&&!f.guided&&f.outcome==='임무 완료'&&Number.isFinite(f.s)&&Number.isFinite(f.total)&&f.s>=f.total-.01&&f.passed?.size===f.plan.points.length-1);
-    const post=!!(landed&&lab.marks.postflight),logs=!!(landed&&lab.marks.logs);
-    return {landed:!!landed,route,post,logs,passed:!!(route&&post&&logs)};
+    return bgEvaluate(flight,courseExamBaseline,agLanded());
   }
   function agExamText(r){return r.passed?'통과 · 전체 경로, 착륙, 임무 처리 및 기록 저장 요청 완료':!r.landed?'진행 중 · 이번 종합실습 비행을 완료하세요.':!r.route?'미통과 · 전체 임무 경로를 정상 완료하지 않았습니다.':`비행 통과 · 후처리 ${r.post?'완료':'대기'} / 기록 저장 ${r.logs?'완료':'대기'}`;}
   function agPaintExam(){
@@ -9495,6 +9498,9 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
   const agMark=mark;
   mark=function(k){
     if((k==='logs'||k==='postflight')&&!agLanded())return;
+    if(k==='logs'||k==='postflight')bgRecord(flight,k);
+    if(k==='course:paused'&&flight?.active&&flight.mode==='HOLD')bgRecord(flight,k);
+    if(k==='resumed'&&flight?.active&&flight.mode==='MISSION')bgRecord(flight,k);
     const v=agMark(k);agPaintExam();return v;
   };
   const agResetSamples=resetSampleFlight;
@@ -9533,7 +9539,7 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
     const modes=document.createElement('section');modes.className='config-card';modes.id='bdCourseModes';
     modes.innerHTML='<h3>실습 방식 선택</h3><p class="micro">처음부터 배우기와 개별 단원 시작은 가상 실습 상태를 새로 준비합니다. 기존 진행 중인 교육을 유지하려면 현재 실습으로 돌아가기를 선택하세요.</p><div class="course-actions"><button type="button" id="bdCurrentQuick">현재 계획 빠른 실습</button><button type="button" id="bdMobileHelp">모바일 조작 안내</button></div><p class="micro">빠른 실습은 정규 단원 이수와 별도입니다. 착륙 후에는 같은 임무 다시 비행 기능을 이용할 수 있습니다.</p>';
     section.after(modes);
-    const releaseNote=document.createElement('p');releaseNote.className='micro';releaseNote.id='beReleaseStatus';releaseNote.textContent='Rev.BF 검토본 · 교육용 웹 모델. 실제 브라우저 종단시험·휴대폰 연결 검증·외부 3D 엔진·정밀 비행동역학 엔진 통합은 미완료입니다. 지도·고도·휴대폰 중계는 외부 서비스에 의존합니다. 운영 배포 승인 전 검토용입니다.';modes.append(releaseNote);
+    const releaseNote=document.createElement('p');releaseNote.className='micro';releaseNote.id='beReleaseStatus';releaseNote.textContent='Rev.BG 검토본 · 교육용 웹 모델. 실제 브라우저 종단시험·휴대폰 연결 검증·외부 3D 엔진·정밀 비행동역학 엔진 통합은 미완료입니다. 지도·고도·휴대폰 중계는 외부 서비스에 의존합니다. 운영 배포 승인 전 검토용입니다.';modes.append(releaseNote);
     $('bdCurrentQuick').onclick=()=>{if(armed||flight?.active)return toast('현재 가상 비행 종료 후 선택하세요.');prepareQuickPractice(true);};
     $('bdMobileHelp').onclick=()=>modal('모바일 조작 안내','<p>상단 창 배치를 켜고 창 내부를 드래그하여 이동하거나 우하단을 드래그하여 크기를 변경합니다. 배치 편집을 끝낸 후 가상 조종을 사용하세요.</p><p>가로·세로 전환 시 저장된 창 위치와 크기를 화면에 맞춰 복원합니다. 명령 확인은 슬라이더를 끝까지 밀어 놓는 방식입니다.</p><p>휴대폰 실제 연결은 별도 검증 대상입니다. 본 교육 화면은 실제 기체를 제어하지 않습니다.</p>');
   };
