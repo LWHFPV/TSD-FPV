@@ -69,8 +69,9 @@ jobs:
           };
           function equivalentOutsideReviewedHeader(file,before,after){
             const edits=approvedHeaderEdits[file]||[];
-            let expected=JSON.stringify(before);
-            if(!edits.length)return expected===JSON.stringify(after);
+            const expected=JSON.stringify(before);
+            if(expected===JSON.stringify(after))return true;
+            if(!edits.length)return false;
             const copy=[...before];
             for(const [oldText,newText] of edits){
               const indices=copy.map((s,i)=>s.includes(oldText)?i:-1).filter(i=>i>=0);
