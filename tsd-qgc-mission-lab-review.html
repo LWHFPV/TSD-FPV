@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.AR 검토본</title><style>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.AS 검토본</title><style>
 /* required styles */
 
 .leaflet-pane,
@@ -4845,23 +4845,46 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
       confirmAction('QGC .plan으로 저장 · 교육용 변환','실기체 비행용으로 검증되지 않았습니다. QGC에서 모든 명령·고도·기체 설정을 별도 검토하세요.'+(omitted.length?' 이 파일에서 제외되는 TSD 항목 · '+omitted.join(', '):''),exportFile);
     };
   };
+  function asProjectScene(input,options={}){
+ const pts=Array.isArray(input?.points)?input.points.filter(p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lng)):[];if(!pts.length)return null;
+ const anchor=pts[0],base=Number.isFinite(input.base)?input.base:0;
+ const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));const rad=Math.PI/180;
+ const angle=clamp(Number.isFinite(options.angle)?options.angle:-28,-180,180)*rad,elev=clamp(Number.isFinite(options.elev)?options.elev:35,10,85)*rad,zoom=clamp(Number.isFinite(options.zoom)?options.zoom:1,.5,2);
+ const local=p=>({x:(p.lng-anchor.lng)*111320*Math.cos(anchor.lat*rad),y:(p.lat-anchor.lat)*111320});
+ const ext=pts.map(local);let minX=Math.min(0,...ext.map(p=>p.x)),maxX=Math.max(0,...ext.map(p=>p.x)),minY=Math.min(0,...ext.map(p=>p.y)),maxY=Math.max(0,...ext.map(p=>p.y));
+ const cx=(maxX+minX)/2,cy=(maxY+minY)/2;
+ const heights=pts.flatMap(p=>[p.z,p.ground]).filter(Number.isFinite);
+ const range=Math.max(25,maxX-minX,maxY-minY,...heights.map(z=>Math.abs(z-base)));
+ const scale=145/range*zoom,grid=Math.max(10,10**Math.floor(Math.log10(range/4)));
+ const pos=(p,z)=>{if(!Number.isFinite(z))return null;const v=local(p),x=v.x-cx,y=v.y-cy,u=x*Math.cos(angle)-y*Math.sin(angle),w=x*Math.sin(angle)+y*Math.cos(angle);return [320+u*scale,202+(w*Math.sin(elev)-(z-base)*Math.cos(elev))*scale];};
+ const XY=(x,y)=>({lat:anchor.lat+y/111320,lng:anchor.lng+x/(111320*Math.max(.01,Math.cos(anchor.lat*rad)))});
+ const extent=Math.ceil(range*.65/grid)*grid;const gridLines=[];
+ for(let i=-extent;i<=extent+.01;i+=grid){gridLines.push([pos(XY(cx+i,cy-extent),base),pos(XY(cx+i,cy+extent),base)],[pos(XY(cx-extent,cy+i),base),pos(XY(cx+extent,cy+i),base)]);}
+ const paths=key=>{let groups=[],g=[];for(const p of pts){const q=pos(p,p[key]);if(q)g.push(q);else if(g.length){groups.push(g);g=[];}}if(g.length)groups.push(g);return groups;};
+ const posts=pts.filter((p,i)=>i%Math.max(1,Math.ceil(pts.length/30))===0&&Number.isFinite(p.ground)&&Number.isFinite(p.z)).map(p=>[pos(p,p.ground),pos(p,p.z)]);
+ const waypoints=(input.waypoints||[]).map((p,i)=>{let nearest=null,best=Infinity;for(const q of pts){const d=Math.hypot(q.lat-p.lat,q.lng-p.lng);if(d<best&&Number.isFinite(q.z)){nearest=q;best=d;}}return nearest?{i,point:pos(p,nearest.z)}:null;}).filter(Boolean);
+ const aircraft=input.aircraft&&Number.isFinite(input.aircraft.lat)&&Number.isFinite(input.aircraft.lng)&&Number.isFinite(input.aircraft.z)?pos(input.aircraft,input.aircraft.z):null;
+ return {grid,gridLines,route:paths('z'),ground:paths('ground'),posts,waypoints,aircraft,hasGround:pts.some(p=>Number.isFinite(p.ground)),hasRoute:pts.some(p=>Number.isFinite(p.z))};
+}
   function show3DPractice(){
-    modal('3D 경로 미리보기',`<label>회전 <input id="rotate3D" type="range" min="-180" max="180" value="-28"></label><label>시점 높이 <input id="pitch3D" type="range" min="10" max="80" value="35"></label><div id="plot3D"></div><p class="micro">경로와 지형 고도 샘플의 공간 배치를 표시합니다. DEM이 없으면 가상 기준면을 표시합니다.</p>`);
-    const draw=()=>{
-      const start=plan.points[0],geo=heights(),pts=M.profile(plan,geo);
-      const base=geo?.[0]??0;
-      const yScale=Math.max(1,...pts.map(p=>M.distance(start,p)),...pts.map(p=>Math.abs(p.z-base)));
-      const a=+$('rotate3D').value*Math.PI/180, t=+$('pitch3D').value*Math.PI/180, factor=155/yScale;
-      function project(p,z) {
-        const y=(p.lat-start.lat)*111320,x=(p.lng-start.lng)*111320*Math.cos(start.lat*Math.PI/180);
-        const u=x*Math.cos(a)-y*Math.sin(a),v=x*Math.sin(a)+y*Math.cos(a);
-        return [305+u*factor,185+(v*Math.sin(t)-(z-base)*Math.cos(t))*factor];
-      }
-      const line=(key,color)=>`<polyline fill="none" stroke="${color}" stroke-width="2.5" points="${pts.map(p=>project(p,key==='ground'?p.ground??base:p.z)).join(' ')}"/>`;
-      $('plot3D').innerHTML=`<svg class="log-chart" viewBox="0 0 610 365" role="img" aria-label="회전 가능한 모의 3D 경로"><path d="M15 185H595M305 15V350" stroke="#7086a5" stroke-dasharray="4 7"/>${line('ground','#73d1ab')}${line('z','#82c6ff')}${plan.points.map((p,i)=>{const [x,y]=project(p,M.at(pts,pts.filter(q=>q.leg<i).at(-1)?.s||0).z);return `<circle cx="${x}" cy="${y}" r="4" fill="#ffd87a"/>`;}).join('')}<text x="15" y="24" fill="#e1f1ff" font-size="13">청색 경로 · 녹색 지형/기준면</text></svg>`;
-    };
-    $('rotate3D').oninput=$('pitch3D').oninput=draw;draw();
-  }
+ const shown=flight?.active?flight.plan:plan,profile=flight?.active?flight.profile:M.profile(shown,heights()),base=flight?.active?flight.homeZ:heights()?.[0]??shown.homeAMSL??0;
+ const input={points:profile,waypoints:shown.points,base,aircraft:flight?.active?{...flight.pos}:null};
+ modal('3D 경로 · 지형 단면',`<div class="as-3d-controls"><label>회전 <input id="rotate3D" type="range" min="-180" max="180" value="-28"></label><label>시점 <input id="pitch3D" type="range" min="10" max="85" value="35"></label><label>확대 <input id="asZoom3D" type="range" min="50" max="200" value="100"></label><button id="asReset3D">초기 시점</button></div><div id="plot3D" tabindex="0" aria-label="터치 드래그 또는 방향키로 시점 회전"></div><p class="micro" id="as3DInfo"></p><p class="micro">경로 주변 DEM 단면의 공간 투영입니다. 실제 3D 지형 메시·건물·충돌 검증이 아닙니다. 비행 중에는 창을 연 시점의 기체 위치를 표시합니다.</p>`);
+ const el=$('plot3D'),rot=$('rotate3D'),pitch=$('pitch3D'),zoom=$('asZoom3D');let scheduled=0;
+ const num=p=>p.map(v=>v.toFixed(2)).join(',');
+ const line=(p,stroke,width,other='')=>`<polyline points="${p.map(num).join(' ')}" fill="none" stroke="${stroke}" stroke-width="${width}" ${other}/>`;
+ const draw=()=>{scheduled=0;if(!el.isConnected)return;const scene=asProjectScene(input,{angle:+rot.value,elev:+pitch.value,zoom:+zoom.value/100});if(!scene){el.textContent='표시 가능한 경로 데이터가 없습니다.';return;}
+ const {gridLines,route,ground,posts,waypoints,aircraft}=scene;
+ el.innerHTML=`<svg viewBox="0 0 640 404" role="img" aria-label="임무 경로 및 지형 단면 공간 투영"><defs><linearGradient id="as3DBG" x2="0" y2="1"><stop stop-color="#172d49"/><stop offset="1" stop-color="#081522"/></linearGradient></defs><rect width="640" height="404" rx="8" fill="url(#as3DBG)"/>${gridLines.map(p=>line(p,'#607993',.8,'opacity=".45"')).join('')}${posts.map(p=>line(p,'#9eabc2',1,'stroke-dasharray="3 4" opacity=".6"')).join('')}${ground.map(p=>line(p,'#5ce0a5',2.4)).join('')}${route.map(p=>line(p,'#79c7ff',3)).join('')}${waypoints.map(({i,point:p})=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="${i?'#ffce74':'#f6f8fa'}" stroke="#1b3048"/><text x="${p[0]+8}" y="${p[1]-8}" fill="#f5f8ff" font-size="12">${i?'WP '+i:'HOME'}</text>`).join('')}${aircraft?`<circle cx="${aircraft[0]}" cy="${aircraft[1]}" r="7" fill="#fff" stroke="#46b8f6" stroke-width="3"/>`:''}<text x="14" y="22" fill="#c8d8eb" font-size="12">기준 격자 ${scene.grid} m · ${scene.hasGround?'실측 DEM 단면':'지형 미확인 · 가상 기준면'}</text><text x="14" y="390" fill="#9cd4ff" font-size="11">청색: 계획 경로  ·  녹색: 확인된 지형 단면</text></svg>`;
+ $('as3DInfo').textContent=scene.hasRoute?(scene.hasGround?'경로·확보된 DEM 샘플 표시':'상대·해발 계획 경로 표시 / DEM 미확인'):'지형 추종 경로 고도 미확정 · 먼저 지형 고도를 조회하세요.';};
+ const schedule=()=>{if(!scheduled)scheduled=requestAnimationFrame(draw);};rot.oninput=pitch.oninput=zoom.oninput=schedule;
+ $('asReset3D').onclick=()=>{rot.value=-28;pitch.value=35;zoom.value=100;schedule();};
+ let drag=null;el.addEventListener('pointerdown',e=>{if(e.button!==0||drag)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY,a:+rot.value,t:+pitch.value};el.setPointerCapture(e.pointerId);e.preventDefault();});
+ el.addEventListener('pointermove',e=>{if(drag?.id!==e.pointerId)return;rot.value=Math.max(-180,Math.min(180,drag.a+(e.clientX-drag.x)*.65));pitch.value=Math.max(10,Math.min(85,drag.t+(e.clientY-drag.y)*.5));schedule();});
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(type,e=>{if(drag?.id===e.pointerId)drag=null;});
+ el.addEventListener('keydown',e=>{const changes={ArrowLeft:[-5,0],ArrowRight:[5,0],ArrowUp:[0,5],ArrowDown:[0,-5]};if(!changes[e.key])return;e.preventDefault();const [a,b]=changes[e.key];rot.value=Math.max(-180,Math.min(180,+rot.value+a));pitch.value=Math.max(10,Math.min(85,+pitch.value+b));schedule();});
+ draw();
+}
   const analyzeBeforePractice=analyzePage;
   analyzePage=function(tab) {
     if (!['GeoTag','MAVLink Console','Vibration'].includes(tab)) {analyzeBeforePractice(tab);return;}
@@ -9410,4 +9433,4 @@ body > main .mapwrap .drone{border:1px solid #cbeaff!important;box-shadow:0 0 0 
 @media(prefers-reduced-motion:reduce){#aqTop *,#dialog .confirm .aq-slide-knob{transition:none!important;animation:none!important}}
 @media(max-width:740px){:root{--aq-top:40px;--tsd-top:90px}#aqTop button{min-height:34px;padding-inline:7px}#aqTop a{font-size:11px}#aqTop #tsdPhoneLink,#aqTop #flightVoiceToggle{min-height:34px}}
 @media(max-height:420px) and (orientation:landscape){:root{--aq-top:34px;--tsd-top:78px}#aqTop button{min-height:29px}body > main #flyTools{max-height:calc(100% - 38px)}}
-</style></body></html>
+</style><style id="as3DStyle">.as-3d-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;align-items:end;gap:8px}.as-3d-controls label{font-size:12px;min-width:0}.as-3d-controls input{display:block;width:100%;margin:4px 0}.as-3d-controls button{min-height:34px}#plot3D{touch-action:none;cursor:grab;user-select:none;border-radius:8px;overflow:hidden;min-width:0}#plot3D svg{display:block;width:100%;height:auto;max-height:52dvh}#plot3D:focus-visible{outline:2px solid #2563eb;outline-offset:2px}@media(max-width:520px){.as-3d-controls{grid-template-columns:repeat(2,minmax(0,1fr))}#plot3D svg{max-height:48dvh}}</style></body></html>
