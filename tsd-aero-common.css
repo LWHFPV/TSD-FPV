@@ -32,4 +32,4 @@
 
 /* Public EO/IR presentation: developer diagnostics not shown on normal entry. */
 .tsdEoirHero[data-tsd-common-hero] p{display:none!important}
-body:has(.tsdEoirHero) #tsdAuditOpen,body:has(.tsdEoirHero) #tsdAuditPanel{display:none!important}
+body:has(.tsdEoirHero):not(:has(#tsdAuditOpen:target)) #tsdAuditOpen,body:has(.tsdEoirHero):not(:has(#tsdAuditOpen:target)) #tsdAuditPanel{display:none!important}
