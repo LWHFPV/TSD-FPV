@@ -86,11 +86,13 @@ function themeUnlockedLab(html) {
   const headerBar=doc.querySelector('[data-tsd-common-bar]');
   if(toolbar&&lock&&headerBar){
     toolbar.append(lock);
+    lock.removeAttribute('data-tsd-common-contact');
     const nav=headerBar.querySelector('[data-tsd-common-nav]');
     const contact=[...nav.querySelectorAll('a')].find(a=>a.textContent.trim()==='문의');
     if(contact){contact.setAttribute('data-tsd-common-contact','');headerBar.append(contact);}
   }
   const lanes=doc.getElementById('lanes');
+  if(toolbar){const hint=toolbar.querySelector('small');if(hint)hint.hidden=true;}
   if(lanes){
     const picker=doc.createElement('select');
     picker.id='tsdAircraftSelect';
