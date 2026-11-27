@@ -594,10 +594,17 @@ dialog::backdrop {background:#132440ab}
   #adminBody input[type=search] { width:145px; max-width:100%; }
 }
 </style>
+<link rel="stylesheet" href="./tsd-aero-common.css">
+<style>.tsdEoirHero{padding:13px 16px}.tsdEoirHero h1{font:700 clamp(20px,3vw,28px)/1.25 system-ui;margin:0}.tsdEoirHero p{font:500 13px/1.5 system-ui;margin:4px 0 0}@media(max-width:600px){.tsdEoirHero{padding:8px 12px}.tsdEoirHero p{font-size:12px}}</style>
 </head>
 <body>
+<header data-tsd-common-header>
+ <div data-tsd-common-bar><a data-tsd-common-brand href="./index.html"><span aria-hidden="true">TSD</span> TSD Aero Systems</a><nav data-tsd-common-nav aria-label="주 메뉴"><a href="./education.html">체험교육</a><a href="./simulator.html" aria-current="page">시뮬레이터 체험</a><a href="./drone-design.html">드론설계</a><a href="./flight-safety.html">비행안전정보</a></nav><a data-tsd-common-contact href="./contact.html">문의</a></div>
+</header>
+<section data-tsd-common-hero aria-label="EO·IR 수색 훈련" class="tsdEoirHero"><h1>EO·IR 수색 훈련</h1><p>광학·열화상 카메라 및 비행 실습</p></section>
+
 <section id="admin" aria-label="시뮬레이션 설정">
- <div class="adminHead"><a class="tsdBrand" href="https://lwhfpv.github.io/TSD-FPV/" aria-label="TSD 메인 페이지">TSD</a><strong>EO·IR 수색 훈련 <span>V24.11.5</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
+ <div class="adminHead"><strong>EO·IR 수색 훈련 <span>V24.11.5</span></strong><span>훈련 통제</span><button id="tutorialOpen" type="button" aria-haspopup="dialog">튜토리얼</button><button id="adminToggle" aria-expanded="true">설정 접기</button><output id="rcTop">조종기 대기</output></div>
  <div id="adminBody">
   <div class="row">
    <label>시·도 <select id="province"></select></label>
