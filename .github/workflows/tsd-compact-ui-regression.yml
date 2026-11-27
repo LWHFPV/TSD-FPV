@@ -1,4 +1,4 @@
-name: TSD compact UI regression
+name: TSD compact UI regression and private gate checks
 on:
   push:
     branches: [review/tsd-ui-compact-qa-20261127]
@@ -24,14 +24,12 @@ jobs:
         run: |
           mkdir -p /tmp/tsd-compact-results
           git rev-parse HEAD > /tmp/tsd-compact-results/commit.txt
-          cp equipment-lab.html tsd-aero-common.css /tmp/tsd-compact-results/
+          cp tsd-aero-common.css /tmp/tsd-compact-results/
       - name: Install isolated Chromium test tools
         run: |
           npm install --no-save --ignore-scripts playwright@1.51.1
           npx playwright install chromium
       - name: Browser UI regression
-        env:
-          TSD_QA_PASSWORD: ${{ secrets.TSD_EQUIPMENT_QA_PASSWORD }}
         shell: bash
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/tsd-compact-http.log 2>&1 &
@@ -119,22 +117,7 @@ jobs:
                 }
                 if(file==='equipment-lab.html'){
                   record.checks.gateVisible=await visible(p.locator('#password'));
-                  if(process.env.TSD_QA_PASSWORD){
-                    await p.locator('#password').fill(process.env.TSD_QA_PASSWORD);
-                    await p.locator('#enter').click();
-                    const f=p.frameLocator('iframe[title="TSD 장비 연결 연구실"]');
-                    await f.locator('#tsdAircraftSelect').waitFor({state:'visible',timeout:20000});
-                    record.checks.outerHeaderHidden=!(await visible(p.locator('#gateNav')));
-                    record.checks.singleHeader=await f.locator('[data-tsd-common-header]:visible').count()===1;
-                    record.checks.all8Options=await f.locator('#tsdAircraftSelect option').count()===8;
-                    record.checks.oneLane=await f.locator('#lanes>.lane:visible').count()===1;
-                    const old=await f.locator('#lanes>.lane[data-row="0"] select').first().inputValue();
-                    await f.locator('#tsdAircraftSelect').selectOption('7');
-                    record.checks.eighthVisible=await visible(f.locator('#lanes>.lane[data-row="7"]'))&&await f.locator('#lanes>.lane:visible').count()===1;
-                    await f.locator('#tsdAircraftSelect').selectOption('0');
-                    record.checks.firstPreserved=await f.locator('#lanes>.lane[data-row="0"] select').first().inputValue()===old;
-                    record.checks.relockAvailable=await visible(f.locator('#lock'));
-                  }else record.protectedTest='NOT_RUN_SECRET_MISSING';
+                  record.protectedTest='SEPARATE_NO_ARTIFACT_JOB';
                 }
                 await p.screenshot({path:dir+'/'+file+'-'+width+'.png',fullPage:false,timeout:12000});
               }catch(e){record.failure=String(e).slice(0,500);}
@@ -147,7 +130,7 @@ jobs:
           await browser.close();
           fs.writeFileSync(dir+'/results.json',JSON.stringify(results,null,2));
           console.log('COMPACT_SUMMARY '+JSON.stringify({passed:results.filter(x=>x.pass).length,total:results.length,protectedFull:results.filter(x=>x.file==='equipment-lab.html'&&x.checks.oneLane&&x.pass).length}));
-          if(results.some(r=>!r.pass)||results.some(r=>r.protectedTest))process.exitCode=1;
+          if(results.some(r=>!r.pass))process.exitCode=1;
           JS
       - uses: actions/upload-artifact@v4
         if: always()
@@ -155,3 +138,74 @@ jobs:
           name: tsd-compact-results
           path: /tmp/tsd-compact-results
           retention-days: 7
+  private-gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0d577e95c4f978193ab039044b03468d16d2d416
+          persist-credentials: false
+          lfs: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser tools
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.51.1
+          npx playwright install --with-deps chromium
+      - name: Authorized gate checks (boolean outcomes only; no screenshots or artifacts)
+        env:
+          TSD_QA_PASSWORD: ${{ secrets.TSD_EQUIPMENT_QA_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$TSD_QA_PASSWORD" ]; then
+            echo 'GATE_POSITIVE NOT_RUN_SECRET_MISSING'
+            exit 1
+          fi
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/tsd-private-http.log 2>&1 &
+          node --input-type=module <<'JS'
+          import {chromium} from 'playwright';
+          const browser=await chromium.launch({headless:true});
+          const root='http://127.0.0.1:8765/';
+          let passed=0;
+          try{
+            for(const width of [1440,768,390,320]){
+              const ctx=await browser.newContext({viewport:{width,height:900},hasTouch:width<=600,serviceWorkers:'block'});
+              await ctx.route('**/*',r=>r.request().url().startsWith(root)?r.continue():r.abort());
+              const p=await ctx.newPage();
+              const checks={};
+              try{
+                await p.goto(root+'equipment-lab.html',{waitUntil:'domcontentloaded',timeout:45000});
+                await p.locator('#password').fill(process.env.TSD_QA_PASSWORD);
+                await p.locator('#enter').click();
+                const f=p.frameLocator('iframe[title="TSD 장비 연결 연구실"]');
+                const select=f.locator('#tsdAircraftSelect');
+                await select.waitFor({state:'visible',timeout:25000});
+                checks.authenticated=true;
+                checks.outerHeaderHidden=!(await p.locator('#gateNav').isVisible());
+                checks.singleHeader=await f.locator('[data-tsd-common-header]:visible').count()===1;
+                checks.all8Options=await select.locator('option').count()===8;
+                const first=f.locator('#lanes>.lane[data-row="0"] select').first();
+                const initial=await first.inputValue();
+                checks.all8SingleLane=true;
+                for(let i=0;i<8;i++){
+                  await select.selectOption(String(i));
+                  if(await f.locator('#lanes>.lane:visible').count()!==1||!(await f.locator('#lanes>.lane[data-row="'+i+'"]').isVisible()))checks.all8SingleLane=false;
+                }
+                await select.selectOption('0');
+                checks.firstPreserved=await first.inputValue()===initial;
+                await f.locator('#lock').click();
+                await p.locator('#password').waitFor({state:'visible',timeout:20000});
+                checks.relocked=await p.locator('iframe[title="TSD 장비 연결 연구실"]').count()===0;
+              }catch{checks.completed=false;}
+              const pass=Object.values(checks).length===7&&Object.values(checks).every(Boolean);
+              if(pass)passed++;
+              console.log('PRIVATE_GATE_RESULT '+JSON.stringify({width,checks,pass}));
+              await ctx.close();
+            }
+          }finally{await browser.close();}
+          console.log('PRIVATE_GATE_SUMMARY '+JSON.stringify({passed,total:4}));
+          if(passed!==4)process.exitCode=1;
+          JS
