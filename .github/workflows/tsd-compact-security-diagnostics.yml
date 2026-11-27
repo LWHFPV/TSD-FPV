@@ -51,7 +51,8 @@ jobs:
                   result.gateBefore=await p.locator('#password').isVisible();
                   await p.locator('#password').fill('invalid-qa-'+randomUUID());
                   await p.locator('#enter').tap();
-                  await p.waitForFunction(()=>!document.getElementById('enter').disabled && document.getElementById('error').textContent.includes('비밀번호가 올바르지'),{},{timeout:25000});
+                  await p.locator('#error').filter({hasText:'비밀번호가 올바르지'}).waitFor({state:'visible',timeout:25000});
+                  await p.locator('#enter:not([disabled])').waitFor({state:'visible',timeout:25000});
                   result.invalidRejected=await p.locator('#password').isVisible()&&await p.locator('iframe[title="TSD 장비 연결 연구실"]').count()===0;
                   result.pass=result.http===200&&result.secureContext&&result.gateBefore&&result.invalidRejected;
                 }catch(e){result.pass=false;result.error=String(e).slice(0,250);}
