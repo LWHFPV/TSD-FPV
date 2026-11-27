@@ -468,17 +468,30 @@ footer.footer{display:none !important;}
 })();
 </script>
 <link rel="stylesheet" href="./tsd-aero-common.css">
+<style id="tsd-compact-ui-20261127">
+[data-tsd-common-hero][data-tsd-common-hero] .hero-grid{position:relative!important;display:block!important;width:100%!important;max-width:none!important;padding:0 12px!important;margin:0!important;text-align:center!important}
+[data-tsd-common-hero] .hero-grid>div:first-child{margin:auto;text-align:center!important}
+[data-tsd-common-hero] .hero-grid .eyebrow{margin:0 0 3px!important;text-align:center!important}
+[data-tsd-common-hero] #clock{position:absolute;right:clamp(12px,5vw,90px);top:4px;font-size:11px}
+[data-tsd-common-hero] .tsd-hero-application{margin:7px auto 0!important;padding:0 12px!important;max-width:1240px}
+[data-tsd-common-hero] .tsd-application-inline{padding:0!important;margin:0!important}
+#tsdApiConfig,#tsdAgencyMethod{display:none!important}
+#location-search .locator-grid{align-items:center!important;gap:7px!important;padding-block:0!important}
+#location-search .locator-grid>label{margin:0!important;padding:0!important}
+#location-search .locator-grid select{margin:0!important}
+@media(max-width:900px){[data-tsd-common-hero] #clock{position:static!important;margin:4px auto 0!important}}
+</style>
 </head>
 <body>
 <header class="header" data-tsd-common-header><div class="container headrow" data-tsd-common-bar><a class="brand" data-tsd-common-brand href="./index.html"><span class="logo">TSD</span>TSD Aero Systems</a><nav data-tsd-common-nav aria-label="주 메뉴"><a href="./education.html">체험교육</a><a href="./simulator.html#technology">시뮬레이터 체험</a><a href="./drone-design.html">드론설계</a><a href="./flight-safety.html" aria-current="page">비행안전정보</a></nav><a data-tsd-common-contact href="./contact.html">문의</a></div></header>
 
-<section class="hero" data-tsd-common-hero><div class="container hero-grid"><div><div class="eyebrow">TSD FLIGHT SAFETY CENTER · BETA 2.9.4</div><h1>TSD 통합 비행안전정보</h1></div><div><div class="clock" id="clock">한국시간 기준 · --</div></div></div><div class="tsd-hero-application"><section aria-label="공식 신청·민원" class="tsd-application-inline" id="application-section"><h3>공식 신청·민원</h3><div class="linklist"><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/flight/register" rel="noopener noreferrer" target="_blank">비행승인 신청 <em>↗</em></a><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/aerophotos/register" rel="noopener noreferrer" target="_blank">항공촬영 신청 <em>↗</em></a><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/flightphotos/registerF" rel="noopener noreferrer" target="_blank">비행·촬영 원스톱 신청 <em>↗</em></a></div><p class="asideNote">원스톱 신청은 비행승인·항공촬영을 함께 접수하는 공식 메뉴입니다. 필요한 심사와 승인은 각각 진행되며 TSD가 대신 제출하지 않습니다.</p></section></div></section>
+<section class="hero" data-tsd-common-hero><div class="container hero-grid"><div><div class="eyebrow">TSD FLIGHT SAFETY CENTER · BETA 2.9.4</div><h1>TSD 통합 비행안전정보</h1></div><div><div class="clock" id="clock">한국시간 기준 · --</div></div></div><div class="tsd-hero-application"><section aria-label="공식 신청·민원" class="tsd-application-inline" id="application-section"><div class="linklist"><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/flight/register" rel="noopener noreferrer" target="_blank">비행승인 신청 <em>↗</em></a><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/aerophotos/register" rel="noopener noreferrer" target="_blank">항공촬영 신청 <em>↗</em></a><a class="quicklink" href="https://drone.onestop.go.kr/civilappeal/flightphotos/registerF" rel="noopener noreferrer" target="_blank">비행·촬영 원스톱 신청 <em>↗</em></a></div><p class="asideNote">원스톱 신청은 비행승인·항공촬영을 함께 접수하는 공식 메뉴입니다. 필요한 심사와 승인은 각각 진행되며 TSD가 대신 제출하지 않습니다.</p></section></div></section>
 <section aria-labelledby="locator-title" class="container panel locator" id="location-search">
 <div class="locator-head"><h2 id="locator-title">⌖ 지역 이동 · 전국 지명 검색</h2><small>지역 선택·주소·좌표 검색</small></div>
 <div aria-label="행정구역 3단계 선택" class="locator-grid" role="group">
-<label for="locProvince">시·도<select id="locProvince"><option value="">시·도 선택</option></select></label>
-<label for="locDistrict">시·군·구<select disabled="" id="locDistrict"><option value="">시·군·구 선택</option></select></label>
-<label for="locTown">읍·면·동<select disabled="" id="locTown"><option value="">읍·면·동 선택</option></select></label>
+<label for="locProvince"><select aria-label="시·도" id="locProvince"><option value="">시·도 선택</option></select></label>
+<label for="locDistrict"><select aria-label="시·군·구" disabled="" id="locDistrict"><option value="">시·군·구 선택</option></select></label>
+<label for="locTown"><select aria-label="읍·면·동" disabled="" id="locTown"><option value="">읍·면·동 선택</option></select></label>
 <div class="tsd-region-controls"><button class="btn primary" id="locRegionGo" type="button">선택 지역으로 이동</button><label class="tsd-agency-select-label" for="tsdAgencySelect"><span class="tsd-agency-select-caption">관할 지방항공청</span><select id="tsdAgencySelect" aria-label="관할 지방항공청 직접 선택"><option value="">지역 선택 또는 지도 클릭 후 확인</option><option value="seoul">서울지방항공청</option><option value="busan">부산지방항공청</option><option value="jeju">제주지방항공청</option></select></label><button class="btn tsd-agency-button" id="tsdAgencyTrigger" type="button" disabled aria-haspopup="dialog" aria-controls="tsdAgencyDialog">연락처 보기</button><span class="tsd-agency-method" id="tsdAgencyMethod" aria-live="polite">위치를 지정하면 관할을 확인합니다. 직접 선택도 가능합니다.</span></div>
 </div>
 <form class="loc-form" id="locSearchForm" role="search">
