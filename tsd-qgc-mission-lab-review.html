@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BA 검토본</title><style>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BB 검토본</title><style>
 /* required styles */
 
 .leaflet-pane,
@@ -9505,24 +9505,34 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
  top.append($('flightVoiceToggle'),$('tsdPhoneLink'));
  const edit=add('aqLayout','창 배치','settings',()=>{if(flight?.manualStick||qyGrant)return toast('가상 조종 또는 휴대폰 조종 권한을 종료한 뒤 배치를 변경하세요.');document.body.classList.toggle('aq-edit');edit.setAttribute('aria-pressed',String(document.body.classList.contains('aq-edit')));});
  edit.setAttribute('aria-pressed','false');
+ // Rev.BB: viewport-relative panel layout only; does not change virtual control inputs.
+ function bbFitPanel(v,b,id){
+   if(!v||!b||![v.x,v.y,v.w,v.h,b.width,b.height].every(Number.isFinite)||v.w<=0||v.h<=0||b.width<=0||b.height<=0)return null;
+   const fixed=id==='tsdManualPanel'||id==='tutorial',floor=fixed?Math.min(92,b.height/3):0;
+   const clamp=(n,min,max)=>Math.min(Math.max(n,min),Math.max(min,max));
+   const sx=Number.isFinite(v.bw)&&v.bw>0?b.width/v.bw:1,sy=Number.isFinite(v.bh)&&v.bh>0?b.height/v.bh:1;
+   const w=clamp(v.w*sx,Math.min(id==='tsdManualPanel'?300:96,b.width),b.width);
+   const h=clamp(v.h*sy,Math.min(id==='tsdManualPanel'?190:64,b.height-floor),b.height-floor);
+   return {x:clamp(v.x*sx,0,b.width-w),y:clamp(v.y*sy,floor,b.height-h),w,h};
+ }
  const key='tsd-qgc-aq-layout-v1';let saved={};try{const v=JSON.parse(localStorage.getItem(key)||'{}');if(v&&typeof v==='object'&&!Array.isArray(v))saved=v;}catch{}
  const targets=['instrument','osdPanel','videoPip','tsdManualPanel','tutorial'];
- const leaveEdit=()=>{document.body.classList.remove('aq-edit');edit.setAttribute('aria-pressed','false');};
+ const cancelGestures=[];const leaveEdit=()=>{for(const cancel of cancelGestures)cancel();document.body.classList.remove('aq-edit');edit.setAttribute('aria-pressed','false');};
  for(const id of ['tsdManualEnable','qyApprove'])$(id)?.addEventListener('click',leaveEdit,true);
  const clamp=(n,min,max)=>Math.min(Math.max(n,min),Math.max(min,max));
  function store(){try{localStorage.setItem(key,JSON.stringify(saved));}catch{}}
  function bounds(el){return el.id==='tsdManualPanel'||el.id==='tutorial'?{left:0,top:0,width:innerWidth,height:innerHeight}:el.offsetParent?.getBoundingClientRect()||{left:0,top:0,width:innerWidth,height:innerHeight};}
- function place(el,v){if(!v||![v.x,v.y,v.w,v.h].every(Number.isFinite)||el.hidden||el.classList.contains('hidden'))return;const b=bounds(el);if(!b.width||!b.height)return;const fixed=el.id==='tsdManualPanel'||el.id==='tutorial',floor=fixed?Math.min(92,b.height/3):0;const minW=el.id==='tsdManualPanel'?Math.min(300,b.width):Math.min(96,b.width),minH=el.id==='tsdManualPanel'?Math.min(190,b.height-floor):Math.min(64,b.height-floor);const w=clamp(v.w,minW,b.width),h=clamp(v.h,minH,b.height-floor);Object.assign(el.style,{right:'auto',bottom:'auto',left:clamp(v.x,0,b.width-w)+'px',top:clamp(v.y,floor,b.height-h)+'px',width:w+'px',height:h+'px',transform:'none',maxWidth:'100%',maxHeight:'100%'});if(el.id==='videoPip'&&(el.offsetWidth!==el._aqLastW||el.offsetHeight!==el._aqLastH)){el._aqLastW=el.offsetWidth;el._aqLastH=el.offsetHeight;cameraMap.invalidateSize({pan:false});}if(el.id==='tsdManualPanel')el.style.setProperty('--ar-pad',Math.floor(Math.min(w*.31,Math.max(66,(h-112)*.65),144))+'px');}
+ function place(el,v){if(el.hidden||el.classList.contains('hidden'))return;const b=bounds(el),p=bbFitPanel(v,b,el.id);if(!p)return;const {x,y,w,h}=p;Object.assign(el.style,{right:'auto',bottom:'auto',left:x+'px',top:y+'px',width:w+'px',height:h+'px',transform:'none',maxWidth:'100%',maxHeight:'100%'});if(el.id==='videoPip'&&(el.offsetWidth!==el._aqLastW||el.offsetHeight!==el._aqLastH)){el._aqLastW=el.offsetWidth;el._aqLastH=el.offsetHeight;cameraMap.invalidateSize({pan:false});}if(el.id==='tsdManualPanel')el.style.setProperty('--ar-pad',Math.floor(Math.min(w*.31,Math.max(66,(h-112)*.65),144))+'px');}
  add('aqResetLayout','배치 초기화','settings',()=>{for(const id of targets){const el=$(id);if(!el)continue;for(const prop of ['right','bottom','left','top','width','height','transform','maxWidth','maxHeight'])el.style.removeProperty(prop.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()));}$('tsdManualPanel').style.removeProperty('--ar-pad');saved={};store();hudKey='';hudLast=0;drawInstrument();cameraMap.invalidateSize({pan:false});});
  $('tsdToolbar').before(top);
- for(const id of targets){const el=$(id);if(!el)continue;el.dataset.aqPanel='1';let gesture=null;
- el.addEventListener('pointerdown',e=>{if(!document.body.classList.contains('aq-edit')||flight?.manualStick||qyGrant||e.button!==0||gesture||e.target.closest('button,input,select,a'))return;const b=bounds(el),r=el.getBoundingClientRect();const dx=e.clientX-r.left,dy=e.clientY-r.top;const resizeX=dx>r.width-28,resizeY=dy>r.height-28;gesture={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:r.left-b.left,y:r.top-b.top,w:r.width,h:r.height,resizeX,resizeY};e.preventDefault();e.stopImmediatePropagation();el.setPointerCapture(e.pointerId);},true);
- el.addEventListener('pointermove',e=>{if(gesture?.id!==e.pointerId)return;e.preventDefault();e.stopImmediatePropagation();const g=gesture,dx=e.clientX-g.startX,dy=e.clientY-g.startY;const b=bounds(el);const v={x:g.x,y:g.y,w:g.w,h:g.h};if(g.resizeX||g.resizeY){if(g.resizeX)v.w=clamp(g.w+dx,96,b.width-g.x);if(g.resizeY)v.h=clamp(g.h+dy,64,b.height-g.y);}else{v.x+=dx;v.y+=dy;}place(el,v);const actual=el.getBoundingClientRect();saved[id]={x:actual.left-b.left,y:actual.top-b.top,w:actual.width,h:actual.height};},true);
+ for(const id of targets){const el=$(id);if(!el)continue;el.dataset.aqPanel='1';let gesture=null;const cancel=()=>{if(!gesture)return;const id=gesture.id;gesture=null;try{if(el.hasPointerCapture(id))el.releasePointerCapture(id);}catch{}store();};cancelGestures.push(cancel);
+ el.addEventListener('pointerdown',e=>{if(!document.body.classList.contains('aq-edit')||flight?.manualStick||qyGrant||e.button!==0||gesture||e.target.closest('button,input,select,a,textarea,label,[contenteditable]'))return;const b=bounds(el),r=el.getBoundingClientRect();const dx=e.clientX-r.left,dy=e.clientY-r.top;const resizeX=dx>r.width-28,resizeY=dy>r.height-28;gesture={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:r.left-b.left,y:r.top-b.top,w:r.width,h:r.height,resizeX,resizeY};e.preventDefault();e.stopImmediatePropagation();el.setPointerCapture(e.pointerId);},true);
+ el.addEventListener('pointermove',e=>{if(gesture?.id!==e.pointerId)return;if(!document.body.classList.contains('aq-edit')||flight?.manualStick||qyGrant){cancel();return;}e.preventDefault();e.stopImmediatePropagation();const g=gesture,dx=e.clientX-g.startX,dy=e.clientY-g.startY;const b=bounds(el);const v={x:g.x,y:g.y,w:g.w,h:g.h};if(g.resizeX||g.resizeY){if(g.resizeX)v.w=clamp(g.w+dx,96,b.width-g.x);if(g.resizeY)v.h=clamp(g.h+dy,64,b.height-g.y);}else{v.x+=dx;v.y+=dy;}place(el,v);const actual=el.getBoundingClientRect();saved[id]={x:actual.left-b.left,y:actual.top-b.top,w:actual.width,h:actual.height,bw:b.width,bh:b.height};},true);
  for(const type of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(type,e=>{if(gesture?.id!==e.pointerId)return;gesture=null;store();e.stopImmediatePropagation();},true);
- el.addEventListener('click',e=>{if(document.body.classList.contains('aq-edit')&&!e.target.closest('button,input,select,a')){e.preventDefault();e.stopImmediatePropagation();}},true);
+ el.addEventListener('click',e=>{if(document.body.classList.contains('aq-edit')&&!e.target.closest('button,input,select,a,textarea,label,[contenteditable]')){e.preventDefault();e.stopImmediatePropagation();}},true);
  const obs=new MutationObserver(()=>{if(!el.hidden&&!el.classList.contains('hidden')&&saved[id]&&!gesture)place(el,saved[id]);});obs.observe(el,{attributes:true,attributeFilter:['hidden','class']});place(el,saved[id]);
  }
- addEventListener('resize',()=>{for(const id of targets)if($(id))place($(id),saved[id]);map.invalidateSize({pan:false});});
+ let bbResizeFrame=0;addEventListener('resize',()=>{for(const cancel of cancelGestures)cancel();if(bbResizeFrame)return;bbResizeFrame=requestAnimationFrame(()=>{bbResizeFrame=0;for(const id of targets)if($(id))place($(id),saved[id]);map.invalidateSize({pan:false});});});
  const before=drawInstrument;let hudLast=0,hudKey='';drawInstrument=function(...args){const f=lastTelemetry,now=performance.now(),key=[lab.hud,view,auTelemetryKind,Math.round(f?.heading||0),Math.round((f?.speed||0)*10),Math.round((f?.vs||0)*10),Math.round(f?.turnRate||0),Math.round((azDisplay?.pitch??0)*10),Math.round((azDisplay?.roll??0)*10)].join(':');if(key===hudKey&&$('instrument').firstElementChild)return;if(hudLast&&now-hudLast<32&&$('instrument').firstElementChild&&$('instrument').dataset.auRx===auTelemetryKind)return;hudLast=now;hudKey=key;const value=before(...args);if(saved.instrument)place($('instrument'),saved.instrument);return value;};
  (function arMapStatus(){
  const node=document.createElement('output');node.id='arMapQuality';node.setAttribute('aria-label','지도 출처와 표시 축척');mapWrap.append(node);
