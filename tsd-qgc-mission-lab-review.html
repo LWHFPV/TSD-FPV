@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BC 검토본</title><style>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BD 검토본</title><style>
 /* required styles */
 
 .leaflet-pane,
@@ -8798,12 +8798,22 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
       $('courseCheckHealth').hidden=s.target!=='[data-qgc-check="gps"]'||ok;
     }
   };
+  // Rev.BD: distinguish selected-unit completion from the continuous course.
+  function bdNextUnit(index,count,continuous){
+    return Number.isInteger(index)&&Number.isInteger(count)&&index>=0&&index<count-1&&continuous===true?index+1:null;
+  }
+  function bdProgress(done,count){
+    return [...new Set((Array.isArray(done)?done:[]).filter(n=>Number.isInteger(n)&&n>=0&&n<count))].sort((a,b)=>a-b);
+  }
+  function bdCoursePosition(units,index,step){
+    return Number.isInteger(index)&&Number.isInteger(step)&&step>=0&&Array.isArray(units?.[index]?.steps)&&step<units[index].steps.length?{index,step,total:units[index].steps.length}:null;
+  }
   renderTutorial=function(){
     const l=lessons[lab.lesson],s=stageNow();
     if(!s)return;
     const panel=$('tutorial');
     panel.innerHTML=`<header><span>${lab.lesson+1} / ${lessons.length} · ${esc(l.title)}</span><button type="button" id="minimizeGuide" aria-label="안내 접기" aria-expanded="true">−</button></header>
-      <div class="tutorial-detail" id="tsdCourseStage"><progress aria-label="현재 단원의 단계" max="${l.steps.length}" value="${lab.step+1}"></progress>
+      <div class="tutorial-detail" id="tsdCourseStage"><p class="micro">${lab.all?'전체 과정 · 다음 단원으로 이어집니다':'선택 단원 · 완료 후 종료 (선행 단계는 모의 준비)'}</p><progress aria-label="현재 단원에서 확인한 이전 단계" max="${l.steps.length}" value="${lab.step}"></progress>
       <h3>${lab.step+1} / ${l.steps.length} · ${esc(s.title)}</h3>${lab.lesson===6&&coursePartialMission?'<p class="micro">임무 바로가기 · 생략된 호버 단원은 이수로 기록되지 않습니다.</p>':''}<p id="courseOtherScreen" hidden></p>
       <p id="courseMissionState" role="status" hidden></p><button type="button" id="courseMissionAction" class="primary" hidden></button>
       <dl class="tsd-course-work"><dt>누르기·조작</dt><dd>${esc(s.action)}</dd><dt>이유</dt><dd>${esc(s.meaning)}</dd><dt>완료 기준</dt><dd>${esc(s.done)}</dd></dl>
@@ -8834,19 +8844,21 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
       if(!credit)toast('일부 조작을 건너뛴 단원입니다. 전체 이수에는 반영하지 않습니다.');
       coursePartialMission=false;
       saveProgress();
-      if(lab.lesson<lessons.length-1){
-        lab.lesson++;
+      const completedTitle=l.title,wasContinuous=lab.all===true,nextUnit=bdNextUnit(lab.lesson,lessons.length,wasContinuous);
+      if(nextUnit!==null){
+        lab.lesson=nextUnit;
         lab.step=0;
         const next=stageNow();
         if(next.tab&&next.tab!==placeNow())openGuidePlace(next.tab);
         renderTutorial();
         return;
       }
-      lab.lesson=null;panel.classList.add('hidden');
+      lab.lesson=null;lab.all=false;panel.classList.add('hidden');
       document.querySelectorAll('.training-target').forEach(e=>e.classList.remove('training-target'));
       const remaining=lessons.map((unit,i)=>({title:unit.title,i})).filter(unit=>!lab.courseDone.includes(unit.i));
       const allDone=remaining.length===0;
-      modal(allDone?'교육 과정 전체 이수':'선택 교육 종료 · 미이수 단원 있음',`<p>교육 이수 ${lessons.length-remaining.length}/${lessons.length}개 단원. ${allDone?'전체 교육 이수가 기록되었습니다. 종합실습 결과는 별도로 평가합니다.':'선행 단계가 모의 준비되었거나 일부 조작을 생략한 단원은 전체 이수로 인정하지 않습니다.'}</p>${allDone?'':`<p>미이수 단원: ${remaining.map(unit=>esc(unit.title)).join(' · ')}</p>`}<button class="primary" id="returnToCourse">교육 과정 보기</button>`);
+      modal(wasContinuous?(allDone?'교육 과정 전체 이수':'연속 교육 종료 · 미이수 단원 있음'):'선택 단원 종료',`<p>${esc(completedTitle)} · ${credit?'단원 이수 기록':'일부 단계 생략 · 이수 미반영'}</p><p>누적 이수 ${lessons.length-remaining.length}/${lessons.length}개 단원. ${allDone?'전체 교육 이수가 기록되었습니다. 종합실습 결과는 별도로 평가합니다.':'선행 단계 자동 준비는 이수 기록에 포함되지 않습니다.'}</p>${allDone?'':`<p>미이수 단원: ${remaining.map(unit=>esc(unit.title)).join(' · ')}</p>`}<button class="primary" id="returnToCourse">교육 과정 보기</button> <button id="bdKeepPractice">현재 실습 유지</button>`);
+      $('bdKeepPractice').onclick=()=>$('dialog').close();
       $('returnToCourse').onclick=()=>{$('dialog').close();openCourse();};
     };
     tutorialUpdate();
@@ -9438,7 +9450,7 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
 
   // Rev.AG: current-flight education evidence, simulation only.
   let coursePartialMission=false,courseUserReturn=null,courseExamBaseline=null,courseLastExam=null;
-  lab.courseDone=lab.courseDone.filter(n=>n<lessons.length);
+  lab.courseDone=bdProgress(lab.courseDone,lessons.length);
   function courseInterventionComplete(){return !!flight&&!flight.guided&&!!lab.marks['course:paused']&&!!lab.marks.resumed&&courseUserReturn===flight;}
   const agRtl=rtlNow;
   rtlNow=function(reason='사용자 RTL'){
@@ -9495,7 +9507,16 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
     agCourse();
     const section=document.createElement('p');section.className='micro';section.id='stage6CourseProgress';
     section.textContent=`교육 이수 ${lab.courseDone.length}/${lessons.length}개 단원 · ${courseLastExam?'최근 종합실습: '+agExamText(courseLastExam):'종합실습 기록 없음 (현재 실행 세션)'}`;
-    $('courseHome').querySelector('.course-actions').after(section);
+    const actions=$('courseHome').querySelector('.course-actions');
+    actions.after(section);
+    const position=bdCoursePosition(lessons,lab.lesson,lab.step);
+    const returnButton=$('courseReturn');
+    if(position)returnButton.textContent='현재 교육 이어서 · '+(position.index+1)+'단원 '+(position.step+1)+'단계';
+    const modes=document.createElement('section');modes.className='config-card';modes.id='bdCourseModes';
+    modes.innerHTML='<h3>실습 방식 선택</h3><p class="micro">처음부터 배우기와 개별 단원 시작은 가상 실습 상태를 새로 준비합니다. 기존 진행 중인 교육을 유지하려면 현재 실습으로 돌아가기를 선택하세요.</p><div class="course-actions"><button type="button" id="bdCurrentQuick">현재 계획 빠른 실습</button><button type="button" id="bdMobileHelp">모바일 조작 안내</button></div><p class="micro">빠른 실습은 정규 단원 이수와 별도입니다. 착륙 후에는 같은 임무 다시 비행 기능을 이용할 수 있습니다.</p>';
+    section.after(modes);
+    $('bdCurrentQuick').onclick=()=>{if(armed||flight?.active)return toast('현재 가상 비행 종료 후 선택하세요.');prepareQuickPractice(true);};
+    $('bdMobileHelp').onclick=()=>modal('모바일 조작 안내','<p>상단 창 배치를 켜고 창 내부를 드래그하여 이동하거나 우하단을 드래그하여 크기를 변경합니다. 배치 편집을 끝낸 후 가상 조종을 사용하세요.</p><p>가로·세로 전환 시 저장된 창 위치와 크기를 화면에 맞춰 복원합니다. 명령 확인은 슬라이더를 끝까지 밀어 놓는 방식입니다.</p><p>휴대폰 실제 연결은 별도 검증 대상입니다. 본 교육 화면은 실제 기체를 제어하지 않습니다.</p>');
   };
 
   (function aqInstall(){
