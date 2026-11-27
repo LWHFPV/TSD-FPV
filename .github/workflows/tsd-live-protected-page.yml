@@ -14,6 +14,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          lfs: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -29,13 +33,16 @@ jobs:
           TSD_QA_PASSWORD: ${{ secrets.TSD_EQUIPMENT_QA_PASSWORD }}
         shell: bash
         run: |
+          export TSD_EXPECTED_BLOB="$(git rev-parse HEAD:equipment-lab.html)"
+          export TSD_CHECKED_MAIN="$(git rev-parse HEAD)"
           cd "$RUNNER_TEMP/tsd-live-protected"
           node --input-type=module <<'JS'
           import { chromium } from 'playwright';
           import { createHash } from 'node:crypto';
           const url='https://lwhfpv.github.io/TSD-FPV/equipment-lab.html';
           const password=process.env.TSD_QA_PASSWORD;
-          const expectedBlob='f4cf3cd54b86ee259bedc3cb539411aff5372a00';
+          const expectedBlob=process.env.TSD_EXPECTED_BLOB;
+          const checkedMain=process.env.TSD_CHECKED_MAIN;
           const browser=await chromium.launch({headless:true});
           const records=[];
           let step='initialization';
@@ -53,7 +60,7 @@ jobs:
                 step='wrong password rejected';
                 await p.locator('#password').fill('TSD-QA-INVALID-PASSWORD');
                 await p.locator('#enter').click();
-                await p.waitForFunction(()=>document.querySelector('#error').textContent.includes('올바르지'));
+                await p.waitForFunction(()=>document.querySelector('#error')?.textContent.includes('올바르지')&&document.querySelector('#enter')?.disabled===false,undefined,{timeout:20000});
                 if(await p.locator('iframe').count())throw Error('unexpected unlock');
                 if(!password){records.push({width,pass:false,negativeAuthPass:true,positiveAuth:'NOT_RUN_SECRET_MISSING'});continue;}
                 step='real password unlock';
@@ -85,10 +92,10 @@ jobs:
                 await f.locator('#lock').click();
                 await p.locator('#password').waitFor({state:'visible',timeout:20000});
                 records.push({width,pass:true,negativeAuthPass:true,positiveAuth:'PASS'});
-              }catch{records.push({width,pass:false,step});}
+              }catch(e){records.push({width,pass:false,step,errorType:e?.name??'Error'});}
               finally{await c.close();}
             }
           }finally{await browser.close();}
-          console.log(JSON.stringify({liveHTTPS:true,expectedBlob,secretConfigured:!!password,negativeAuthPassed:records.filter(x=>x.negativeAuthPass).length,records}));
+          console.log(JSON.stringify({liveHTTPS:true,checkedMain,expectedBlob,secretConfigured:!!password,negativeAuthPassed:records.filter(x=>x.negativeAuthPass).length,records}));
           if(records.length!==4||records.some(x=>!x.pass))process.exitCode=1;
           JS
