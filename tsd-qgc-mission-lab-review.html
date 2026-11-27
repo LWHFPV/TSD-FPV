@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BB 검토본</title><style>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BC 검토본</title><style>
 /* required styles */
 
 .leaflet-pane,
@@ -1318,7 +1318,14 @@ button.tsd-slot-checked { background:#e7f6eb;border-color:#68a781;color:#154b2b;
 }
 
 </style>
-<style>#courseHome [data-tsd-common-header]{display:block}#courseHome [data-tsd-common-nav]{height:auto}#courseHome [data-tsd-common-hero] .lead{color:#153b65!important}</style></head>
+<style>#courseHome [data-tsd-common-header]{display:block}#courseHome [data-tsd-common-nav]{height:auto}#courseHome [data-tsd-common-hero] .lead{color:#153b65!important}</style><!-- Rev.BC source regression record: baseline blob 6128f1ffe9afaf53f6e82cb8e5e6d792ea9d2a48.
+2026-11-27: 131/131 isolated checks passed (12 JS syntax, 2 static structure,
+21 telemetry, 13 DEM/3D, 12 aircraft, 8 HUD, 16 emergency status,
+37 layout, 10 mission math). Layout tested numerically at 7 viewport sizes.
+Only version label and this audit note changed. No browser execution,
+device connection, physical flight, graphics performance or deployment tested.
+-->
+</head>
 <body>
 <header><button id="menuButton" class="brand" aria-label="주 메뉴">Q<span>☰</span></button><nav><button data-view="fly">Fly <small>비행</small></button><button data-view="plan" class="active">Plan <small>계획</small></button></nav><div class="vehicle"><b>PX4 멀티콥터</b><span id="flightStatus">연결되지 않음</span></div><div class="health"><span id="gps">◉ GPS —</span><span id="link">▥ LINK —</span><span id="battery">▰ 100%</span></div><button id="connect" class="primary">가상 기체 연결</button></header>
 <div id="menu" class="menu hidden"><button data-view="fly">Fly · 비행 화면</button><button data-view="plan">Plan · 임무 계획</button><button data-dialog="setup">Vehicle Setup · 기체 설정</button><button data-dialog="settings">Application Settings · 앱 설정</button><button data-dialog="logs">Analyze Tools · 비행 기록</button><button data-dialog="about">도움말 · 데모 구현 범위</button></div>
