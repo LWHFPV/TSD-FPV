@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BE 검토본</title><style>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>TSD Mission Lab · QGroundControl v5.1.5 · Rev.BF 검토본</title><style>
 /* required styles */
 
 .leaflet-pane,
@@ -2193,7 +2193,9 @@ function renderChecks(){let names=['이착륙 지점·주변 사람·장애물 �
 function showView(v){view=v;editMode='';$('menu').classList.add('hidden');document.querySelectorAll('nav [data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===v));$('planPanel').classList.toggle('hidden',v!=='plan');$('flyPanel').classList.toggle('hidden',v!=='fly');$('planTools').classList.toggle('hidden',v!=='plan');$('flyTools').classList.toggle('hidden',v!=='fly');$('telemetry').classList.toggle('hidden',v!=='fly');$('mapHeading').textContent=v==='plan'?'임무 계획':'비행 모니터';render();map.invalidateSize();}
 function connect(){if(!connected){connected=true;linkOK=true;gpsOK=true;log('가상 PX4 기체 연결 · GPS 위치 확보');toast('가상 기체가 연결되었습니다. 기체 준비 상태를 확인하세요.');showSetup();}else if(armed||flight?.active){return reject('비행 중 링크 장애는 훈련 환경의 링크 끊김 버튼으로 연습하세요.');}else{connected=false;setup=false;checks.fill(false);log('가상 연결 해제');}updateStatus();}
 function updateStatus(){let mode=flight?.active?flight.mode:armed?'ARMED':complete?'COMPLETE':'STANDBY';$('flightStatus').textContent=!connected?'연결되지 않음':!linkOK?'텔레메트리 손실':mode==='STANDBY'?'시동 해제 · 가상 연결':mode;$('gps').textContent=connected?'◉ GPS 3D FIX':'◉ GPS —';$('gps').className=connected?'good':'';$('link').textContent=connected?(linkOK?'▥ LINK 100%':'▥ LINK LOST'):'▥ LINK —';$('link').className=connected?(linkOK?'good':'bad'):'';$('battery').textContent=`▰ ${Math.round(battery)}%`;$('battery').className=battery<30?'bad':'';$('connect').textContent=connected?'가상 연결됨':'가상 기체 연결';$('connect').classList.toggle('primary',!connected);$('modePill').textContent=mode;$('upload').disabled=armed||!!flight?.active;$('arm').disabled=armed||!!flight?.active;$('start').disabled=!!flight?.active;$('disarm').disabled=!armed||!!flight?.active;$('pause').disabled=!flight?.active||flight.mode!=='MISSION';$('resume').disabled=!flight?.active||flight.mode!=='HOLD';$('rtl').disabled=!flight?.active;$('land').disabled=!flight?.active;let t,desc,btn,fn;if(!connected){t='01 / 가상 기체 연결';desc='가상 PX4 기체를 연결하세요. 실제 USB나 드론은 필요하지 않습니다.';btn='가상 기체 연결';fn=connect;}else if(!setup){t='02 / 기체 준비 상태';desc='센서·조종기·비행모드·전원·안전 상태를 확인하세요. 데모 기체는 사전 설정되어 있습니다.';btn='Vehicle Setup 열기';fn=showSetup;}else if(dirty){t='03 / 임무 계획과 업로드';desc='지도와 우측 목록에서 경로를 편집하세요. 지형 추종은 고도 조회를 완료한 뒤 업로드합니다.';btn='임무 업로드';fn=upload;}else if(complete){t='08 / 비행 완료';desc='착륙과 시동 해제를 확인했습니다. 기록을 저장하거나 새 임무를 연습하세요.';btn='비행 결과 보기';fn=showComplete;}else if(!checks.every(Boolean)){t='04 / 비행 전 점검';desc='Fly 화면에서 체크리스트를 완료하세요. 시동 전에 업로드한 경로와 종료 동작을 확인합니다.';btn='Fly 화면으로';fn=()=>showView('fly');}else if(!armed&&!complete){t='05 / Arm → Start Mission';desc='시동 후 임무 시작을 별도로 확인하세요. 시동만으로는 이륙하지 않습니다.';btn='Arm · 시동';fn=arm;}else if(armed&&!flight?.active){t='06 / 임무 시작';desc='Start Mission을 확인하면 이륙 후 업로드한 경로를 따라 이동합니다.';btn='Start Mission';fn=start;}else if(flight?.active){t='07 / 비행 감시';desc='Pause는 Hold, RTL은 홈 복귀, Land는 현재 위치 착륙입니다. 배속과 장애 상황을 연습하세요.';btn='Fly 화면으로';fn=()=>showView('fly');}else{t='08 / 비행 완료';desc='착륙과 시동 해제를 확인했습니다. 기록을 저장하거나 새 임무를 연습하세요.';btn='비행 결과 보기';fn=showComplete;}$('coachTitle').textContent=t;$('coachText').textContent=desc;$('coachAction').textContent=btn;$('coachAction').onclick=fn;}
-async function loadTerrain(){if(!canEdit())return;let key=M.key(plan),sample=M.samples(plan);if(M.route(plan).some((p,i,a)=>i>0&&Math.abs(p.lng-a[i-1].lng)>180))return reject('날짜변경선 경로는 지원하지 않습니다.');if(sample.at(-1).s>10000)return reject('지형 조회는 데모 경로 10km 이내에서 가능합니다.');let id=++requestId;loading=true;renderProfile();try{let result=[];for(let i=0;i<sample.length;i+=100){let batch=sample.slice(i,i+100),url='https://api.open-meteo.com/v1/elevation?latitude='+batch.map(p=>p.lat.toFixed(7)).join(',')+'&longitude='+batch.map(p=>p.lng.toFixed(7)).join(',');let response=await fetch(url,{signal:AbortSignal.timeout(20000)});if(!response.ok)throw Error('HTTP '+response.status);let data=await response.json();if(!Array.isArray(data.elevation)||data.elevation.length!==batch.length||data.elevation.some(x=>!Number.isFinite(x)))throw Error('불완전한 고도 응답');if(id!==requestId||key!==M.key(plan))return;result.push(...data.elevation);}if(id!==requestId||key!==M.key(plan))return;terrain=result;terrainKey=key;plan.homeAMSL=result[0];terrainDate=new Date().toISOString().slice(0,10)+' 조회';dirty=true;complete=false;checks.fill(false);log('실제 지형 고도 조회 완료');toast('실제 지형 자료를 반영했습니다. 계획을 검토한 뒤 업로드하세요.');}catch(err){if(id!==requestId)return;terrainMessage='지형 확인 불가 · '+err.message+' · 다시 조회하거나 예제를 사용하세요.';toast('고도 조회 실패: '+err.message);}finally{if(id===requestId){loading=false;render();}}}
+// Rev.BF: use the widely supported AbortController instead of AbortSignal.timeout.
+async function bfFetchElevation(url,fetcher=fetch){const c=new AbortController(),timer=setTimeout(()=>c.abort(),20000);try{const response=await fetcher(url,{signal:c.signal});if(!response.ok)throw Error('HTTP '+response.status);return await response.json();}finally{clearTimeout(timer);}}
+async function loadTerrain(){if(loading||!canEdit())return;let key=M.key(plan),sample=M.samples(plan);if(M.route(plan).some((p,i,a)=>i>0&&Math.abs(p.lng-a[i-1].lng)>180))return reject('날짜변경선 경로는 지원하지 않습니다.');if(sample.at(-1).s>10000)return reject('지형 조회는 데모 경로 10km 이내에서 가능합니다.');let id=++requestId;loading=true;renderProfile();try{let result=[];for(let i=0;i<sample.length;i+=100){let batch=sample.slice(i,i+100),url='https://api.open-meteo.com/v1/elevation?latitude='+batch.map(p=>p.lat.toFixed(7)).join(',')+'&longitude='+batch.map(p=>p.lng.toFixed(7)).join(',');let data=await bfFetchElevation(url);if(!Array.isArray(data.elevation)||data.elevation.length!==batch.length||data.elevation.some(x=>!Number.isFinite(x)))throw Error('불완전한 고도 응답');if(id!==requestId||key!==M.key(plan))return;result.push(...data.elevation);}if(id!==requestId||key!==M.key(plan))return;terrain=result;terrainKey=key;plan.homeAMSL=result[0];terrainDate=new Date().toISOString().slice(0,10)+' 조회';dirty=true;complete=false;checks.fill(false);log('실제 지형 고도 조회 완료');toast('실제 지형 자료를 반영했습니다. 계획을 검토한 뒤 업로드하세요.');}catch(err){if(id!==requestId)return;terrainMessage='지형 확인 불가 · '+err.message+' · 다시 조회하거나 예제를 사용하세요.';toast('고도 조회 실패: '+err.message);}finally{if(id===requestId){loading=false;render();}}}
 function modal(title,html){pendingConfirm=null;$('dialogTitle').textContent=title;$('dialogBody').innerHTML=html;if(!$('dialog').open)$('dialog').showModal();}
 function confirmAction(title,description,action){modal(title,`<p>${description}</p><div class="confirm"><label for="confirmSlider">오른쪽 끝까지 밀어 확인하세요</label><input id="confirmSlider" type="range" min="0" max="100" value="0" aria-label="동작 확인 슬라이더"><small>키보드: 슬라이더 선택 후 End → 방향키 또는 마우스 사용</small></div>`);pendingConfirm=action;$('confirmSlider').oninput=e=>{if(+e.target.value>=98){let f=pendingConfirm;pendingConfirm=null;$('dialog').close();if(f)f();}};}
 function showSetup(){modal('Vehicle Setup · 가상 기체 준비',`<div class="dialog-grid"><div class="setupnav">${['Summary','Firmware','Airframe','Sensors','Radio','Flight Modes','Power','Safety'].map(n=>`<button data-setup="${n}">${n}</button>`).join('')}</div><div id="setupDetail"></div></div><button id="setupDone" class="primary wide">준비 상태 확인 완료</button>`);const contents={Summary:'가상 PX4 멀티콥터 · 시뮬레이션 연결입니다. 물리 기체의 설정·보정 결과를 나타내지 않습니다.',Firmware:'교육용 PX4 동작 모델입니다. 펌웨어 설치·업데이트는 실행하지 않습니다.',Airframe:'멀티콥터 1대로 고정되어 있습니다. 기체 제작·부품 선택은 훈련 범위에 포함하지 않습니다.',Sensors:'나침반 · 자이로 · 가속도계: 가상 정상 상태. 실제 보정 동작은 이번 데모에 포함되지 않습니다.',Radio:'RC 링크: 가상 정상 상태. 실제 조종기 캘리브레이션은 지원하지 않습니다.', 'Flight Modes':'Mission / Hold / Return / Land 전환을 Fly 화면에서 연습합니다. RC 스위치 매핑은 지원하지 않습니다.',Power:'초기 배터리 100%. 비행 중 시간에 비례하여 소모되는 교육용 모델이며 실제 체공시간 예측용이 아닙니다.',Safety:'배터리 25%: RTL / 10%: Land. 텔레메트리 손실 5초: RTL. 지오펜스 침범: Hold. RTL은 현재 고도와 홈+60m 중 높은 고도로 직선 복귀합니다. 장애물 회피는 하지 않습니다.'};function show(n){$('setupDetail').innerHTML=`<h3>${n}</h3><p>${contents[n]}</p><p class="${connected?'good':'bad'}">${connected?'● 가상 기체 연결됨':'● 먼저 가상 기체를 연결하세요'}</p>`;document.querySelectorAll('[data-setup]').forEach(el=>el.classList.toggle('active',el.dataset.setup===n));}document.querySelectorAll('[data-setup]').forEach(el=>el.onclick=()=>show(el.dataset.setup));$('setupDone').onclick=()=>{if(!connected)return toast('먼저 가상 기체를 연결하세요.');setup=true;$('dialog').close();log('가상 기체 준비 상태 확인');updateStatus();};show('Summary');}
@@ -8810,6 +8812,7 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
   }
   // Rev.BE: reject actions from an obsolete tutorial render.
   function beCurrentStage(unit,step,activeUnit,activeStep){return unit===activeUnit&&step===activeStep;}
+  function bfCurrentButton(rendered,current,unit,step,activeUnit,activeStep){return rendered!=null&&rendered===current&&beCurrentStage(unit,step,activeUnit,activeStep);}
   renderTutorial=function(){
     const unitAtRender=lab.lesson,stepAtRender=lab.step;
     const position=bdCoursePosition(lessons,unitAtRender,stepAtRender);
@@ -8837,8 +8840,9 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
       $('minimizeGuide').textContent='+';
       $('minimizeGuide').setAttribute('aria-expanded','false');
     }
-    $('nextStep').onclick=()=>{
-      if(!beCurrentStage(unitAtRender,stepAtRender,lab.lesson,lab.step)||panel.classList.contains('hidden')||!$('courseHome').classList.contains('hidden'))return;
+    const nextButtonAtRender=$('nextStep');
+    nextButtonAtRender.onclick=()=>{
+      if(!bfCurrentButton(nextButtonAtRender,$('nextStep'),unitAtRender,stepAtRender,lab.lesson,lab.step)||panel.classList.contains('hidden')||!$('courseHome').classList.contains('hidden'))return;
       if(!s.test())return tutorialUpdate();
       if(lab.step+1<l.steps.length){
         lab.step++;
@@ -9133,8 +9137,9 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
   function canReuseFlightSetup(){
     return connected&&setup&&!armed&&!flight?.active;
   }
+  function bfRepeatReady(ready,mission,changed,fetching){return ready===true&&!!mission&&!changed&&!fetching;}
   function canUseSameMission(){
-    return canReuseFlightSetup()&&!!uploaded&&!dirty;
+    return bfRepeatReady(canReuseFlightSetup(),uploaded,dirty,loading);
   }
   function resetForNextFlight(){
     checks.fill(false);
@@ -9156,8 +9161,11 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
       ${wasLandedAway?'<p>반복 실습의 다음 출발점은 계획의 이륙 지점입니다.</p>':''}
       <p>가상 배터리 잔량 <b>${Math.round(battery)}%</b></p><label><input id="replaceRepeatBattery" type="checkbox" ${battery<40?'checked':''}> 가상 배터리 교체 (100%)</label>
       <button type="button" class="primary" id="repeatOpenChecks">비행 전 점검표 열기</button>`);
-    $('repeatOpenChecks').onclick=()=>{
+    const repeatButton=$('repeatOpenChecks');
+    repeatButton.onclick=()=>{
+      if(!$('dialog').open||$('repeatOpenChecks')!==repeatButton||repeatButton.disabled)return;
       if(!canUseSameMission())return toast('현재 임무 상태를 다시 확인하세요.');
+      repeatButton.disabled=true;
       mark('postflight');
       if($('replaceRepeatBattery').checked)swapPracticeBattery();
       $('dialog').close();
@@ -9385,14 +9393,14 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
   const manualStatusBefore=updateStatus;updateStatus=function(){manualStatusBefore();manualRefresh();};
   // Rev.W: drag handle and independent local, authenticated phone controller.
   const dragHead=manualPanel.querySelector('.tsd-manual-header');
-  dragHead.querySelector('strong').textContent='가상 조종기 · Mode 2 ↔ 이동';
+  dragHead.querySelector('strong').textContent='가상 조종기 · Mode 2';
   dragHead.style.cursor='move';dragHead.style.touchAction='none';
   let drag=null;
   function clampPanel(x,y){const r=manualPanel.getBoundingClientRect();manualPanel.style.transform='none';manualPanel.style.bottom='auto';manualPanel.style.left=Math.max(0,Math.min(x,innerWidth-r.width))+'px';manualPanel.style.top=Math.max(0,Math.min(y,innerHeight-r.height))+'px';}
-  dragHead.addEventListener('pointerdown',e=>{if(e.button!==0||e.target.closest('button'))return;e.preventDefault();const r=manualPanel.getBoundingClientRect();drag={id:e.pointerId,x:e.clientX-r.left,y:e.clientY-r.top};dragHead.setPointerCapture(e.pointerId);});
+  dragHead.addEventListener('pointerdown',e=>{if(manualPanel.dataset.aqPanel==='1'||e.button!==0||e.target.closest('button'))return;e.preventDefault();const r=manualPanel.getBoundingClientRect();drag={id:e.pointerId,x:e.clientX-r.left,y:e.clientY-r.top};dragHead.setPointerCapture(e.pointerId);});
   dragHead.addEventListener('pointermove',e=>{if(drag?.id===e.pointerId)clampPanel(e.clientX-drag.x,e.clientY-drag.y);});
   for(const type of ['pointerup','pointercancel','lostpointercapture'])dragHead.addEventListener(type,e=>{if(drag?.id===e.pointerId)drag=null;});
-  addEventListener('resize',()=>{if(!manualPanel.hidden&&manualPanel.style.top){const r=manualPanel.getBoundingClientRect();clampPanel(r.left,r.top);}});
+  addEventListener('resize',()=>{if(manualPanel.dataset.aqPanel!=='1'&&!manualPanel.hidden&&manualPanel.style.top){const r=manualPanel.getBoundingClientRect();clampPanel(r.left,r.top);}});
   $('tsdManualToggle').innerHTML='✥<small>가상 조종기</small>';
   const phoneButton=document.createElement('button');phoneButton.id='tsdPhoneLink';phoneButton.type='button';phoneButton.textContent='휴대폰 연동';$('flightVoiceToggle').after(phoneButton);
   // Rev.Y independent QGC web relay: explicit approval, simulation-only commands.
@@ -9431,7 +9439,8 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
     const status={idle:'연결 확인 필요',checking:'QGC 연결 서비스 확인 중…',ready:'운영자 비밀번호를 입력하면 QR을 생성합니다.',unconfigured:'연결 서비스에 운영자 인증 설정이 아직 없습니다. PC 단독 사용은 가능합니다.',unavailable:'QGC 연결 서비스에 접속할 수 없습니다. 서버 준비 전까지 PC 단독 사용은 가능합니다.'};
     $('qyInfo').textContent=qyMsg||(qySession?(qyPeer?'휴대폰 접속됨 · PC에서 승인하세요':'QR 접속 대기'):status[qzHealth]);
   }
-  async function qyAPI(origin,action,data){const c=new AbortController(),t=setTimeout(()=>c.abort(),4000);try{const r=await fetch(origin+'/api/qgc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...data}),credentials:'omit',redirect:'error',cache:'no-store',signal:c.signal});const d=await r.json();if(!r.ok)throw Error(d.error||'중계 오류');return d;}finally{clearTimeout(t);}}
+  async function bfRelayResponse(r){let d;try{d=await r.json();}catch{throw Error('중계 응답 형식 오류 (HTTP '+r.status+')');}if(!d||typeof d!=='object'||Array.isArray(d))throw Error('중계 응답 형식 오류 (HTTP '+r.status+')');if(!r.ok)throw Error(typeof d.error==='string'&&d.error?d.error.slice(0,180):'중계 오류 (HTTP '+r.status+')');return d;}
+  async function qyAPI(origin,action,data){const c=new AbortController(),t=setTimeout(()=>c.abort(),4000);try{const r=await fetch(origin+'/api/qgc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...data}),credentials:'omit',redirect:'error',cache:'no-store',signal:c.signal});return await bfRelayResponse(r);}finally{clearTimeout(t);}}
   $('qyForm').onsubmit=async e=>{e.preventDefault();if(qySession||qyBusy||qzChecking||qzHealth!=='ready')return;const pw=$('qyPassword').value;$('qyPassword').value='';const origin=qzOrigin;qyBusy=true;qyMsg='';qyPaint();try{if(performance.now()-qzCheckedAt>30000&&!await qzProbe())return;const t=await qyAPI(origin,'create',{password:pw});if(!/^[a-f0-9]{32}$/.test(t.id)||!t.hostKey||typeof t.qr!=='string'||!t.qr.startsWith('data:image/png;base64,')||new URL(t.invite).origin!==origin)throw Error('QGC 세션 응답 오류');qySession={origin,id:t.id,key:t.hostKey};apOpen();qySeq=qyCmdSeq=-1;qyNeedNeutral=true;$('tsdPhoneQR').src=t.qr;$('tsdPhoneInvite').href=t.invite;$('tsdPhoneInvite').textContent=t.invite;$('qyPin').textContent=typeof t.pin==='string'&&t.pin.includes('입력 불필요')?'QR 스캔 · 자동 접속':('휴대폰 PIN: '+t.pin);$('qyTicket').hidden=false;$('qyForm').hidden=true;qyMsg='';}catch(err){qyMsg='연결 실패: '+err.message;}finally{qyBusy=false;qyPaint();}};
   phoneButton.onclick=()=>{if(!qyDialog.open)qyDialog.showModal();qyPaint();if(!qySession&&!qyBusy){qyMsg='';void qzProbe();}};$('qzRetry').onclick=()=>{qyMsg='';void qzProbe();};$('qyClose').onclick=()=>qyDialog.close();$('qyApprove').onclick=()=>{if(!qyPeer)return;if(qyGrant){qyStop(true);}else{manualNeutral();qyGrant=true;qyOwn=!!flight?.manualStick;qyNeedNeutral=true;qyPeerSeen=performance.now();qyDialog.close();}qyPaint();};
   $('qyRevoke').onclick=async()=>{const s=qySession;++qyGen;qyStop(true);qySession=null;apClose();qyPeer=false;$('qyTicket').hidden=true;$('qyForm').hidden=false;$('tsdPhoneQR').removeAttribute('src');$('tsdPhoneInvite').removeAttribute('href');$('tsdPhoneInvite').textContent='';qyMsg='';qyPaint();if(s)try{await qyAPI(s.origin,'revoke',{id:s.id,key:s.key});}catch(_){}};
@@ -9524,7 +9533,7 @@ QGroundControl v5.1.5 metadata (settings tree and airframe names): QGroundContro
     const modes=document.createElement('section');modes.className='config-card';modes.id='bdCourseModes';
     modes.innerHTML='<h3>실습 방식 선택</h3><p class="micro">처음부터 배우기와 개별 단원 시작은 가상 실습 상태를 새로 준비합니다. 기존 진행 중인 교육을 유지하려면 현재 실습으로 돌아가기를 선택하세요.</p><div class="course-actions"><button type="button" id="bdCurrentQuick">현재 계획 빠른 실습</button><button type="button" id="bdMobileHelp">모바일 조작 안내</button></div><p class="micro">빠른 실습은 정규 단원 이수와 별도입니다. 착륙 후에는 같은 임무 다시 비행 기능을 이용할 수 있습니다.</p>';
     section.after(modes);
-    const releaseNote=document.createElement('p');releaseNote.className='micro';releaseNote.id='beReleaseStatus';releaseNote.textContent='Rev.BE 검토본 · 교육용 웹 모델. 실제 브라우저 종단시험·휴대폰 연결 검증·외부 3D 엔진·정밀 비행동역학 엔진 통합은 미완료입니다. 지도·고도·휴대폰 중계는 외부 서비스에 의존합니다. 운영 배포 승인 전 검토용입니다.';modes.append(releaseNote);
+    const releaseNote=document.createElement('p');releaseNote.className='micro';releaseNote.id='beReleaseStatus';releaseNote.textContent='Rev.BF 검토본 · 교육용 웹 모델. 실제 브라우저 종단시험·휴대폰 연결 검증·외부 3D 엔진·정밀 비행동역학 엔진 통합은 미완료입니다. 지도·고도·휴대폰 중계는 외부 서비스에 의존합니다. 운영 배포 승인 전 검토용입니다.';modes.append(releaseNote);
     $('bdCurrentQuick').onclick=()=>{if(armed||flight?.active)return toast('현재 가상 비행 종료 후 선택하세요.');prepareQuickPractice(true);};
     $('bdMobileHelp').onclick=()=>modal('모바일 조작 안내','<p>상단 창 배치를 켜고 창 내부를 드래그하여 이동하거나 우하단을 드래그하여 크기를 변경합니다. 배치 편집을 끝낸 후 가상 조종을 사용하세요.</p><p>가로·세로 전환 시 저장된 창 위치와 크기를 화면에 맞춰 복원합니다. 명령 확인은 슬라이더를 끝까지 밀어 놓는 방식입니다.</p><p>휴대폰 실제 연결은 별도 검증 대상입니다. 본 교육 화면은 실제 기체를 제어하지 않습니다.</p>');
   };
