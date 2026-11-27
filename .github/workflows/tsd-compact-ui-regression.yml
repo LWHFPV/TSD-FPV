@@ -1,0 +1,211 @@
+name: TSD compact UI regression and private gate checks
+on:
+  push:
+    branches: [review/tsd-ui-compact-qa-20261127]
+  pull_request:
+    branches: [review/tsd-ui-compact-20261127]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0d577e95c4f978193ab039044b03468d16d2d416 # exact compact UI candidate under test
+          persist-credentials: false
+          lfs: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare QA directory
+        run: |
+          mkdir -p /tmp/tsd-compact-results
+          git rev-parse HEAD > /tmp/tsd-compact-results/commit.txt
+          cp tsd-aero-common.css /tmp/tsd-compact-results/
+      - name: Install isolated Chromium test tools
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.51.1
+          npx playwright install chromium
+      - name: Browser UI regression
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/tsd-compact-http.log 2>&1 &
+          node --input-type=module <<'JS'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const dir='/tmp/tsd-compact-results';
+          const root='http://127.0.0.1:8765/';
+          const files=['education.html','simulator.html','fpv-flight-lab.html','blackbox-analyzer.html','prop-vibration-lab.html','tsd-qgc-mission-lab.html','TSD_EOIR_V24_Mission.html','link-budget.html','long-range-calculator.html','equipment-lab.html','flight-safety.html'];
+          const browser=await chromium.launch({headless:true});
+          const results=[];
+          const visible=async l=>l.count().then(n=>n>0?l.first().isVisible():false);
+          for(const width of [1440,768,390,320]){
+            for(const file of files){
+              const ctx=await browser.newContext({viewport:{width,height:900}});
+              const p=await ctx.newPage();
+              const errors=[];
+              p.on('pageerror',e=>errors.push(String(e).slice(0,300)));
+              let record={width,file,checks:{},errors};
+              try{
+                const res=await p.goto(root+file,{waitUntil:'domcontentloaded',timeout:45000});
+                record.checks.http=res.status()===200;
+                const hero=p.locator('[data-tsd-common-hero]:visible').first();
+                await hero.waitFor({state:'visible',timeout:20000});
+                await p.waitForTimeout(file==='tsd-qgc-mission-lab.html'?1200:250);
+                record.hero=await hero.evaluate(e=>{const c=getComputedStyle(e,'::before'),r=e.getBoundingClientRect();return{height:r.height,width:r.width,background:c.backgroundImage,title:e.querySelector('h1')?.textContent,padding:getComputedStyle(e).paddingBlock}});
+                record.checks.heroVisible=record.hero.height>35&&record.hero.height<190;
+                record.checks.horizontalOnly=record.hero.background.includes('linear-gradient')&&!record.hero.background.includes('to right')&&!record.hero.background.includes('90deg');
+                if(file==='education.html'){
+                  record.checks.compactCards=await p.locator('.edu-item').first().evaluate(e=>parseFloat(getComputedStyle(e).paddingTop)<=10);
+                }
+                if(file==='simulator.html'){
+                  record.checks.eightCards=await p.locator('.cards>.card').count()===8;
+                  record.checks.searchRemoved=await p.locator('#siteSearch,#searchFeedback,#showAll').count()===0;
+                  record.checks.footerClean=await p.locator('#protectedDownload,.footerActions').count()===0;
+                  record.checks.noDetailText=await p.locator('.card .detail').count()===0;
+                  record.checks.cardHeightEqual=await p.locator('.cards>.card').evaluateAll(es=>Math.max(...es.map(e=>e.getBoundingClientRect().height))-Math.min(...es.map(e=>e.getBoundingClientRect().height))<2);
+                  record.checks.eightLinks=await p.locator('.cards>.card a.cardLink').count()===8;
+                }
+                if(file==='fpv-flight-lab.html'){
+                  const f=p.frameLocator('#r26-lab-frame');
+                  await f.locator('#audioToggle').waitFor({state:'visible'});
+                  record.checks.noDarkBar=!(await visible(f.locator('.r23-title')));
+                  record.checks.audioMoved=await f.locator('.tsd-profile-audio-row #audioToggle').count()===1&&await f.locator('.tsd-profile-audio-row #volume').count()===1;
+                  record.checks.profilePreserved=await f.locator('.r29-profile summary').count()===1;
+                  await f.locator('#volume').fill('22');
+                  record.checks.volumeChange=await f.locator('#volume').inputValue()==='22';
+                  record.checks.r36=fs.readFileSync(file,'utf8').includes('R36');
+                }
+                if(file==='blackbox-analyzer.html')record.checks.bannerOutsideLegacy=await p.locator('body > [data-tsd-common-hero]:visible').count()===1;
+                if(file==='prop-vibration-lab.html'){
+                  record.checks.noSubtitle=await hero.locator('p').count()===0;
+                  record.checks.noModelLabel=await p.locator('.spectrum-card .unit').count()===0;
+                  const track=await p.locator('.track-card').boundingBox(),spectrum=await p.locator('.spectrum-card').boundingBox();
+                  record.checks.graphEnds=width<=900||Math.abs(track.y+track.height-spectrum.y-spectrum.height)<2;
+                  await p.locator('#throttle').fill('45');
+                  record.checks.throttle=await p.locator('#throttle').inputValue()==='45';
+                  await p.locator('#reset').click();
+                  record.checks.reset=await p.locator('#throttle').inputValue()!=='45';
+                }
+                if(file==='tsd-qgc-mission-lab.html'){
+                  record.checks.courseRemains=await visible(p.locator('#courseHome'));
+                  await p.locator('#courseReturn').click();
+                  record.checks.explicitEntry=!(await visible(p.locator('#courseHome')));
+                }
+                if(file==='TSD_EOIR_V24_Mission.html'){
+                  record.checks.diagnosticsHidden=!(await visible(p.locator('#tsdAuditOpen')))&&!(await visible(p.locator('#tsdAuditPanel')));
+                  record.checks.subtitleHidden=!(await visible(hero.locator('p')));
+                }
+                if(file==='link-budget.html')record.checks.titleOnly=await hero.locator('p,.brand').count()===0;
+                if(file==='long-range-calculator.html')record.checks.titleOnly=await hero.locator('p,.sub').count()===0&&await p.locator('footer.tsd-disclaimer').count()===0;
+                if(file==='flight-safety.html'){
+                  record.checks.serverHidden=!(await visible(p.locator('#tsdApiConfig')));
+                  record.checks.agencyHintHidden=!(await visible(p.locator('#tsdAgencyMethod')));
+                  record.checks.labelsPreserved=await p.locator('#locProvince[aria-label],#locDistrict[aria-label],#locTown[aria-label]').count()===3;
+                  record.checks.applicationLinks=await p.locator('#application-section .quicklink').count()===3;
+                  record.checks.applicationHeadingRemoved=await p.locator('#application-section h3').count()===0;
+                  if(width<=600){
+                    const geometry=await p.locator('#application-section .quicklink').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height,scroll:e.scrollWidth,client:e.clientWidth};}));
+                    record.applicationGeometry=geometry;
+                    record.checks.applicationSingleRow=geometry.length===3&&geometry.every(g=>Math.abs(g.y-geometry[0].y)<2);
+                    record.checks.applicationTouchTargets=geometry.length===3&&geometry.every(g=>g.h>=44&&g.w>=44);
+                    record.checks.applicationNoOverflow=geometry.length===3&&geometry.every(g=>g.x>=0&&g.x+g.w<=width+1&&g.scroll<=g.client+1);
+                  }
+                }
+                if(file==='equipment-lab.html'){
+                  record.checks.gateVisible=await visible(p.locator('#password'));
+                  record.protectedTest='SEPARATE_NO_ARTIFACT_JOB';
+                }
+                await p.screenshot({path:dir+'/'+file+'-'+width+'.png',fullPage:false,timeout:12000});
+              }catch(e){record.failure=String(e).slice(0,500);}
+              record.pass=!record.failure&&Object.values(record.checks).every(Boolean);
+              console.log('COMPACT_RESULT '+JSON.stringify(record));
+              results.push(record);
+              await ctx.close();
+            }
+          }
+          await browser.close();
+          fs.writeFileSync(dir+'/results.json',JSON.stringify(results,null,2));
+          console.log('COMPACT_SUMMARY '+JSON.stringify({passed:results.filter(x=>x.pass).length,total:results.length,protectedFull:results.filter(x=>x.file==='equipment-lab.html'&&x.checks.oneLane&&x.pass).length}));
+          if(results.some(r=>!r.pass))process.exitCode=1;
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsd-compact-results
+          path: /tmp/tsd-compact-results
+          retention-days: 7
+  private-gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0d577e95c4f978193ab039044b03468d16d2d416
+          persist-credentials: false
+          lfs: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser tools
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.51.1
+          npx playwright install --with-deps chromium
+      - name: Authorized gate checks (boolean outcomes only; no screenshots or artifacts)
+        env:
+          TSD_QA_PASSWORD: ${{ secrets.TSD_EQUIPMENT_QA_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$TSD_QA_PASSWORD" ]; then
+            echo 'GATE_POSITIVE NOT_RUN_SECRET_MISSING'
+            exit 1
+          fi
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/tsd-private-http.log 2>&1 &
+          node --input-type=module <<'JS'
+          import {chromium} from 'playwright';
+          const browser=await chromium.launch({headless:true});
+          const root='http://127.0.0.1:8765/';
+          let passed=0;
+          try{
+            for(const width of [1440,768,390,320]){
+              const ctx=await browser.newContext({viewport:{width,height:900},hasTouch:width<=600,serviceWorkers:'block'});
+              await ctx.route('**/*',r=>r.request().url().startsWith(root)?r.continue():r.abort());
+              const p=await ctx.newPage();
+              const checks={};
+              try{
+                await p.goto(root+'equipment-lab.html',{waitUntil:'domcontentloaded',timeout:45000});
+                await p.locator('#password').fill(process.env.TSD_QA_PASSWORD);
+                await p.locator('#enter').click();
+                const f=p.frameLocator('iframe[title="TSD 장비 연결 연구실"]');
+                const select=f.locator('#tsdAircraftSelect');
+                await select.waitFor({state:'visible',timeout:25000});
+                checks.authenticated=true;
+                checks.outerHeaderHidden=!(await p.locator('#gateNav').isVisible());
+                checks.singleHeader=await f.locator('[data-tsd-common-header]:visible').count()===1;
+                checks.all8Options=await select.locator('option').count()===8;
+                const first=f.locator('#lanes>.lane[data-row="0"] select').first();
+                const initial=await first.inputValue();
+                checks.all8SingleLane=true;
+                for(let i=0;i<8;i++){
+                  await select.selectOption(String(i));
+                  if(await f.locator('#lanes>.lane:visible').count()!==1||!(await f.locator('#lanes>.lane[data-row="'+i+'"]').isVisible()))checks.all8SingleLane=false;
+                }
+                await select.selectOption('0');
+                checks.firstPreserved=await first.inputValue()===initial;
+                await f.locator('#lock').click();
+                await p.locator('#password').waitFor({state:'visible',timeout:20000});
+                checks.relocked=await p.locator('iframe[title="TSD 장비 연결 연구실"]').count()===0;
+              }catch{checks.completed=false;}
+              const pass=Object.values(checks).length===7&&Object.values(checks).every(Boolean);
+              if(pass)passed++;
+              console.log('PRIVATE_GATE_RESULT '+JSON.stringify({width,checks,pass}));
+              await ctx.close();
+            }
+          }finally{await browser.close();}
+          console.log('PRIVATE_GATE_SUMMARY '+JSON.stringify({passed,total:4}));
+          if(passed!==4)process.exitCode=1;
+          JS
