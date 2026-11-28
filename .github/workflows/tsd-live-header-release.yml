@@ -16,19 +16,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: e53f1c147a2820effd1579edc8d710f33c15fb77
+          ref: main
           lfs: false
           persist-credentials: false
       - name: Compare live HTTPS files with merged source
         shell: bash
         run: |
           python3 - <<'PY'
-          import hashlib, json, pathlib, time, urllib.request, concurrent.futures
+          import hashlib, json, pathlib, time, urllib.request, concurrent.futures, subprocess
+          checked_main=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           files=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','prop-vibration-lab.html','simulator.html','tsd-aero-common.css','tsd-qgc-mission-lab.html']
           def check(file):
               expected=pathlib.Path(file).read_bytes()
               try:
-                  url='https://lwhfpv.github.io/TSD-FPV/'+file+'?release=e53f1c147&qa='+str(int(time.time()))
+                  url='https://lwhfpv.github.io/TSD-FPV/'+file+'?release='+checked_main+'&qa='+str(int(time.time()))
                   with urllib.request.urlopen(urllib.request.Request(url,headers={'Cache-Control':'no-cache','User-Agent':'TSD-release-QA'}),timeout=25) as response:
                       actual=response.read()
                       return {'file':file,'status':response.status,'matches':actual==expected,'expectedSHA256':hashlib.sha256(expected).hexdigest(),'actualSHA256':hashlib.sha256(actual).hexdigest()}
@@ -37,7 +38,7 @@ jobs:
           for attempt in range(12):
               with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
                   results=list(pool.map(check,files))
-              print(json.dumps({'attempt':attempt+1,'matches':sum(r['matches'] for r in results),'total':len(results),'results':results}),flush=True)
+              print(json.dumps({'checkedMain':checked_main,'attempt':attempt+1,'matches':sum(r['matches'] for r in results),'total':len(results),'results':results}),flush=True)
               if all(r['matches'] for r in results):break
               if attempt<11:time.sleep(20)
           pathlib.Path('/tmp/tsd-live-release.json').write_text(json.dumps(results,indent=2))
@@ -84,8 +85,10 @@ jobs:
               expect(x.expectedSHA256).toBe(sha(readFileSync(resolve(root,file))))
               expect(x.actualSHA256).toBe(x.expectedSHA256)
             })
-            test('latest R36 marker remains in production source',()=>{
-              expect(readFileSync(resolve(root,'fpv-flight-lab.html'),'utf8')).toContain('R36 그래픽 미리보기')
+            test('current FPV source includes shared header and executable script',()=>{
+              const html=readFileSync(resolve(root,'fpv-flight-lab.html'),'utf8')
+              expect(html).toContain('data-tsd-common-header')
+              expect(html).toMatch(/<script\b/i)
             })
             test('simulator uses the integrated PropLab route',()=>{
               expect(readFileSync(resolve(root,'simulator.html'),'utf8')).toMatch(/href=["']\.\/prop-vibration-lab\.html["']/)

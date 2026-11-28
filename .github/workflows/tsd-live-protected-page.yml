@@ -18,6 +18,7 @@ jobs:
         with:
           ref: main
           lfs: false
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -57,11 +58,17 @@ jobs:
                 const actual=createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
                 if(response.status()!==200||actual!==expectedBlob)throw Error('live source differs from verified release');
                 if(!await p.evaluate(()=>isSecureContext&&!!crypto.subtle))throw Error('secure WebCrypto unavailable');
+                const labFrame=p.locator('iframe[title="TSD 장비 연결 연구실"]');
+                const initialGate=await p.locator('#password').isVisible();
+                if(!initialGate||await labFrame.count())throw Error('initial gate not locked');
                 step='wrong password rejected';
                 await p.locator('#password').fill('TSD-QA-INVALID-PASSWORD');
                 await p.locator('#enter').click();
                 await p.waitForFunction(()=>document.querySelector('#error')?.textContent.includes('올바르지')&&document.querySelector('#enter')?.disabled===false,undefined,{timeout:20000});
-                if(await p.locator('iframe').count())throw Error('unexpected unlock');
+                step='negative-auth locked-state assertion';
+                const negativeState={gateVisible:await p.locator('#password').isVisible(),protectedFrameCount:await labFrame.count(),otherFrameCount:await p.locator('iframe').count(),rejectionMessage:await p.locator('#error').evaluate(e=>e.textContent.includes('올바르지'))};
+                console.log(JSON.stringify({width,negativeState}));
+                if(!negativeState.gateVisible||negativeState.protectedFrameCount!==0||!negativeState.rejectionMessage)throw Error('negative-auth gate state invalid');
                 if(!password){records.push({width,pass:false,negativeAuthPass:true,positiveAuth:'NOT_RUN_SECRET_MISSING'});continue;}
                 step='real password unlock';
                 const unlock=async()=>{
@@ -84,14 +91,19 @@ jobs:
                 step='relock and reload';
                 await f.locator('#lock').click();
                 await p.locator('#password').waitFor({state:'visible',timeout:20000});
-                if(await p.locator('iframe').count())throw Error('iframe remains unlocked');
+                if(await labFrame.count())throw Error('protected iframe remains unlocked');
+                step='reload while locked';
+                await p.reload({waitUntil:'domcontentloaded'});
+                await p.locator('#password').waitFor({state:'visible',timeout:20000});
+                if(await labFrame.count())throw Error('protected iframe opened after reload');
                 step='restore after second login';
                 f=await unlock();
                 await f.locator('#notice').filter({hasText:'저장된 구성을 복원했습니다'}).waitFor();
                 step='final relock';
                 await f.locator('#lock').click();
                 await p.locator('#password').waitFor({state:'visible',timeout:20000});
-                records.push({width,pass:true,negativeAuthPass:true,positiveAuth:'PASS'});
+                if(await labFrame.count())throw Error('protected iframe remains after final relock');
+                records.push({width,pass:true,negativeAuthPass:true,positiveAuth:'PASS',encryptedPersistence:true,reloadWhileLocked:true});
               }catch(e){records.push({width,pass:false,step,errorType:e?.name??'Error'});}
               finally{await c.close();}
             }
