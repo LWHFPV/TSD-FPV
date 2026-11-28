@@ -1,0 +1,124 @@
+name: TSD live protected page verification
+on:
+  push:
+    branches: [review/tsd-header-browser-check-20261126]
+    paths: ['.github/workflows/tsd-live-protected-page.yml']
+  pull_request:
+    branches: [review/tsd-aero-header-main-safe-20261126]
+    paths: ['.github/workflows/tsd-live-protected-page.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-protected:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          lfs: false
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser verification tool
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/tsd-live-protected"
+          cd "$RUNNER_TEMP/tsd-live-protected"
+          npm install --no-save --ignore-scripts playwright@1.51.1
+          npx playwright install chromium
+      - name: Verify production HTTPS authentication and encrypted persistence
+        env:
+          TSD_QA_PASSWORD: ${{ secrets.TSD_EQUIPMENT_QA_PASSWORD }}
+        shell: bash
+        run: |
+          export TSD_EXPECTED_BLOB="$(git rev-parse HEAD:equipment-lab.html)"
+          export TSD_CHECKED_MAIN="$(git rev-parse HEAD)"
+          cd "$RUNNER_TEMP/tsd-live-protected"
+          node --input-type=module <<'JS'
+          import { chromium } from 'playwright';
+          import { createHash } from 'node:crypto';
+          const url='https://lwhfpv.github.io/TSD-FPV/equipment-lab.html';
+          const password=process.env.TSD_QA_PASSWORD;
+          const expectedBlob=process.env.TSD_EXPECTED_BLOB;
+          const checkedMain=process.env.TSD_CHECKED_MAIN;
+          const browser=await chromium.launch({headless:true});
+          const records=[];
+          let step='initialization';
+          try{
+            for(const width of [1440,768,390,320]){
+              const c=await browser.newContext({viewport:{width,height:900}});
+              let p;
+              let negativeAuthPass=false;
+              try{
+                p=await c.newPage();
+                step='live response/source identity';
+                const response=await p.goto(url+'?qa='+Date.now(),{waitUntil:'domcontentloaded',timeout:30000});
+                const bytes=await response.body();
+                const actual=createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
+                if(response.status()!==200||actual!==expectedBlob)throw Error('live source differs from verified release');
+                if(!await p.evaluate(()=>isSecureContext&&!!crypto.subtle))throw Error('secure WebCrypto unavailable');
+                const labFrame=p.locator('iframe[title="TSD 장비 연결 연구실"]');
+                const initialGate=await p.locator('#password').isVisible();
+                if(!initialGate||await labFrame.count())throw Error('initial gate not locked');
+                step='negative input';
+                await p.locator('#password').fill('TSD-QA-INVALID-PASSWORD');
+                step='negative submit';
+                await p.locator('#password').press('Enter');
+                step='negative rejection message';
+                await p.locator('#error').filter({hasText:'올바르지'}).waitFor({state:'visible',timeout:20000});
+                step='negative submit completed';
+                await p.locator('#enter:enabled').waitFor({state:'visible',timeout:20000});
+                step='negative-auth locked-state assertion';
+                const negativeState={gateVisible:await p.locator('#password').isVisible(),protectedFrameCount:await labFrame.count(),otherFrameCount:await p.locator('iframe').count(),rejectionMessage:await p.locator('#error').evaluate(e=>e.textContent.includes('올바르지'))};
+                console.log(JSON.stringify({width,negativeState}));
+                if(!negativeState.gateVisible||negativeState.protectedFrameCount!==0||!negativeState.rejectionMessage)throw Error('negative-auth gate state invalid');
+                negativeAuthPass=true;
+                if(!password){records.push({width,pass:false,negativeAuthPass:true,positiveAuth:'NOT_RUN_SECRET_MISSING'});continue;}
+                step='real password unlock';
+                const unlock=async()=>{
+                  await p.locator('#password').fill(password);
+                  await p.locator('#enter').click();
+                  const f=p.frameLocator('iframe[title="TSD 장비 연결 연구실"]');
+                  await f.locator('#lock').waitFor({state:'visible',timeout:20000});
+                  if(await f.locator('[data-tsd-common-header] a').count()<6)throw Error('missing header links');
+                  if(await p.locator('#password').inputValue()!=='')throw Error('password not cleared');
+                  return f;
+                };
+                let f=await unlock();
+                step='encrypted storage';
+                await f.locator('#four').click();
+                await f.locator('#save').click();
+                await f.locator('#notice').filter({hasText:'암호화 저장 완료'}).waitFor();
+                const stored=await p.evaluate(()=>localStorage.getItem('tsd-equipment-encrypted-v1'));
+                const parsed=JSON.parse(stored);
+                if(!parsed.iv||!parsed.data||Object.keys(parsed).sort().join(',')!=='data,iv')throw Error('invalid encrypted storage envelope');
+                step='relock and reload';
+                await f.locator('#lock').click();
+                await p.locator('#password').waitFor({state:'visible',timeout:20000});
+                if(await labFrame.count())throw Error('protected iframe remains unlocked');
+                step='reload while locked';
+                await p.reload({waitUntil:'domcontentloaded'});
+                await p.locator('#password').waitFor({state:'visible',timeout:20000});
+                if(await labFrame.count())throw Error('protected iframe opened after reload');
+                step='restore after second login';
+                f=await unlock();
+                await f.locator('#notice').filter({hasText:'저장된 구성을 복원했습니다'}).waitFor();
+                step='final relock';
+                await f.locator('#lock').click();
+                await p.locator('#password').waitFor({state:'visible',timeout:20000});
+                if(await labFrame.count())throw Error('protected iframe remains after final relock');
+                records.push({width,pass:true,negativeAuthPass:true,positiveAuth:'PASS',encryptedPersistence:true,reloadWhileLocked:true});
+              }catch(e){
+                // Never log the password, decrypted HTML, stored ciphertext or input values.
+                const state=p?await p.evaluate(()=>({gateVisible:!!document.getElementById('password')?.getClientRects().length,buttonDisabled:document.getElementById('enter')?.disabled??null,errorPresent:!!document.getElementById('error')?.textContent,wrongPasswordMessage:document.getElementById('error')?.textContent.includes('올바르지')??false,protectedFrameCount:document.querySelectorAll('iframe[title="TSD 장비 연결 연구실"]').length,submitHandler:typeof document.getElementById('login')?.onsubmit})).catch(()=>null):null;
+                records.push({width,pass:false,negativeAuthPass,step,errorType:e?.name??'Error',errorCategory:/timeout/i.test(String(e))?'timeout':/strict mode/i.test(String(e))?'selector-ambiguity':/not editable/i.test(String(e))?'not-editable':/not visible/i.test(String(e))?'not-visible':/closed/i.test(String(e))?'closed':/unexpected|invalid/i.test(String(e))?'assertion':'other',state});
+              }
+              finally{await c.close();}
+            }
+          }finally{await browser.close();}
+          console.log(JSON.stringify({liveHTTPS:true,checkedMain,expectedBlob,secretConfigured:!!password,negativeAuthPassed:records.filter(x=>x.negativeAuthPass).length,records}));
+          if(records.length!==4||records.some(x=>!x.pass))process.exitCode=1;
+          JS

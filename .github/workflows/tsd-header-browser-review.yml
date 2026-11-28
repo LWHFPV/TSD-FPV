@@ -1,0 +1,343 @@
+name: TSD header browser review
+on:
+  push:
+    branches: [review/tsd-header-browser-check-20261126]
+  pull_request:
+    branches: [review/tsd-aero-header-main-safe-20261126]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 772b4743ca8b4f11df85da051615eb095efcbea8
+          fetch-depth: 1
+          lfs: false
+      - name: Fetch immutable original release comparison pair
+        run: git fetch --no-tags --depth=1 origin b0a0307819e5fb7e3c03fec015f7006698416842 2616a89393f220576d0468ae1e1d1bce098adcdc ec88ae52f74df936ee85ca32cfbd77e31d65a45c
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.51.1 axe-core@4.10.3 pngjs@7.0.0
+      - name: Export existing encrypted equipment page for private browser verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsd-equipment-encrypted-candidate
+          path: |
+            equipment-lab.html
+            tsd-aero-common.css
+          retention-days: 3
+      - name: Install Chromium and system dependencies
+        shell: bash
+        run: |
+          if ! npx playwright install --with-deps chromium; then
+            # The Ubuntu runner's unrelated Microsoft apt repository can return 403.
+            # Remove only its source for this disposable runner, never application code.
+            sudo grep -rl 'packages.microsoft.com/ubuntu/24.04/prod' /etc/apt/sources.list.d/ | while IFS= read -r file; do
+              if sudo grep -Eqv '^(#.*|[[:space:]]*|.*packages.microsoft.com/ubuntu/24.04/prod.*|Types:.*|Suites:.*|Components:.*|Signed-By:.*|Architectures:.*)$' "$file"; then
+                echo "Unexpected mixed apt source; not modifying $file"; exit 1
+              fi
+              sudo mv "$file" "$file.disabled"
+            done
+            npx playwright install --with-deps chromium
+          fi
+      - name: Run desktop and mobile header smoke checks
+        env:
+          TSD_EQUIPMENT_QA_PASSWORD: ${{ secrets.TSD_EQUIPMENT_QA_PASSWORD }}
+        shell: bash
+        run: |
+          mkdir -p /tmp/tsd-header-results
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/tsd-header-http.log 2>&1 &
+          node --input-type=module <<'JS'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          import { PNG } from 'pngjs';
+          import { execFileSync } from 'node:child_process';
+          const checkedCommit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          const axeSource=fs.readFileSync('node_modules/axe-core/axe.min.js','utf8');
+          const paths=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','simulator.html','tsd-qgc-mission-lab.html','prop-vibration-lab.html'];
+          const result=[];
+          const baseCommit='b0a0307819e5fb7e3c03fec015f7006698416842';
+          const originalHeaderCandidate='2616a89393f220576d0468ae1e1d1bce098adcdc';
+          // Only these exact, reviewed presentation substitutions are permitted.
+          const approvedHeaderEdits={
+            'equipment-lab.html':[["const LAB_HEADER=\"<header class=\\\"tsd-header\\\"><div class=\\\"tsd-wrap tsd-header-inner\\\"><a class=\\\"tsd-brand\\\" href=\\\"https://lwhfpv.github.io/TSD-FPV/index.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\"><span aria-hidden=\\\"true\\\">TSD</span>TSD Aero Systems</a><nav class=\\\"tsd-nav\\\" aria-label=\\\"주 메뉴\\\"><a href=\\\"https://lwhfpv.github.io/TSD-FPV/education.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">체험교육</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/index.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">기술연구소</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/index.html#technology\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">실습·계산기</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/equipment-lab.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\" aria-current=\\\"page\\\">장비연구실</a></nav><button id=\\\"lock\\\" type=\\\"button\\\">잠그기</button></div></header>\";","const LAB_HEADER=\"<header data-tsd-common-header class=\\\"tsd-header\\\"><div class=\\\"tsd-wrap tsd-header-inner\\\" data-tsd-common-bar><a class=\\\"tsd-brand\\\" data-tsd-common-brand href=\\\"https://lwhfpv.github.io/TSD-FPV/index.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\"><span aria-hidden=\\\"true\\\">TSD</span>TSD Aero Systems</a><nav class=\\\"tsd-nav\\\" data-tsd-common-nav aria-label=\\\"주 메뉴\\\"><a href=\\\"https://lwhfpv.github.io/TSD-FPV/education.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">체험교육</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/simulator.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">시뮬레이터 체험</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/drone-design.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">드론설계</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/flight-safety.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">비행안전정보</a><a href=\\\"https://lwhfpv.github.io/TSD-FPV/contact.html\\\" target=\\\"_blank\\\" rel=\\\"noopener noreferrer\\\">문의</a></nav><button id=\\\"lock\\\" data-tsd-common-contact type=\\\"button\\\">잠그기</button></div></header>\";"],["const LAB_BANNER=\"<section class=\\\"tsd-hero\\\" aria-label=\\\"페이지 소개\\\"><div class=\\\"tsd-wrap\\\"><h1>8대 장비 연결 연구실</h1><p>기체별 영상·조종 경로를 구성하고 두 대의 모니터 연결을 점검하세요.</p></div></section>\";","const LAB_BANNER=\"<section data-tsd-common-hero class=\\\"tsd-hero\\\" aria-label=\\\"페이지 소개\\\"><div class=\\\"tsd-wrap\\\"><h1>8대 장비 연결 연구실</h1><p>기체별 영상·조종 경로를 구성하고 두 대의 모니터 연결을 점검하세요.</p></div></section>\";"],["  style.textContent = LAB_STYLE;","  style.textContent = LAB_STYLE + \"\\n/* TSD Aero: scoped homepage header contract. Do not apply to simulator controls. */\\n[data-tsd-common-header][data-tsd-common-header]{box-sizing:border-box!important;display:block!important;background:#fff!important;color:#172844!important;border:0!important;border-bottom:1px solid #dce5f1!important;margin:0!important;padding:0!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;font:400 15px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;letter-spacing:normal!important;text-align:left!important;}\\n[data-tsd-common-header] [data-tsd-common-bar][data-tsd-common-bar]{box-sizing:border-box!important;width:min(calc(100% - 2 * clamp(16px,4vw,40px)),1180px)!important;max-width:none!important;margin:0 auto!important;display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;grid-template-areas:\\\"brand nav contact\\\"!important;align-items:center!important;justify-content:normal!important;gap:20px!important;min-height:66px!important;height:auto!important;padding:0!important;}\\n[data-tsd-common-header] [data-tsd-common-brand][data-tsd-common-brand]{box-sizing:border-box!important;grid-area:brand!important;order:0!important;justify-self:start!important;display:flex!important;align-items:center!important;gap:9px!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;font:650 15px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;color:#172844!important;letter-spacing:normal!important;white-space:nowrap!important;text-decoration:none!important;}\\n[data-tsd-common-header] [data-tsd-common-brand] span:first-child{box-sizing:border-box!important;display:grid!important;place-items:center!important;width:37px!important;height:31px!important;min-width:37px!important;min-height:31px!important;flex:0 0 37px!important;margin:0!important;padding:0!important;border:0!important;border-radius:6px!important;background:#194cb9!important;color:#fff!important;font:650 13px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;letter-spacing:normal!important;}\\n[data-tsd-common-header] [data-tsd-common-nav][data-tsd-common-nav]{box-sizing:border-box!important;grid-area:nav!important;order:0!important;display:flex!important;align-items:center!important;justify-content:center!important;flex-wrap:nowrap!important;gap:clamp(10px,3vw,34px)!important;width:auto!important;min-width:0!important;height:auto!important;background:transparent!important;border:0!important;padding:0!important;margin:0!important;}\\n[data-tsd-common-header] [data-tsd-common-nav] a{box-sizing:border-box!important;display:grid!important;align-items:center!important;min-height:44px!important;margin:0!important;padding:0!important;color:#172844!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;font:550 15px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;letter-spacing:normal!important;white-space:nowrap!important;text-decoration:none!important;}\\n[data-tsd-common-header] [data-tsd-common-contact][data-tsd-common-contact]{box-sizing:border-box!important;grid-area:contact!important;order:0!important;justify-self:end!important;display:grid!important;place-items:center!important;min-height:44px!important;margin:0!important;padding:0 13px!important;background:#fff!important;color:#172844!important;border:1px solid #dce5f1!important;border-radius:6px!important;white-space:nowrap!important;text-decoration:none!important;font:400 15px/1.55 Inter,\\\"Malgun Gothic\\\",\\\"Apple SD Gothic Neo\\\",system-ui,sans-serif!important;letter-spacing:normal!important;}\\n[data-tsd-common-header] a:focus-visible{outline:2px solid #1763db!important;outline-offset:3px!important;}\\n[data-tsd-common-header] [data-tsd-common-nav] a:hover,[data-tsd-common-header] [data-tsd-common-brand]:hover,[data-tsd-common-header] [data-tsd-common-contact]:hover{color:#164fb9!important;}\\n[data-tsd-common-hero]{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(105deg,#eaf6ff 0%,#c5e2fa 30%,#83b8eb 65%,#347bc3 100%)!important;color:#153b65!important;box-shadow:inset 0 -3px #347bc3;text-align:center;}\\n[data-tsd-common-hero]::before{content:\\\"\\\"!important;position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:1!important;background-image:url(\\\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22680%22%20height%3D%22100%22%20viewBox%3D%220%200%20680%20100%22%3E%3Cg%20stroke%3D%22white%22%20fill%3D%22none%22%20opacity%3D%22.6%22%3E%3Ccircle%20cx%3D%22624%22%20cy%3D%2250%22%20r%3D%2238%22%2F%3E%3Ccircle%20cx%3D%22624%22%20cy%3D%2250%22%20r%3D%2228%22%2F%3E%3Ccircle%20cx%3D%22624%22%20cy%3D%2250%22%20r%3D%2215%22%2F%3E%3Cpath%20d%3D%22M580%2050H668M624%206V94M597%2023L651%2077M651%2023L597%2077%22%20stroke-dasharray%3D%223%204%22%2F%3E%3Cpath%20d%3D%22M0%2075H80L110%2045H158M0%2085H90L120%2055H170M510%200L550%2040H575%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E\\\"),linear-gradient(to right,#ffffff4d 1px,transparent 1px),linear-gradient(to bottom,#ffffff4d 1px,transparent 1px)!important;background-size:100% 100%,18px 18px,18px 18px!important;background-position:center!important;}\\n[data-tsd-common-hero]::after{content:none!important;}\\n[data-tsd-common-hero] h1,[data-tsd-common-hero] p,[data-tsd-common-hero] .sub{color:#153b65!important;text-shadow:none!important;}\\n@media(max-width:580px){\\n[data-tsd-common-header] [data-tsd-common-bar][data-tsd-common-bar]{grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:\\\"brand brand\\\" \\\"nav contact\\\"!important;gap:3px 8px!important;padding:8px 0!important;}\\n[data-tsd-common-header] [data-tsd-common-nav][data-tsd-common-nav]{justify-content:start!important;flex-wrap:wrap!important;gap:4px 12px!important;}\\n[data-tsd-common-header] [data-tsd-common-nav] a{font-size:13px!important;min-height:36px!important;}\\n[data-tsd-common-header] [data-tsd-common-contact][data-tsd-common-contact]{font-size:13px!important;padding-inline:8px!important;}\\n}\\n\";"]],
+            'tsd-qgc-mission-lab.html':[["<div class=\"course-top\"><div class=\"course-nav course-wrap\"><a class=\"course-brand\" href=\"./index.html\"><span aria-hidden=\"true\">TSD</span>TSD Aero Systems</a><a class=\"course-contact\" href=\"./contact.html\">문의</a></div></div><section class=\"course-hero\" aria-labelledby=\"courseTitle\">","<div class=\"course-top\" data-tsd-common-header><div class=\"course-nav course-wrap\" data-tsd-common-bar><a class=\"course-brand\" data-tsd-common-brand href=\"./index.html\"><span aria-hidden=\"true\">TSD</span>TSD Aero Systems</a><div data-tsd-common-nav role=\"navigation\" aria-label=\"주 메뉴\"><a href=\"./education.html\">체험교육</a><a href=\"./simulator.html\">시뮬레이터 체험</a><a href=\"./drone-design.html\">드론설계</a><a href=\"./flight-safety.html\">비행안전정보</a></div><a class=\"course-contact\" data-tsd-common-contact href=\"./contact.html\">문의</a></div></div><section class=\"course-hero\" data-tsd-common-hero aria-labelledby=\"courseTitle\">"]]
+          };
+          function equivalentOutsideReviewedHeader(file,before,after){
+            const edits=approvedHeaderEdits[file]||[];
+            const expected=JSON.stringify(before);
+            if(expected===JSON.stringify(after))return true;
+            if(!edits.length)return false;
+            const copy=[...before];
+            for(const [oldText,newText] of edits){
+              const indices=copy.map((s,i)=>s.includes(oldText)?i:-1).filter(i=>i>=0);
+              if(indices.length!==1)return false;
+              const i=indices[0];if(copy[i].split(oldText).length!==2)return false;
+              copy[i]=copy[i].replace(oldText,()=>newText);
+            }
+            return JSON.stringify(copy)===JSON.stringify(after);
+          }
+          const sourceAudit=paths.filter(f=>f!=='prop-vibration-lab.html').map(file=>{
+            const baseline=execFileSync('git',['show',baseCommit+':'+file],{encoding:'utf8',maxBuffer:100*1024*1024});
+            const candidate=execFileSync('git',['show',originalHeaderCandidate+':'+file],{encoding:'utf8',maxBuffer:100*1024*1024});
+            const scripts=s=>[...s.matchAll(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi)].map(m=>m[0].replace(/\r\n/g,'\n'));
+            const before=scripts(baseline),after=scripts(candidate);
+            const differences=before.map((x,i)=>{
+              const y=after[i]??'';if(x===y)return null;
+              let p=0;while(p<Math.min(x.length,y.length)&&x[p]===y[p])p++;
+              let q=0;while(q<Math.min(x.length,y.length)-p&&x[x.length-1-q]===y[y.length-1-q])q++;
+              return {index:i,beforeLength:x.length,afterLength:y.length,firstDifference:p,before:x.slice(Math.max(0,p-100),Math.min(x.length-q+100,p+700)),after:y.slice(Math.max(0,p-100),Math.min(y.length-q+100,p+700))};
+            }).filter(Boolean);
+            return {file,baselineScripts:before.length,candidateScripts:after.length,scriptsIdentical:JSON.stringify(before)===JSON.stringify(after),functionalSourcePreserved:equivalentOutsideReviewedHeader(file,before,after),differences};
+          });
+          fs.writeFileSync('/tmp/tsd-header-results/source-audit.json',JSON.stringify({baseCommit,originalHeaderCandidate,checkedCommit,sourceAudit},null,2));
+          console.log(JSON.stringify({baseCommit,originalHeaderCandidate,checkedCommit,sourceAudit}));
+          const patternSyncSourceAudit=['index.html','tsd-qgc-mission-lab.html'].map(file=>{
+            const before=execFileSync('git',['show','ec88ae52f74df936ee85ca32cfbd77e31d65a45c:'+file],{encoding:'utf8',maxBuffer:100*1024*1024});
+            const after=fs.readFileSync(file,'utf8');
+            const scripts=x=>[...x.matchAll(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi)].map(m=>m[0]);
+            return {file,scriptsIdentical:JSON.stringify(scripts(before))===JSON.stringify(scripts(after))};
+          });
+          console.log(JSON.stringify({patternSyncSourceAudit}));
+          if(patternSyncSourceAudit.some(x=>!x.scriptsIdentical))throw Error('Pattern sync changed functional script');
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          async function fingerprint(header,home=false){
+            return header.evaluate((h,home)=>{
+              const get=(q)=>h.querySelector(q);
+              const bar=get(home?'.tsd-bar':'[data-tsd-common-bar]');
+              const brand=get(home?'.tsd-brand':'[data-tsd-common-brand]');
+              const mark=brand?.querySelector('span');
+              const nav=get(home?'nav':'[data-tsd-common-nav]');
+              const contact=get(home?'.tsd-contact':'[data-tsd-common-contact]');
+              const rect=h.getBoundingClientRect();
+              const pick=(el,props)=>{if(!el)return null;const s=getComputedStyle(el);const r=el.getBoundingClientRect();return {rect:[r.x-rect.x,r.y-rect.y,r.width,r.height].map(x=>Math.round(x*100)/100),css:Object.fromEntries(props.map(p=>[p,s[p]]))};};
+              const links=[...h.querySelectorAll('a')].map(a=>({label:a.textContent.replace(/\s+/g,' ').trim(),url:new URL(a.href).pathname.split('/').pop(),hash:new URL(a.href).hash}));
+              return {header:pick(h,['backgroundColor','borderBottomColor','borderBottomWidth']),bar:pick(bar,['display','gridTemplateColumns','gap','minHeight']),brand:pick(brand,['fontFamily','fontSize','fontWeight','color','gap']),mark:pick(mark,['backgroundColor','color','borderRadius','fontSize']),nav:pick(nav,['display','justifyContent','gap','flexWrap']),menu:pick(nav?.querySelector('a'),['fontFamily','fontSize','fontWeight','color','minHeight']),contact:pick(contact,['fontFamily','fontSize','fontWeight','color','borderColor','borderRadius','minHeight']),links,hero:(()=>{const e=document.querySelector(home?'#tsd-fpv-preview .tsd-hero':'[data-tsd-common-hero]');if(!e)return null;const s=getComputedStyle(e);return {background:s.backgroundImage,color:s.color,pattern:getComputedStyle(e,'::before').backgroundImage};})()};
+            },home);
+          }
+          const baselines={};
+          for(const width of [1440,768,390,320]){
+            const ctx=await browser.newContext({viewport:{width,height:900}});
+            const page=await ctx.newPage();
+            await page.goto('http://127.0.0.1:8765/index.html',{waitUntil:'domcontentloaded'});
+            const header=page.locator('#tsd-fpv-preview header').first();
+            await header.waitFor({state:'visible'});
+            await page.mouse.move(width-2,898);
+            baselines[width]=await fingerprint(header,true);
+            await header.screenshot({path:'/tmp/tsd-header-results/home-header-'+width+'.png',timeout:30000});
+            await ctx.close();
+          }
+          function compare(base,actual){
+            const out=[];
+            for(const name of ['header','bar','brand','mark','nav','menu','contact']){
+              if(!base[name]||!actual[name]){out.push({name,missing:true});continue;}
+              for(const [prop,val] of Object.entries(base[name].css)){
+                if(val!==actual[name].css[prop])out.push({name,prop,expected:val,actual:actual[name].css[prop]});
+              }
+              const delta=actual[name].rect.map((v,i)=>Math.round((v-base[name].rect[i])*100)/100);
+              if(delta.some(v=>Math.abs(v)>3))out.push({name,geometryDeltaPx:delta});
+            }
+            return out;
+          }
+          async function verifyPropControls(page,entry,errors){
+          const checks={};
+          const ensure=(key,value)=>{checks[key]=!!value;if(!value)throw Error('PropLab functional failure: '+key);};
+          entry.propChecks=checks;
+          await page.locator('#motors button').first().waitFor({state:'visible',timeout:10000});
+          ensure('fourMotors',await page.locator('#motors button').count()===4);
+          ensure('canvases',await page.evaluate(()=>['airframe3d','drone','track','spectrum'].every(id=>{const c=document.getElementById(id);return c instanceof HTMLCanvasElement&&c.width>0&&c.height>0&&c.getBoundingClientRect().width>0;})));
+          const rpmBefore=await page.locator('#rpm').innerText();
+          await page.locator('#throttle').fill('60');
+          await page.waitForFunction(old=>document.querySelector('#power').textContent.includes('60')&&document.querySelector('#rpm').textContent!==old,rpmBefore,{timeout:15000});
+          ensure('throttleRPM',true);
+          for(const [id,v] of [['roll','35'],['pitch','-25'],['yaw','40']]){
+            await page.locator('#'+id).fill(v);
+            ensure(id,await page.locator('#'+id).inputValue()===v&&await page.locator('#'+id+'Value').innerText().then(t=>t.includes(v.replace('-',''))));
+          }
+          await page.locator('#axesCenter').click();
+          ensure('axesCenter',await page.evaluate(()=>['roll','pitch','yaw'].every(id=>document.getElementById(id).value==='0')));
+          await page.locator('#motors button').nth(2).click();
+          ensure('motorSelect',await page.locator('#motors button').nth(2).getAttribute('aria-pressed')==='true');
+          await page.locator('#blades button[data-value="4"]').click();
+          ensure('bladeSelect',await page.locator('#blades button[data-value="4"]').getAttribute('aria-pressed')==='true');
+          await page.locator('#speed button[data-value="0.1"]').click();
+          ensure('slowPlayback',await page.locator('#speed button[data-value="0.1"]').getAttribute('aria-pressed')==='true');
+          await page.locator('#pulses').click();
+          ensure('pulseToggle',await page.locator('#pulses').getAttribute('aria-pressed')==='false');
+          await page.locator('#vibrationExample').click();
+          ensure('vibrationToggle',await page.locator('#vibrationExample').getAttribute('aria-pressed')==='true');
+          await page.locator('#pause').click();
+          ensure('pause',await page.locator('#pause').getAttribute('aria-pressed')==='true');
+          await page.locator('#pause').click();
+          ensure('resume',await page.locator('#pause').getAttribute('aria-pressed')==='false');
+          await page.locator('#sound').click();
+          await page.waitForFunction(()=>document.getElementById('sound').getAttribute('aria-pressed')==='true'||document.getElementById('audioStatus').textContent.length>0,undefined,{timeout:10000});
+          ensure('audioStart',await page.locator('#sound').getAttribute('aria-pressed')==='true');
+          await page.locator('#volume').fill('20');
+          ensure('volume',await page.locator('#volumeValue').innerText()==='20%');
+          await page.locator('#reset').click();
+          ensure('reset',await page.evaluate(()=>document.getElementById('throttle').value==='0'&&document.getElementById('sound').getAttribute('aria-pressed')==='false'&&document.getElementById('vibrationExample').getAttribute('aria-pressed')==='false'));
+          ensure('noPageErrors',errors.length===0);
+          entry.propFunctionalPass=true;
+          }
+          for (const file of paths) for (const width of [1440,768,390,320]) {
+            const context=await browser.newContext({viewport:{width,height:900}});
+            const page=await context.newPage(); const errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            const entry={file,width,errors};
+            try {
+              const response=await page.goto('http://127.0.0.1:8765/'+file,{waitUntil:'domcontentloaded',timeout:30000});
+              entry.http=response?.status();
+              const header=page.locator('[data-tsd-common-header]:visible').first();
+              if(file==='tsd-qgc-mission-lab.html'){
+                await page.waitForLoadState('load',{timeout:30000}).catch(()=>{});
+                entry.qgcInitial=await page.evaluate(()=>({ready:document.readyState,course:document.getElementById('courseHome')?.className,openCourseType:typeof openCourse,buttons:[...document.querySelectorAll('button')].filter(b=>b.getBoundingClientRect().width>0).map(b=>({id:b.id,text:b.textContent.trim().slice(0,70),handler:b.getAttribute('onclick')})).slice(0,80)}));
+                if(!await header.count()){
+                  const menu=page.locator('#menuButton:visible');
+                  if(await menu.count()){
+                    await menu.click({timeout:5000});
+                    entry.qgcMenu=await page.evaluate(()=>[...document.querySelectorAll('button,a,[role=menuitem]')].filter(b=>b.getBoundingClientRect().width>0&&b.getBoundingClientRect().height>0&&getComputedStyle(b).visibility!=='hidden').map(b=>({id:b.id,text:b.textContent.trim().slice(0,100)})).slice(0,120));
+                  }
+                  const courseButton=page.locator('button:visible,a:visible,[role=menuitem]:visible').filter({hasText:/^(교육 과정|교육과정|교육 홈|실습 과정|실습과정|실습 홈|교육 시작|단계별 실습|튜토리얼|처음부터 배우기|학습 과정|교육 목록|실습 목록|교육 과정으로|교육 과정으로 돌아가기|교육 과정 홈|교육 홈으로|교육 과정 보기|교육 과정 열기|교육 안내|교육 메뉴|교육·실습|실습 안내|실습 메뉴|과정 선택|교육 과정 선택|학습 홈|교육과정 선택)$/}).first();
+                  if(await courseButton.count()){
+                    entry.courseEntry='visible UI button';
+                    await courseButton.click({timeout:5000}).catch(e=>entry.courseClickError=String(e));
+                  }
+                  if(!await header.count()){
+                    entry.courseEntry='direct diagnostic only';
+                    entry.courseOpened=await page.evaluate(()=>{if(typeof openCourse!=='function')return false;openCourse();return true;});
+                  }
+                }else entry.courseEntry='initial';
+              }
+              await header.waitFor({state:'visible',timeout:10000});
+              const nav=await header.evaluate(h=>{
+                const r=h.getBoundingClientRect();
+                const links=[...h.querySelectorAll('a')].map(a=>{const b=a.getBoundingClientRect(); return {label:a.textContent.trim(),href:a.getAttribute('href'),visible:b.width>0&&b.height>0,left:b.left,right:b.right};});
+                return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,viewport:innerWidth,viewportHeight:innerHeight,links,overflow:h.scrollWidth>h.clientWidth+1};
+              });
+              Object.assign(entry,nav);
+              entry.pass=entry.http===200&&!entry.overflow&&nav.left>=-1&&nav.right<=width+1&&nav.links.length>=6&&nav.links.every(a=>a.visible&&a.left>=-1&&a.right<=width+1)&&errors.length===0&&entry.courseEntry!=='direct diagnostic only';
+              await page.mouse.move(width-2,898);
+              entry.fingerprint=await fingerprint(header);
+              entry.styleSheets=await page.evaluate(()=>[...document.styleSheets].map(s=>({href:s.href,inlineCommon:!!s.ownerNode?.hasAttribute('data-tsd-common-inline')})));
+              entry.cssSource=await page.evaluate(()=>[...document.querySelectorAll('link[rel=stylesheet]')].filter(l=>l.href.includes('tsd-aero-common.css')).map(l=>({href:l.href,loaded:!!l.sheet})));
+              entry.commonCssResponse=await page.request.get('http://127.0.0.1:8765/tsd-aero-common.css').then(async res=>({status:res.status(),length:(await res.body()).length}));
+              entry.visualDifferences=compare(baselines[width],entry.fingerprint);
+              entry.heroBackgroundMatch=entry.fingerprint.hero?.background===baselines[width].hero?.background;
+              entry.heroPatternMatch=entry.fingerprint.hero?.pattern===baselines[width].hero?.pattern;
+              entry.menuLabelsMatch=entry.fingerprint.links.map(x=>x.label.replace(/\s/g,'')).join('|')===baselines[width].links.map(x=>x.label.replace(/\s/g,'')).join('|');
+              entry.menuTargetsMatch=entry.fingerprint.links.map(x=>x.url).join('|')===baselines[width].links.map(x=>x.url).join('|');
+              entry.linkChecks=[];
+              for(const link of await header.locator('a').all()){
+                const href=await link.evaluate(a=>a.href);
+                const url=new URL(href);
+                const filePath=url.pathname.split('/').pop()||'index.html';
+                const local='http://127.0.0.1:8765/'+filePath;
+                const response=await page.request.get(local,{timeout:10000});
+                entry.linkChecks.push({file:filePath,status:response.status(),hash:url.hash});
+              }
+              await page.addScriptTag({content:axeSource});
+              entry.axe=await header.evaluate(async h=>{const result=await window.axe.run(h,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']}});return result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}));},undefined,{timeout:90000});
+              // Capture the rendered viewport once, without waiting for another layout action.
+              // The header crop is derived from real PNG pixels, not reconstructed markup.
+              let pixels;
+              let session;
+              try {
+                session=await context.newCDPSession(page);
+                let timer;
+                try {
+                  const capture=await Promise.race([session.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('CDP screenshot timeout')),45000);})]);
+                  pixels=Buffer.from(capture.data,'base64');
+                } finally {clearTimeout(timer);}
+                entry.captureMethod='chromium-cdp';
+              } catch(e) {
+                entry.captureFallback=String(e);
+                pixels=await page.screenshot({timeout:45000,animations:'disabled'});
+                entry.captureMethod='playwright';
+              } finally {if(session)await session.detach().catch(()=>{});}
+              const full=PNG.sync.read(pixels);
+              const sx=full.width/nav.viewport,sy=full.height/nav.viewportHeight;
+              const x=Math.max(0,Math.floor(nav.left*sx)),y=Math.max(0,Math.floor(nav.top*sy));
+              const right=Math.min(full.width,Math.ceil(nav.right*sx)),bottom=Math.min(full.height,Math.ceil(nav.bottom*sy));
+              if(right<=x||bottom<=y)throw Error('Header outside captured viewport');
+              const cropped=new PNG({width:right-x,height:bottom-y});
+              PNG.bitblt(full,cropped,x,y,cropped.width,cropped.height,0,0);
+              fs.writeFileSync('/tmp/tsd-header-results/'+file+'-'+width+'.png',pixels);
+              fs.writeFileSync('/tmp/tsd-header-results/header-'+file+'-'+width+'.png',PNG.sync.write(cropped));
+              entry.headerCapture=true;
+              entry.captureSize=[full.width,full.height];
+              if(file==='prop-vibration-lab.html') await verifyPropControls(page,entry,errors);
+              if(file==='simulator.html'){
+                const card=page.locator('#prop-vibration-lab a[aria-label="프롭 진동 실습 시작"]');
+                const target=await card.getAttribute('href');
+                if(target!=='./prop-vibration-lab.html')throw Error('PropLab card target incorrect: '+target);
+                await Promise.all([page.waitForURL('**/prop-vibration-lab.html',{timeout:15000}),card.click({timeout:15000})]);
+                await page.locator('#motors button').first().waitFor({state:'visible',timeout:15000});
+                await Promise.all([page.waitForURL('**/simulator.html',{timeout:15000}),page.locator('[data-tsd-common-nav] a[href="./simulator.html"]').click({timeout:15000})]);
+                entry.propCardRoundTrip=true;
+              }
+              entry.designPass=entry.pass&&entry.visualDifferences.length===0&&entry.heroBackgroundMatch&&entry.heroPatternMatch&&entry.menuLabelsMatch&&entry.menuTargetsMatch&&entry.linkChecks.every(x=>x.status===200)&&entry.axe.length===0&&entry.headerCapture===true&&entry.commonCssResponse.status===200;
+            } catch(e) {entry.pass=false;entry.designPass=false;entry.failure=String(e);await page.screenshot({path:'/tmp/tsd-header-results/'+file+'-'+width+'-failure.png',timeout:10000}).catch(()=>{});}
+            result.push(entry); console.log(JSON.stringify(entry));await context.close();
+          }
+          const external={url:'https://tsd-prop-sound-lab.amiablecoati.chatgpt.site/',comparable:false};
+          const externalPage=await browser.newPage();
+          const externalErrors=[];externalPage.on('pageerror',e=>externalErrors.push(String(e)));
+          try {
+            const response=await externalPage.goto(external.url,{waitUntil:'domcontentloaded',timeout:25000});
+            external.http=response?.status();external.finalUrl=externalPage.url();external.title=await externalPage.title();
+            const ids=['motors','airframe3d','drone','track','spectrum','throttle','roll','pitch','yaw','sound','reset'];
+            external.controls=await externalPage.evaluate(ids=>Object.fromEntries(ids.map(id=>[id,!!document.getElementById(id)])),ids);
+            external.comparable=external.http===200&&Object.values(external.controls).every(Boolean);
+            await verifyPropControls(externalPage,external,externalErrors);
+            await externalPage.screenshot({path:'/tmp/tsd-header-results/external-prop.png',timeout:10000}).catch(()=>{});
+          }catch(e){external.error=String(e)}
+          fs.writeFileSync('/tmp/tsd-header-results/external-prop-audit.json',JSON.stringify(external,null,2));
+          console.log(JSON.stringify({externalPropAudit:external}));
+          await externalPage.close();
+          const unlockedAudit={configured:!!process.env.TSD_EQUIPMENT_QA_PASSWORD,pass:false};
+          if(unlockedAudit.configured){
+            const c=await browser.newContext({viewport:{width:1440,height:900}});
+            try{
+              const p=await c.newPage();
+              await p.goto('http://127.0.0.1:8765/equipment-lab.html',{waitUntil:'domcontentloaded'});
+              await p.locator('#password').fill(process.env.TSD_EQUIPMENT_QA_PASSWORD);
+              await p.locator('#enter').click();
+              const f=p.frameLocator('iframe[title="TSD 장비 연결 연구실"]');
+              const h=f.locator('[data-tsd-common-header]');
+              await h.waitFor({state:'visible',timeout:20000});
+              unlockedAudit.header=true;
+              unlockedAudit.links=await h.locator('a').count();
+              unlockedAudit.lock=await f.locator('#lock').isVisible();
+              unlockedAudit.hasMain=await f.locator('main').count()>0;
+              await f.locator('#lock').click();
+              await p.locator('#password').waitFor({state:'visible',timeout:20000});
+              unlockedAudit.relocked=true;
+              unlockedAudit.pass=unlockedAudit.links>=6&&unlockedAudit.lock&&unlockedAudit.hasMain&&unlockedAudit.relocked;
+            }catch{unlockedAudit.failure='Unlock, internal layout, or relock verification failed';}
+            finally{await c.close();}
+          }else unlockedAudit.failure='Repository QA secret is not configured';
+          fs.writeFileSync('/tmp/tsd-header-results/equipment-unlock-audit.json',JSON.stringify(unlockedAudit,null,2));
+          console.log(JSON.stringify({unlockedAudit}));
+          await browser.close();
+          fs.writeFileSync('/tmp/tsd-header-results/results.json',JSON.stringify(result,null,2));
+          fs.writeFileSync('/tmp/tsd-header-results/design-audit.json',JSON.stringify({checkedCommit,baselines,summary:{smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length},results:result},null,2));
+          console.log(JSON.stringify({checkedCommit,smoke:result.filter(x=>x.pass).length,design:result.filter(x=>x.designPass).length,total:result.length}));
+          const unresolvedScripts=sourceAudit.filter(x=>!x.functionalSourcePreserved).map(x=>x.file);
+          const externalPassed=external.comparable===true&&external.propFunctionalPass===true;
+          const propRoundTrips=result.filter(x=>x.file==='simulator.html'&&x.propCardRoundTrip===true).length;
+          const propFunctional=result.filter(x=>x.file==='prop-vibration-lab.html'&&x.propFunctionalPass===true).length;
+          console.log(JSON.stringify({releaseGate:{unresolvedScripts,externalPassed,propRoundTrips,propFunctional,unlockedAudit,allHeaderTestsPassed:result.every(x=>x.pass&&x.designPass)}}));
+          if(result.some(x=>!x.pass||!x.designPass)||unresolvedScripts.length||!externalPassed||propRoundTrips!==4||propFunctional!==4||!unlockedAudit.pass) process.exitCode=1;
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsd-header-browser-results
+          path: /tmp/tsd-header-results
+          retention-days: 30

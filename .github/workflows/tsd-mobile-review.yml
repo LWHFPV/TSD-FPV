@@ -1,0 +1,48 @@
+name: TSD mobile device review
+on:
+  push:
+    branches: [review/tsd-header-browser-check-20261126]
+  pull_request:
+    branches: [review/tsd-aero-header-main-safe-20261126]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mobile:
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ENGINE: ${{ matrix.engine }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Checkout current production source used by desktop QA
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: site
+          fetch-depth: 1
+          lfs: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.51.1
+      - run: npx playwright install --with-deps "$ENGINE"
+      - name: Run mobile touch and orientation checks
+        working-directory: site
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/tsd-mobile-http.log 2>&1 &
+          for n in {1..20}; do curl -fsS http://127.0.0.1:8765/index.html >/dev/null && break; sleep 1; done
+          node ../.github/qa/tsd-mobile-review.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsd-mobile-${{ matrix.engine }}
+          path: /tmp/tsd-mobile-${{ matrix.engine }}
+          retention-days: 30

@@ -1,0 +1,106 @@
+name: TSD live header release verification
+on:
+  push:
+    branches: [review/tsd-header-browser-check-20261126]
+    paths: ['.github/workflows/tsd-live-header-release.yml']
+  pull_request:
+    branches: [review/tsd-aero-header-main-safe-20261126]
+    paths: ['.github/workflows/tsd-live-header-release.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deployed:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          lfs: false
+          persist-credentials: false
+      - name: Compare live HTTPS files with merged source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib, time, urllib.request, concurrent.futures, subprocess
+          checked_main=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          files=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','prop-vibration-lab.html','simulator.html','tsd-aero-common.css','tsd-qgc-mission-lab.html']
+          def check(file):
+              expected=pathlib.Path(file).read_bytes()
+              try:
+                  url='https://lwhfpv.github.io/TSD-FPV/'+file+'?release='+checked_main+'&qa='+str(int(time.time()))
+                  with urllib.request.urlopen(urllib.request.Request(url,headers={'Cache-Control':'no-cache','User-Agent':'TSD-release-QA'}),timeout=25) as response:
+                      actual=response.read()
+                      return {'file':file,'status':response.status,'matches':actual==expected,'expectedSHA256':hashlib.sha256(expected).hexdigest(),'actualSHA256':hashlib.sha256(actual).hexdigest()}
+              except Exception as exc:
+                  return {'file':file,'matches':False,'error':str(exc)}
+          for attempt in range(12):
+              with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+                  results=list(pool.map(check,files))
+              print(json.dumps({'checkedMain':checked_main,'attempt':attempt+1,'matches':sum(r['matches'] for r in results),'total':len(results),'results':results}),flush=True)
+              if all(r['matches'] for r in results):break
+              if attempt<11:time.sleep(20)
+          pathlib.Path('/tmp/tsd-live-release.json').write_text(json.dumps(results,indent=2))
+          if not all(r['matches'] for r in results):raise SystemExit(1)
+          PY
+      - name: Install isolated Vitest 5.1.2 after dependency audit
+        if: always()
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate release evidence with Vitest
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          QA="$(mktemp -d)"
+          cd "$QA"
+          printf '%s\n' '{"name":"tsd-release-evidence-qa","version":"1.0.0","private":true,"type":"module","devDependencies":{"vitest":"5.1.2"}}' > package.json
+          npm install --package-lock-only --ignore-scripts --no-audit
+          npm audit --audit-level=moderate
+          npm ci --ignore-scripts --no-audit
+          cat > vitest.config.mjs <<'JS'
+          import { defineConfig } from 'vitest/config'
+          export default defineConfig({test:{environment:'node',watch:false,api:false,browser:{enabled:false},include:['release.test.mjs']}})
+          JS
+          cat > release.test.mjs <<'JS'
+          import { describe, expect, test } from 'vitest'
+          import { readFileSync } from 'node:fs'
+          import { createHash } from 'node:crypto'
+          import { resolve } from 'node:path'
+          const files=['TSD_EOIR_V24_Mission.html','blackbox-analyzer.html','contact.html','drone-design.html','education.html','equipment-lab.html','flight-safety.html','fpv-flight-lab.html','link-budget.html','long-range-calculator.html','prop-vibration-lab.html','simulator.html','tsd-aero-common.css','tsd-qgc-mission-lab.html']
+          const evidence=JSON.parse(readFileSync('/tmp/tsd-live-release.json','utf8'))
+          const root=process.env.GITHUB_WORKSPACE
+          const sha=s=>createHash('sha256').update(s).digest('hex')
+          describe('production release evidence',()=>{
+            test('all expected files are represented once',()=>{
+              expect(evidence.map(x=>x.file).sort()).toEqual([...files].sort())
+            })
+            test.each(files)('%s: live HTTP 200 and exact source hash',file=>{
+              const x=evidence.find(r=>r.file===file)
+              expect(x).toBeDefined()
+              expect(x.status).toBe(200)
+              expect(x.matches).toBe(true)
+              expect(x.expectedSHA256).toBe(sha(readFileSync(resolve(root,file))))
+              expect(x.actualSHA256).toBe(x.expectedSHA256)
+            })
+            test('current FPV source includes shared header and executable script',()=>{
+              const html=readFileSync(resolve(root,'fpv-flight-lab.html'),'utf8')
+              expect(html).toContain('data-tsd-common-header')
+              expect(html).toMatch(/<script\b/i)
+            })
+            test('simulator uses the integrated PropLab route',()=>{
+              expect(readFileSync(resolve(root,'simulator.html'),'utf8')).toMatch(/href=["']\.\/prop-vibration-lab\.html["']/)
+            })
+          })
+          JS
+          env -u NODE_AUTH_TOKEN -u GITHUB_TOKEN ./node_modules/.bin/vitest run --reporter=default --reporter=json --outputFile.json=/tmp/tsd-vitest-release.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsd-live-release
+          path: |
+            /tmp/tsd-live-release.json
+            /tmp/tsd-vitest-release.json
+          retention-days: 7
