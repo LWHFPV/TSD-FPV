@@ -1,0 +1,128 @@
+{
+  "revision": "RevS9-RX1",
+  "scope": "Internal nonflight mockup only",
+  "sourceCommit": "155872b42bda2d05a7a26766cbc73a04cf7ad8b6",
+  "sourceArchiveSHA256": "cd67bc14a05a2c1b01d11314379a74bbc68464f9c7c0cdcb4f68a525b0dbb833",
+  "rx": {
+    "supportExtension_mm": 1.5,
+    "originalHoleDiameter_mm": 3,
+    "nominalScrew": "M2.5",
+    "newVolume_mm3": 3416.0653076200915,
+    "addedVolume_mm3": 162.8601631619299,
+    "assemblyBounds_mm": [
+      [
+        -18,
+        -88,
+        7
+      ],
+      [
+        18,
+        -70,
+        29.2
+      ]
+    ],
+    "fourVariantWebRXMeshSHA256": "998ace51931819a86fa0119a01e56c7d1d41bc52a38b8f51bcdc2bb166f21550"
+  },
+  "actualNewChecks": {
+    "reimportedValidAssemblySolids": 142,
+    "unchangedSolidsCheckedVolumeAndBounds": 138,
+    "changedSolids": 4,
+    "rxToOtherSolidPairsScreened": 138,
+    "positiveAABBVolumeCandidates": 4,
+    "positiveBooleanOverlap": 0,
+    "rxBaseMinDistance_mm": 0,
+    "newGLBRoundtripNodeCount": 142,
+    "glbRXVerticesMatchWeb": true,
+    "webPayloadRoundtrip": true,
+    "jsSyntax": "pass",
+    "webgl": "unavailable: both WebGL and WebGL2 false using Chromium ANGLE SwiftShader and SwiftShader-WebGL",
+    "originalGeometryPreserved": true
+  },
+  "variants": [
+    {
+      "name": "상부_XT60",
+      "solids": 35,
+      "rxIndex": 34,
+      "triangles": 89076,
+      "STEP_SHA256": "720d545ebc0d7e67e1a593f5c093f1afca89af8888221f25460097b0ad916e12",
+      "GLB_SHA256": "f1965cea00a58d4a9ff9d5533a855f9591584062e0831e53edea67747bfb4f78"
+    },
+    {
+      "name": "상부_XT90",
+      "solids": 34,
+      "rxIndex": 33,
+      "triangles": 86356,
+      "STEP_SHA256": "4b060f44a1882dbce5d11d123fb20131f161e8afe7122c3486e2a85e2005e30d",
+      "GLB_SHA256": "ef8e24f5ba572669c7029fe670e0f736def94398f29fccfac1b1958fdd478dfd"
+    },
+    {
+      "name": "하부_XT60",
+      "solids": 37,
+      "rxIndex": 36,
+      "triangles": 96896,
+      "STEP_SHA256": "542540acae2ecaedb32a21194e2dca37dc7a5b156e50568f630d9e9881702675",
+      "GLB_SHA256": "7e44ce308bd1a4e0a29fcd8bd7c0ae596e22dfac41534cf6c2e6c19d58a18a8f"
+    },
+    {
+      "name": "하부_XT90",
+      "solids": 36,
+      "rxIndex": 35,
+      "triangles": 94160,
+      "STEP_SHA256": "b60c49f8f66e00b28c29adb4f42cf9acaa76f5385b0d3c17a1575eda8d8c61d8",
+      "GLB_SHA256": "ff1fbd4b2a73de25e3c1938c88000fc1d72cfd70e50feee3df546e9bf88f2fd0"
+    }
+  ],
+  "output": {
+    "assemblySTEP": 4,
+    "assemblySTL": 4,
+    "assemblyGLB": 4,
+    "individualPrintSTL": 40,
+    "webTriangles": 366488,
+    "webHTML": 1,
+    "webHTMLBytes": 5844159,
+    "printBOMID": "TSD10-MOCK-015",
+    "printQtyByVariant": [
+      20,
+      19,
+      22,
+      21
+    ],
+    "updatedRX100pctSHA256": "c7446719b255d8b680b6e2f705fab5de74158a9f998da26a3ec2b8c08574546a",
+    "updatedRX50pctSHA256": "47138859ba1d34b5fabaaf1cd03f3fca2e56e9e245afa4cb7b67c05db2b7060a",
+    "internalArchive": {
+      "name": "TSD10_RevS9-RX1_internal.zip",
+      "bytes": 32048434,
+      "sha256": "89a844becabd5490c39cbd5be155b3a1979e08a0539cd35ac986e459cdf040cd",
+      "verifiedManifest": 144
+    },
+    "regenerated3MF": {
+      "name": "TSD10_RevS9-RX1_3MF_internal.zip",
+      "plates": 16,
+      "instances": 164,
+      "manifest": 20,
+      "sha256": "b0b150d1debc5bfd475e03deb4d3abcadf0af520863d277a7297278d86fef5b7"
+    },
+    "note": "Local archives only; CAD binaries and HTML not committed. Historical RevS9 measurements kept under historical paths, no old 3MF reused. No actual slicing/G-code."
+  },
+  "priorActions": {
+    "id": 46146884679,
+    "conclusion": "success",
+    "scope": "RevS8 mesh/category audit only"
+  },
+  "PR": {
+    "number": 2,
+    "base": "38eae7931ba9cdb02bd521294b24f25c1e3a46c0",
+    "mergeable": true,
+    "merged": false
+  },
+  "remaining": [
+    "Red marked rear extension exact boundary unavailable after targeted prior-conversation and library search",
+    "GPS/RF attachment decisions",
+    "Actual slicer and independent Fusion test",
+    "Full browser rendering/picking/mobile",
+    "Structural and manufacturing approval"
+  ],
+  "preprintReady": false,
+  "manufacturingApproved": false,
+  "productionChanged": false
+}
