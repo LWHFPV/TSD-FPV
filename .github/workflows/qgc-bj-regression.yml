@@ -1,0 +1,38 @@
+name: QGC BJ isolated regression
+on:
+  push:
+    branches:
+      - review/qgc-bj-storage-regression
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'tsd-qgc-mission-lab.html'
+      - 'tests/qgc-bj-regression.cjs'
+      - '.github/workflows/qgc-bj-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Embedded JavaScript and migration tests
+        run: node tests/qgc-bj-regression.cjs
+      - name: Install isolated browser tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/qgc-bj" --no-save --no-package-lock playwright@1.51.1
+          "$RUNNER_TEMP/qgc-bj/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Chromium desktop and mobile smoke tests
+        run: NODE_PATH="$RUNNER_TEMP/qgc-bj/node_modules" node tests/qgc-bj-regression.cjs --browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qgc-bj-browser-screenshots
+          path: qgc-bj-*.png
+          if-no-files-found: ignore
