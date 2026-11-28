@@ -21,10 +21,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           lfs: false
-      - name: Checkout the same release candidate used by desktop QA
+      - name: Checkout current production source used by desktop QA
         uses: actions/checkout@v4
         with:
-          ref: review/tsd-aero-header-main-safe-20261126
+          ref: main
           path: site
           fetch-depth: 1
           lfs: false

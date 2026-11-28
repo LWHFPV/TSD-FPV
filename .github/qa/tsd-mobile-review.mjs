@@ -123,8 +123,8 @@ try{
  let baselineDiagnostic=null;
  if(engine==='webkit'&&results.some(x=>x.file==='flight-safety.html'&&!x.pass)){
    try{
-     execFileSync('git',['fetch','--no-tags','--depth=1','origin','refs/heads/main:refs/remotes/origin/main'],{encoding:'utf8'});
-     const baselineCommit=execFileSync('git',['rev-parse','refs/remotes/origin/main'],{encoding:'utf8'}).trim();
+     execFileSync('git',['fetch','--no-tags','--depth=1','origin','e53f1c147a2820effd1579edc8d710f33c15fb77'],{encoding:'utf8'});
+     const baselineCommit='e53f1c147a2820effd1579edc8d710f33c15fb77';
      const baselineHtml=execFileSync('git',['show',baselineCommit+':flight-safety.html'],{encoding:'utf8',maxBuffer:20*1024*1024});
      const tests=[];
      for(const mode of ['main','candidate']){
