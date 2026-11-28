@@ -1,0 +1,120 @@
+{
+  "revision": "RevS9-RX1-GPS1",
+  "sourceCommit": "b2d0558436fb63a355e2562a2402472072cd3941",
+  "sourceArchiveSHA256": "89a844becabd5490c39cbd5be155b3a1979e08a0539cd35ac986e459cdf040cd",
+  "scope": "Internal nonflight trial, nominal contact only",
+  "sourceEvidence": "RevS8 GPS pad generator gps_pad_trial.py: 14x12 footprint, 0.5 mm shim; GPS virtual reference shifted 0.6 mm along (0,-0.5,sqrt(3)/2). Kept reference GPS and bracket geometry/position unchanged; adjusted shim only from actual planar face coordinates.",
+  "gps": {
+    "seatPlaneOffset_mm": 116.72851152515332,
+    "gpsUndersidePlaneOffset_mm": 117.3369108352453,
+    "oldThickness_mm": 0.5,
+    "newThickness_mm": 0.6083993100919827,
+    "normalTranslation_mm": -0.00011561309952412557,
+    "oldGaps_mm": [
+      0.0001156130516517032,
+      0.10828369699465892
+    ],
+    "newGaps_mm": [
+      1.1457157353758233e-12,
+      1.2726453165463516e-12
+    ],
+    "bothExactPlanarCommonAreas_mm2": [
+      168,
+      168
+    ],
+    "newVolume_mm3": 102.21108409155272,
+    "delta_mm3": 18.21108409105821,
+    "shimSTEPSTLRoundtrip": "4/4 valid, watertight, winding consistent",
+    "maxSTLVolumeError_pct": 0.00003146906494780287,
+    "positiveBooleanOverlap": 0,
+    "actualFastenerAdhesiveAndTolerance": "not verified; not approval of real shim thickness or mounting"
+  },
+  "variants": [
+    {
+      "name": "상부_XT60",
+      "solids": 35,
+      "shimIndex": 33,
+      "STEP": "4502917fa727a02ebff52901e5033ea4d70bcf5c3c51f731e8f74c7ca1260741",
+      "GLB": "f7e7142f96a68d4c57ac879c8cfefebebdcd951ac529787063fc0af027817e7d"
+    },
+    {
+      "name": "상부_XT90",
+      "solids": 34,
+      "shimIndex": 32,
+      "STEP": "cfaac9ea38e0449e13b102a16c65bcd9fb180adb1929e5b1e53cda01a61f7302",
+      "GLB": "08f90a24596042aa81a7c5e8ee6356027a3ad088a16a9e07f44bf21c4363538f"
+    },
+    {
+      "name": "하부_XT60",
+      "solids": 37,
+      "shimIndex": 35,
+      "STEP": "e9fd6ab357227f10b5392c4605f769480379238872ebd599c2dd09a0d50635b2",
+      "GLB": "cdc6aff7d80c4311f91dd07838b34421607cadad822d29f8065d63b9494b7c5e"
+    },
+    {
+      "name": "하부_XT90",
+      "solids": 36,
+      "shimIndex": 34,
+      "STEP": "b05395b656f6e7eb2d8989448c748bcd2cf98a98d1a8f3d2ab250491370d6edf",
+      "GLB": "c176b6d1c47c89a70e2e2962a76a2d3a491c85376ff420e6cf1ce3218028f760"
+    }
+  ],
+  "actualIntegrationChecks": {
+    "validReimportedSolids": 142,
+    "unchangedSolidsVolumeBounds": 138,
+    "newShims": 4,
+    "shimPairScreening": 138,
+    "AABBCandidates": 8,
+    "positiveIntersections": 0,
+    "GLBNodeRoundtrip": 142,
+    "GLBMeshBoundsAndTriangleCounts": "pass",
+    "changedWebVertexDataMatchesGLB": "pass",
+    "webTriangleCount": 366488,
+    "JSsyntax": "node --check pass",
+    "standaloneHTMLCount": 1,
+    "HTMLBytes": 5844201,
+    "webGL": "not verified in this turn"
+  },
+  "output": {
+    "archive": {
+      "name": "TSD10_RevS9-RX1-GPS1_internal.zip",
+      "bytes": 32056721,
+      "sha256": "a5edf9e6ca188f64e2e1da629716aa5f7d3a396c88b981e67e9eb6cb3ebd2a1b",
+      "manifest": 149
+    },
+    "layout": {
+      "name": "TSD10_RevS9-RX1-GPS1_3MF_internal.zip",
+      "bytes": 15165027,
+      "sha256": "eda60231a239f97092f58cd75a991cd544340ee68fa9e8c53a0f7529f6f81291",
+      "manifest": 20,
+      "plates": 16,
+      "instances": 164
+    },
+    "printId": "TSD10-MOCK-014",
+    "STL100SHA256": "e9ab6fe9f490ca72b11e1a064939429a8fa0e9aecc80ae48ba9f2db95d4a94a6",
+    "STL50SHA256": "64afd432d30a4d3ada411a59af4e969c6313fb3dd903a3bbad3638e05ba8805e",
+    "binaryUploaded": false,
+    "obsoleteViewerRemoved": true,
+    "slicerGcode": false
+  },
+  "priorActions": {
+    "runId": 46147184817,
+    "result": "success",
+    "scope": "RevS8 mesh/category audit only"
+  },
+  "priorPR": {
+    "number": 2,
+    "mergeable": true,
+    "merged": false
+  },
+  "remaining": [
+    "Red-marked rear extension: targeted prior-context search again returned no original image or coordinates; no arbitrary edit",
+    "GPS/RF fastening selection and access",
+    "Actual slicer and independent Fusion tests",
+    "Browser full rendering/interaction",
+    "Structural/material qualification"
+  ],
+  "preprintReady": false,
+  "manufacturingApproved": false,
+  "productionChanged": false
+}
