@@ -1,0 +1,680 @@
+   && new Set(saved.channels).size === 7 && Array.isArray(saved.reverse) && saved.reverse.length === 4
+        && saved.reverse.every(value => typeof value === "boolean")) {
+      return { channels: saved.channels, reverse: saved.reverse };
+    }
+  } catch { /* Use the default layout if browser storage is unavailable. */ }
+  return { channels: defaultChannels, reverse: [false, false, false, false] };
+}
+
+function readSession() {
+  try {
+    if (isNewHostNavigation()) {
+      storeSession(null);
+      return null;
+    }
+    const session = JSON.parse(sessionStorage.getItem(hostStorageKey) ?? "null");
+    if (session && [session.id, session.hostKey].every(v => typeof v === "string" && token.test(v))
+        && Number.isSafeInteger(session.camera?.revision)) return { id: session.id, hostKey: session.hostKey, camera: session.camera };
+  } catch { /* The session can still run without storage. */ }
+  return null;
+}
+
+function storeSession(session) {
+  try {
+    if (session) sessionStorage.setItem(hostStorageKey, JSON.stringify(session));
+    else sessionStorage.removeItem(hostStorageKey);
+  } catch { /* The session can still run without storage. */ }
+}
+
+async function api(action, data = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), action === "poll" ? 1500 : 4000);
+  try {
+    const result = await fetch(relayOrigin + "/api/link", {
+      method: "POST",
+      credentials: "omit",
+      cache: "no-store",
+      redirect: "manual",
+      headers: { "Content-Type": action === "poll" ? "text/plain;charset=UTF-8" : "application/json" },
+      body: JSON.stringify({ action, ...data }),
+      signal: controller.signal,
+    });
+    if (requiresSiteSignIn(result)) {
+      throw Object.assign(new Error("QR 연결 서비스에 접속할 수 없습니다."), { status: 401 });
+    }
+    const body = await result.json().catch(() => null);
+    if (!result.ok || !body) throw Object.assign(
+      new Error(body?.error ?? "QR 연결 서비스와 인터넷 연결을 확인하세요."), { status: result.status });
+    return body;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function setupLink() {
+  const eoir = window.tsdEoirControls;
+  const open = document.getElementById("touchLinkOpen");
+  const close = document.getElementById("touchLinkClose");
+  const end = document.getElementById("touchLinkEnd");
+  const dialog = document.getElementById("touchLinkDialog");
+  const status = document.getElementById("touchLinkStatus");
+  const passwordDialog = document.getElementById("touchPasswordDialog");
+  const passwordForm = document.getElementById("touchPasswordForm");
+  const passwordInput = document.getElementById("touchPasswordInput");
+  const passwordError = document.getElementById("touchPasswordError");
+  const passwordSubmit = document.getElementById("touchPasswordSubmit");
+  const confirmation = document.getElementById("touchLinkConfirmation");
+  const qr = document.getElementById("touchLinkQr");
+  const invite = document.getElementById("touchLinkInvite");
+  const copy = document.getElementById("touchLinkCopy");
+  const channels = channelConfig();
+
+  let session = readSession();
+  let last = null;
+  let receivedUntil = 0;
+  let videoLease = null;
+  let timer = 0;
+  let pollGeneration = 0;
+  let seen = false;
+  let suspendedPilot = null;
+  let handledReset = null;
+  let handledMode = null;
+  let directLink = null;
+  let lastSequence = 0;
+  let sequenceSender = null;
+  let configuring = false;
+  const supportsDirect = typeof RTCPeerConnection !== "undefined" && window.isSecureContext;
+  const directLive = (now = performance.now()) => Boolean(directLink?.channel?.readyState === "open" && directLink.receiveUntil > now);
+
+  function closeDirect() {
+    const previous = directLink;
+    directLink = null;
+    previous?.peer.close();
+    if (previous) view.stopTrack();
+  }
+
+  function followDirect(current, data) {
+    const offer = data.directOffer;
+    if (!data.packet || !data.sender || data.age >= 1800 || !offer) {
+      // An incomplete HTTPS poll must not tear down a live authenticated direct channel.
+      if (directLink && (!data.sender || data.sender===directLink.sender) &&
+          (directLive() || (directLink.channel?.readyState==="open" &&
+           relayVideoLeaseActive(videoLease,current,directLink.sender,performance.now())))) return;
+      closeDirect();
+      return;
+    }
+    if (directLink?.negotiation === offer.negotiation && directLink.sender === data.sender) return;
+    closeDirect();
+    try {
+      const peer = directInputPeer();
+      const connection = { peer, negotiation: offer.negotiation, sender: data.sender, receiveUntil: 0 };
+      directLink = connection;
+      const active = () => directLink === connection && session === current;
+      peer.ondatachannel = ({ channel }) => {
+        if (!active() || channel.label !== directChannelLabel) { channel.close(); return; }
+        connection.channel = channel;
+        channel.onmessage = ({ data: value }) => {
+          if (!active() || typeof value !== "string" || value.length > 4096) return;
+          let packet;
+          try { packet = readDirectPacket(JSON.parse(value)); } catch { return; }
+          if (!packet?.sequence) { qrDiagnostics.rejectedInvalid++; return; }
+          const now = performance.now();
+          if (sequenceSender === connection.sender && packet.sequence <= lastSequence) { qrDiagnostics.rejectedSequence++; return; }
+          connection.receiveUntil = now + directFreshMs;
+          applyPacket({ packet, sender: connection.sender, age: 0 }, now, directFreshMs, "direct");
+          updateStatus(now);
+        };
+        channel.onclose = () => {
+          if (active()) connection.receiveUntil = 0;
+        };
+      };
+      peer.onconnectionstatechange = () => {
+        if (!active() || !["failed", "closed"].includes(peer.connectionState)) return;
+        connection.receiveUntil = 0;
+        peer.close();
+      };
+      void (async () => {
+        await peer.setRemoteDescription({ type: "offer", sdp: offer.sdp });
+        const video = peer.getTransceivers().find(track => track.receiver.track.kind === "video");
+        if (video && !relayForceJpeg) {
+          try {
+            const track = view.track();
+            if (track) {
+              video.direction = "sendonly";
+              await video.sender.replaceTrack(track);
+              connection.video = true;
+              connection.videoSender = video.sender;
+            }
+          } catch { video.direction = "inactive"; }
+        } else if(video) {video.direction="inactive";}
+        const sdp = await directDescription(peer, await peer.createAnswer());
+        if (!active() || !sdp) return;
+        await api("direct", { stage: "answer", id: current.id, key: current.hostKey, hostDocument: hostPageId(),
+          sender: connection.sender, negotiation: connection.negotiation, sdp });
+        if (active() && connection.video && video) {
+          // Some browsers expose sender encodings only after local negotiation.
+          try {
+            const parameters = video.sender.getParameters();
+            if (parameters.encodings?.length) {
+              parameters.encodings[0].maxBitrate = streamBitrate;
+              parameters.encodings[0].maxFramerate = streamFps;
+              parameters.degradationPreference = "maintain-framerate";
+              void video.sender.setParameters(parameters).catch(() => {});
+            }
+          } catch {}
+        }
+      })().catch(() => { if (active()) connection.peer.close(); });
+    } catch { closeDirect(); }
+  }
+  let refreshCamera = false;
+  let error = "";
+  let steps = { gimbal: 0, zoom: 0 };
+  let cameraTimer = 0;
+  function directVideo(now = performance.now()) {
+    if(relayForceJpeg)return null;
+    const connection = directLink;
+    if (!connection?.videoSender || !["connected", "completed"].includes(connection.peer.iceConnectionState)) return null;
+    if (typeof connection.videoSender.getStats === "function" && now >= (connection.nextStats ?? 0)) {
+      connection.nextStats = now + 600;
+      void bounded(() => connection.videoSender.getStats(), 500).then(report => {
+        if (directLink !== connection) return;
+        const entries=[...report.values()];
+        const outbound=entries.find(s=>s.type==="outbound-rtp"&&(s.kind==="video"||s.mediaType==="video"));
+        const frames=outbound?.framesEncoded;
+        const remote=entries.find(s=>s.type==="remote-inbound-rtp"&&outbound&&(s.localId===outbound.id||s.id===outbound.remoteId));
+        qrDiagnostics.directSent=Number.isFinite(outbound?.framesSent)?outbound.framesSent:null;
+        qrDiagnostics.directLost=Number.isFinite(remote?.packetsLost)?remote.packetsLost:null;
+        qrDiagnostics.directRttMs=Number.isFinite(remote?.roundTripTime)?Math.round(remote.roundTripTime*1000):null;
+        if (Number.isFinite(frames)) {
+          if (Number.isFinite(connection.encodedFrames) && frames > connection.encodedFrames) connection.flowUntil = performance.now() + 1300;
+          connection.encodedFrames = frames;
+          qrDiagnostics.encodedFrames = frames;
+        }
+      }).catch(() => {});
+    }
+    return connection;
+  }
+  const view = createViewRelay(eoir, current =>
+    session === current && relayVideoLeaseActive(videoLease,current,null,performance.now()), directVideo);
+
+  function updateStatus(now = performance.now()) {
+    const connected = Boolean(last && receivedUntil > now);
+    const enabled = connected && last.sender !== suspendedPilot && last.packet.arm && !last.packet.stopHeld;
+    const resetLocked = connected && last.sender === suspendedPilot;
+    qrDiagnostics.inputGate = !connected ? "waiting" : resetLocked ? "reset-lock" : last.packet.stopHeld ? "stop" : !last.packet.arm ? "disarmed" : !eoir.ready() ? "terrain" : "enabled";
+    const summary = error || (!session ? "조종기 미연결" : !connected
+      ? (seen ? "연결 끊김 · 스틱 중립" : "조종기 접속 대기")
+      : resetLocked ? "비행 초기화 잠금 · 모바일 CH5(조종 시작) OFF → ON" : last.packet.stopHeld ? "연결됨 · 정지 입력 유지 중" : !eoir.ready() ? "연결됨 · EO/IR 지형 확인 중" : enabled ? "연결됨 · 조종 중" : "연결됨 · 조종 시작 대기");
+    if (status.value !== summary) {
+      status.value = summary;
+      confirmation.value = summary;
+    }
+    const buttonLabel = session ? "연결 QR 보기" : "휴대폰 연동";
+    if (open.textContent !== buttonLabel) open.textContent = buttonLabel;
+    return enabled;
+  }
+
+  function resetLocal() {
+    closeDirect();
+    view.stopTrack();
+    lastSequence = 0;
+    sequenceSender = null;
+    pollGeneration++;
+    configuring = false;
+    clearTimeout(timer);
+    last = null;
+    receivedUntil = 0;
+    videoLease = null;
+    steps = { gimbal: 0, zoom: 0 };
+    cameraTimer = 0;
+    seen = false;
+    qrDiagnostics.rawAxes=null;qrDiagnostics.effectiveAxes=null;qrDiagnostics.arm=null;qrDiagnostics.inputGate="waiting";qrDiagnostics.lastInputPath="-";
+  }
+
+  function displayQr(ticket) {
+    const url = new URL(ticket.invite);
+    if (url.origin !== relayOrigin || !url.pathname.startsWith(`/controller/${session.id}/`)
+        || typeof ticket.qr !== "string") throw new Error("조종기 주소를 확인할 수 없습니다.");
+    qr.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(ticket.qr);
+    invite.href = url.href;
+    copy.textContent = "연결 링크 복사";
+    dialog.showModal();
+    updateStatus();
+  }
+
+  function applyPacket(data, started, freshness = timeoutMs, path = "HTTPS") {
+    const packet = readDirectPacket(data?.packet);
+    // A different identified sender must not inherit the old video lease.
+    if(videoLease && typeof data?.sender==="string" && data.sender && data.sender!==videoLease.sender) videoLease=null;
+    if (!packet || typeof data?.sender !== "string" || !data.sender || !Number.isFinite(data.age) || data.age < 0) {
+      qrDiagnostics.rejectedInvalid++;
+      last = null;
+      receivedUntil = 0;
+      return;
+    }
+    const until = started + freshness - data.age;
+    if (until <= performance.now()) return;
+    if (packet.sequence) {
+      if (sequenceSender === data.sender && packet.sequence <= lastSequence) { qrDiagnostics.rejectedSequence++; return; }
+      sequenceSender = data.sender;
+      lastSequence = packet.sequence;
+    }
+    const previous = last?.sender === data.sender && (receivedUntil >= started || (packet.sequence && started - receivedUntil < 1000))
+      ? last.packet : null;
+    if (!eoir.reviewView()) {
+      if (packet.cameraMotion && previous?.cameraMotion) {
+        const motion = packet.cameraMotion, baseline = previous.cameraMotion, camera = eoir.camera();
+        steps.gimbal = Math.max(-90 - camera.gimbal, Math.min(35 - camera.gimbal,
+          steps.gimbal + motion.gimbal - baseline.gimbal));
+        steps.zoom = Math.max(Math.log2(camera.minZoom / camera.zoom), Math.min(Math.log2(camera.maxZoom / camera.zoom),
+          steps.zoom + motion.zoom - baseline.zoom));
+      } else if (!packet.cameraMotion && previous?.cameraRevision === session.camera.revision && packet.cameraRevision === session.camera.revision) {
+        steps.gimbal += packet.gimbal - previous.gimbal;
+        steps.zoom += Math.log2(packet.zoom / previous.zoom);
+      }
+    }
+    const reset = packet.commands?.reset ?? 0;
+    const resetRequested = reset > (handledReset?.sender === data.sender ? handledReset.count : 0);
+    handledReset = { sender: data.sender, count: reset };
+    if (suspendedPilot !== data.sender || !packet.arm) suspendedPilot = null;
+    last = { sender: data.sender, packet };
+    qrDiagnostics.inputPackets++;qrDiagnostics.lastInputAt=performance.now();
+    qrDiagnostics.rawAxes=packet.axes.slice();qrDiagnostics.arm=packet.arm;qrDiagnostics.lastInputPath=path;
+    receivedUntil = until;
+    videoLease = relayVideoLeaseNext(videoLease,session,data.sender,until,performance.now());
+    seen = true;
+    if (resetRequested) {
+      eoir.action("reset");
+      return;
+    }
+    if (previous && packet.capture > previous.capture && eoir.ready()) eoir.photo();
+    const modeCount = packet.commands?.flightMode ?? 0;
+    const modeRequested = modeCount > (handledMode?.sender === data.sender ? handledMode.count : 0);
+    handledMode = { sender: data.sender, count: modeCount };
+    if (modeRequested || (previous && previous.mode !== packet.mode)) eoir.mode(packet.mode);
+    if (previous && eoir.ready()) {
+      for (const [command, count] of Object.entries(packet.commands ?? {})) {
+        if (command !== "reset" && command !== "flightMode" && count > (previous.commands?.[command] ?? 0)) eoir.action(command);
+      }
+    }
+  }
+
+  async function poll(current, resume = false) {
+    if (session !== current) return;
+    const generation = pollGeneration;
+    const isCurrent = () => session === current && pollGeneration === generation;
+    const started = performance.now();
+    try {
+      const data = await api("poll", { id: current.id, key: current.hostKey, resume, hostDocument: hostPageId(), direct: supportsDirect });
+      if (!isCurrent()) return;
+      error = "";
+      if (supportsDirect) followDirect(current, data);
+      if (!directLive() || (data.sender && data.sender !== directLink.sender)) applyPacket(data, started);
+      const camera = eoir.camera();
+      if (!configuring && ((refreshCamera && eoir.ready()) || camera.minZoom !== current.camera.minZoom || camera.maxZoom !== current.camera.maxZoom)) {
+        configuring = true;
+        const updated = { ...camera, revision: current.camera.revision + 1 };
+        void api("configure", { id: current.id, key: current.hostKey, config: { ...channels, camera: updated } })
+          .then(() => {
+            if (!isCurrent()) return;
+            refreshCamera = false;
+            current.camera = updated;
+            steps.zoom = 0;
+            storeSession(current);
+          }).catch(() => {}).finally(() => { if (isCurrent()) configuring = false; });
+      }
+    } catch (failure) {
+      if (!isCurrent()) return;
+      if (failure.status === 404 || failure.status === 401) {
+        session = null;
+        storeSession(null);
+        resetLocal();
+        dialog.close();
+        error = failure.status === 401 ? failure.message : "세션이 끝났습니다. 새 QR을 발급하세요.";
+      } else {
+        error = failure.message || "조종 연결을 확인 중입니다.";
+      }
+    }
+    updateStatus();
+    if (isCurrent()) {
+      const nextPoll = directLive() ? 260 : pollMs;
+      timer = setTimeout(() => void poll(current), Math.max(0, nextPoll - (performance.now() - started)));
+    }
+  }
+
+  function requestPassword() {
+    passwordForm.reset();
+    passwordError.hidden = true;
+    passwordDialog.showModal();
+  }
+  document.getElementById("touchPasswordClose").addEventListener("click", () => passwordDialog.close());
+
+  passwordForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (passwordSubmit.disabled) return;
+    const password = passwordInput.value;
+    passwordInput.value = "";
+    passwordError.hidden = true;
+    passwordSubmit.disabled = true;
+    try {
+      const camera = { ...eoir.camera(), revision: 1 };
+      const created = await api("create", { config: { ...channels, camera }, hostDocument: hostPageId(), password });
+      session = { id: created.id, hostKey: created.hostKey, camera };
+      storeSession(session);
+      passwordDialog.close();
+      error = "";
+      displayQr(created);
+      void poll(session);
+    } catch (failure) {
+      passwordError.textContent = failure.message;
+      passwordError.hidden = false;
+      passwordInput.focus();
+    } finally {
+      passwordSubmit.disabled = false;
+      updateStatus();
+    }
+  });
+
+  open.addEventListener("click", async () => {
+    if (open.disabled) return;
+    if (!session) { requestPassword(); return; }
+    open.disabled = true;
+    error = "";
+    try {
+      const ticket = await api("invite", { id: session.id, key: session.hostKey });
+      displayQr(ticket);
+    } catch (failure) {
+      if (failure.status === 404) {
+        session = null;
+        storeSession(null);
+        resetLocal();
+        requestPassword();
+      } else error = failure.message;
+    } finally {
+      open.disabled = false;
+      updateStatus();
+    }
+  });
+  close.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("close", () => {
+    qr.removeAttribute("src");
+    invite.removeAttribute("href");
+  });
+  end.addEventListener("click", async () => {
+    const current = session;
+    if (!current || end.disabled) return;
+    end.disabled = true;
+    resetLocal();
+    updateStatus();
+    try {
+      await api("disconnect", { id: current.id, key: current.hostKey });
+      error = "";
+    } catch (failure) {
+      error = failure.message;
+    } finally {
+      end.disabled = false;
+      if (session === current) void poll(current);
+      updateStatus();
+    }
+  });
+  copy.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(invite.href);
+      copy.textContent = "복사됨";
+    } catch {
+      copy.textContent = "주소 복사 실패";
+    }
+  });
+
+  window.tsdEoirLink = {
+    resetFlightInput() {
+      suspendedPilot = last?.sender ?? null;
+      steps = { gimbal: 0, zoom: 0 };
+      cameraTimer = 0;
+      refreshCamera = true;
+      if (session) void api("reset-flight", { id: session.id, key: session.hostKey }).catch(failure => {
+        error = failure.message;
+        updateStatus();
+      });
+    },
+    captureView: view.capture,
+    updateView: now => {
+      qrDiagnostics.videoLeaseMs=videoLease && videoLease.session===session ? Math.max(0,Math.round(videoLease.until-performance.now())) : 0;
+      qrDiagnostics.videoLeaseActive=relayVideoLeaseActive(videoLease,session,null,performance.now());
+      view.request(session, now);
+    },
+    frame(dt, now) {
+      const enabled = updateStatus(now);
+      if (!last || receivedUntil <= now) {
+        qrDiagnostics.effectiveAxes=null;
+        steps = { gimbal: 0, zoom: 0 };
+        cameraTimer = 0;
+        return null;
+      }
+      if (eoir.ready()) {
+        const zoom = Math.abs(steps.zoom) < .00025 ? steps.zoom : steps.zoom * (1 - Math.exp(-16 * dt));
+        steps.zoom -= zoom;
+        cameraTimer = Math.min(.07, cameraTimer + dt);
+        let gimbal = 0;
+        if (cameraTimer >= .028 && steps.gimbal) {
+          gimbal = Math.abs(steps.gimbal) < .025 ? steps.gimbal : steps.gimbal * (1 - Math.exp(-16 * cameraTimer));
+          steps.gimbal -= gimbal;
+          cameraTimer = 0;
+        }
+        if ((gimbal || zoom) && !eoir.moveCamera(gimbal, zoom)) steps.gimbal = 0;
+      }
+      const effective=enabled && eoir.ready() ? toEoirAxes(last.packet.axes, channels.reverse) : null;
+      qrDiagnostics.effectiveAxes=effective;
+      return effective;
+    },
+  };
+  window.addEventListener("pagehide", () => {
+    if (!session) return;
+    resetLocal();
+    leaveHostPage(session);
+  });
+  window.addEventListener("pageshow", event => {
+    if (event.persisted && session) void poll(session, true);
+  });
+  updateStatus();
+  if (session) void poll(session, true);
+}
+
+if (typeof document !== "undefined") setupLink();
+
+})();
+</script>
+<script id="tsdPilot2PreviewScript">
+(function(){
+var d=document, strip=d.getElementById('cameraStrip'), trigger=d.getElementById('cameraSettings'), pilot=d.getElementById('pilot'), menu=d.getElementById('tsdCamMenu'), path=d.getElementById('tsdCamPath'), back=d.getElementById('tsdCamBack');
+var tree={video:[['녹화 설정',['tsdVideoPanel']]],exposure:[['노출 설정',['tsdExposurePanel']]],photo:[['촬영 설정',['tsdPhotoPanel']]],view:[['독립 화면',['tsdSensorViewPanel']],['분할 화면',['sbs','lock','sync']]],ir:[['팔레트',['palette']],['게인 모드',['gain']],['온도 측정',['measure']],['등온선',['tsdIsothermPanel']],['고온 경보 (TSD)',['tsdHeatAlarmPanel']],['표시 모드',['tsdSensorViewPanel','sbs','lock','sync']]],training:[['가상 조종기',['flightControls']],['짐벌 제어',['gimbalControls']],['거리 검증',['zoomTest','zoomTestReadout']]]};
+var titles={video:'동영상',exposure:'노출',photo:'사진',view:'화면',ir:'열화상',training:'TSD 훈련'}, entries={}, current='view', leaf=-1;
+Object.keys(tree).forEach(function(k){tree[k].forEach(function(row){row[1].forEach(function(id){var n=d.getElementById(id);if(n)entries[id]=n.closest('label')||n;});});});
+function camera(){return d.getElementById('irCamera').getAttribute('aria-pressed')==='true'?'ir':d.getElementById('zoomCamera').getAttribute('aria-pressed')==='true'?'zoom':'wide';}
+function irAvailable(){return camera()==='ir'||d.getElementById('sbs').getAttribute('aria-pressed')==='true';}
+function render(){var ir=irAvailable();if((current==='ir'&&!ir)||(current==='exposure'&&camera()==='ir')){current=camera()==='ir'?'ir':'view';leaf=-1;} d.getElementById('tsdExposureOpen').hidden=camera()==='ir';d.getElementById('tsdExposureOpen').setAttribute('aria-expanded',String(!strip.hidden&&current==='exposure'));
+strip.querySelectorAll('[data-tsd-tab]').forEach(function(b){var k=b.dataset.tsdTab;b.hidden=(k==='ir'&&!ir)||(k==='exposure'&&camera()==='ir');b.setAttribute('aria-pressed',String(k===current));});
+var selected=tree[current][leaf];Object.keys(entries).forEach(function(id){var n=entries[id];if(n.parentNode!==strip)strip.appendChild(n);n.style.display=selected&&selected[1].indexOf(id)!==-1?'':'none';});
+path.textContent=camera().toUpperCase()+' / '+titles[current];menu.replaceChildren();menu.hidden=false;back.hidden=true;
+tree[current].forEach(function(row,i){var group=d.createElement('div');group.className='tsdLeafGroup';var b=d.createElement('button');b.type='button';b.className='tsdOptionRow';b.dataset.tsdLeaf=String(i);b.setAttribute('aria-expanded',String(i===leaf));[row[0],i===leaf?'접기':'설정',i===leaf?'▴':'▾'].forEach(function(t){var sp=d.createElement('span');sp.textContent=t;b.appendChild(sp);});b.onclick=function(){leaf=leaf===i?-1:i;render();var n=menu.querySelector('[data-tsd-leaf="'+i+'"]');if(n)n.focus({preventScroll:true});};group.appendChild(b);if(i===leaf){var content=d.createElement('div');content.className='tsdLeafContent';row[1].forEach(function(id){if(entries[id])content.appendChild(entries[id]);});group.appendChild(content);}menu.appendChild(group);});}
+function position(){var a=d.getElementById('flightBar').getBoundingClientRect(),b=pilot.getBoundingClientRect();pilot.style.setProperty('--tsd-camera-top',Math.max(0,a.bottom-b.top+6)+'px');pilot.style.setProperty('--tsd-camera-right','8px');}
+function close(){strip.hidden=true;leaf=-1;trigger.setAttribute('aria-expanded','false');d.getElementById('tsdExposureOpen').setAttribute('aria-expanded','false');}
+function returnFocus(){var shortcut=d.getElementById('tsdExposureOpen');(current==='exposure'&&!shortcut.hidden?shortcut:trigger).focus({preventScroll:true});}
+strip.querySelectorAll('[data-tsd-tab]').forEach(function(b){b.addEventListener('click',function(){if(current===b.dataset.tsdTab)return;current=b.dataset.tsdTab;leaf=(current==='exposure'||current==='photo'||current==='video')?0:-1;render();position();});});
+back.addEventListener('click',function(){leaf=-1;render();var b=menu.querySelector('button');if(b)b.focus();});
+d.getElementById('tsdCamClose').addEventListener('click',function(){close();returnFocus();});
+trigger.addEventListener('click',function(){if(!trigger.onclick){strip.hidden=!strip.hidden;trigger.setAttribute('aria-expanded',String(!strip.hidden));}if(strip.hidden){close();return;}current=camera()==='ir'?'ir':'view';leaf=-1;render();position();});
+d.getElementById('tsdExposureOpen').addEventListener('click',function(){if(camera()==='ir')return;if(!strip.hidden&&current==='exposure'){close();returnFocus();return;}strip.hidden=false;trigger.setAttribute('aria-expanded','true');current='exposure';leaf=0;render();position();});
+var previous=camera()+'|'+irAvailable();var observer=new MutationObserver(function(){var next=camera()+'|'+irAvailable();if(next!==previous){previous=next;if(camera()==='ir'&&!strip.hidden){current='ir';leaf=-1;}render();position();}});['wide','zoomCamera','irCamera','sbs'].forEach(function(id){observer.observe(d.getElementById(id),{attributes:true,attributeFilter:['aria-pressed']});});
+// Keep camera-specific state synchronized without closing the settings on a sensor switch.
+d.addEventListener('pointerdown',function(e){if(!strip.hidden&&!strip.contains(e.target)&&!trigger.contains(e.target)&&!e.target.closest('#wide,#zoomCamera,#irCamera,#tsdExposureOpen'))close();});
+d.addEventListener('keydown',function(e){if(e.key==='Escape'&&!strip.hidden&&!e.defaultPrevented&&!d.querySelector('dialog[open]')){e.preventDefault();e.stopPropagation();if(leaf>=0){var previousLeaf=leaf;leaf=-1;render();menu.querySelector('[data-tsd-leaf="'+previousLeaf+'"]')?.focus({preventScroll:true});}else{close();returnFocus();}}});
+// Reveal only camera UI controls named in the lesson, without changing sensor or setting values.
+d.addEventListener('tsd-camera-guide',function(e){
+ if(strip.hidden)return;
+ var id=e.detail?.id, ir=irAvailable(), route={sbs:['view',1],lock:['view',1],sync:['view',1],palette:['ir',0],gain:['ir',1],measure:['ir',2]}[id];
+ if(!route||route[0]==='ir'&&!ir)return;
+ current=route[0];leaf=route[1];render();position();
+});
+d.addEventListener('tsd-camera-reset',()=>{close();render();});
+window.addEventListener('resize',position);if(typeof ResizeObserver==='function'){var anchorObserver=new ResizeObserver(position);anchorObserver.observe(d.getElementById('flightBar'));}render();position();
+})();
+</script>
+<script id="tsdRev8dChoices">(function(){
+const panel=document.getElementById('tsdPhotoPanel'),strip=document.getElementById('cameraStrip');
+const fields=['tsdPhotoMode','tsdPhotoInterval','tsdPhotoSize','tsdPhotoFormat'];
+const titles=['촬영 모드','촬영 간격','사진 해상도','저장 형식'];
+const rows=[];let active=null;
+const choices=document.createElement('div');choices.id='tsdChoicePanel';choices.hidden=true;panel.appendChild(choices);
+function refresh(){if(active&&active.closest('label').hidden){active=null;choices.hidden=true;choices.replaceChildren();}rows.forEach(({select,row,value})=>{value.textContent=select.selectedOptions[0]?.textContent||'';row.setAttribute('aria-expanded',String(active===select));row.lastElementChild.textContent=active===select?'▴':'▾';});if(active)choices.querySelectorAll('button').forEach((b,i)=>{const o=active.options[i];if(o){b.textContent=o.textContent;b.disabled=o.disabled;b.setAttribute('aria-pressed',String(o.selected));}});}
+function close(restoreFocus=false){const previous=rows.find(x=>x.select===active);active=null;choices.hidden=true;choices.replaceChildren();refresh();if(restoreFocus&&previous&&!previous.select.closest('label').hidden&&!strip.hidden&&panel.style.display!=='none')previous.row.focus({preventScroll:true});}
+function open(select,title){if(active===select){close();return;}active=select;refresh();const item=rows.find(x=>x.select===select);item.row.after(choices);choices.hidden=false;choices.replaceChildren();Array.from(select.options).forEach(opt=>{const b=document.createElement('button');b.type='button';b.textContent=opt.textContent;b.disabled=opt.disabled;b.setAttribute('aria-pressed',String(opt.selected));b.onclick=()=>{if(active!==select||opt.disabled||select.closest('label').hidden||strip.hidden||panel.style.display==='none')return;/* Rev15f: reselecting an unchanged value must not stop an interval. */if(select.value!==opt.value){select.value=opt.value;select.dispatchEvent(new Event('change',{bubbles:true}));}refresh();if(active===select&&b.isConnected)b.focus({preventScroll:true});};choices.append(b);});}
+fields.forEach((id,i)=>{const select=document.getElementById(id),label=select.closest('label');const row=document.createElement('button');row.type='button';row.className='tsdOptionRow';const name=document.createElement('span'),value=document.createElement('span'),arrow=document.createElement('span');name.textContent=titles[i];arrow.textContent='›';row.append(name,value,arrow);Array.from(label.childNodes).filter(n=>n.nodeType===3).forEach(n=>n.textContent='');select.hidden=true;label.append(row);rows.push({select,row,value});row.onclick=()=>open(select,titles[i]);select.addEventListener('change',refresh);});
+const observer=new MutationObserver(()=>{if(strip.hidden||panel.style.display==='none'){if(active)close();}else refresh();});observer.observe(strip,{attributes:true,attributeFilter:['hidden']});observer.observe(panel,{attributes:true,attributeFilter:['style']});fields.forEach(id=>{const select=document.getElementById(id);observer.observe(select,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled']});observer.observe(select.closest('label'),{attributes:true,attributeFilter:['hidden']});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&active&&!strip.hidden&&panel.style.display!=='none'){e.stopImmediatePropagation();close(true);}},true);
+document.getElementById('tsdCamBack').addEventListener('click',e=>{if(active&&!strip.hidden&&panel.style.display!=='none'){e.stopImmediatePropagation();close(true);}},true);refresh();
+})();</script>
+<script id="tsdRev8fExposure">
+(function(){
+'use strict';
+const d=document,$e=id=>d.getElementById(id),panel=$e('tsdExposurePanel'),rows=$e('tsdExposureRows'),choices=$e('tsdExposureChoices'),strip=$e('cameraStrip'),button=$e('tsdExposureOpen');
+const isoList=[100,200,400,800,1600,3200,6400,12800,25600];
+const shutterList=[8,4,2,1,1/2,1/4,1/8,1/15,1/30,1/60,1/125,1/250,1/500,1/1000,1/2000,1/4000,1/8000];
+const evList=Array.from({length:19},(_,i)=>(i-9)/3);
+const init=()=>({mode:'auto',iso:100,shutter:1/500,ev:0,lock:false,wb:'auto',autoStops:0,hasSample:false});
+const states={wide:init(),zoom:init()};let choice=null,lastSample=-Infinity;
+const bounds=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
+const lens=()=>typeof eoLens==='string'&&eoLens==='zoom'?'zoom':'wide';
+const state=()=>states[lens()];
+const nearest=(list,v)=>list.reduce((a,b)=>Math.abs(Math.log(b/v))<Math.abs(Math.log(a/v))?b:a);
+const fmtShutter=n=>n>=1?n+'초':'1/'+Math.round(1/n)+'초';
+const fmtEV=n=>(n>0?'+':'')+n.toFixed(1);
+function snapshot(){const v=state();let iso=v.iso,shutter=v.shutter,stops;
+ if(v.mode==='auto'){const wanted=bounds(v.autoStops+v.ev,-4,10);shutter=bounds(1/500*Math.pow(2,wanted),1/8000,1/30);iso=nearest(isoList,bounds(100*Math.pow(2,wanted)/(shutter*500),100,25600));stops=Math.log2(iso/100*shutter*500);}
+ else stops=Math.log2(iso/100*shutter*500);
+ return {lens:lens(),mode:v.mode,iso,shutter,ev:v.ev,lock:v.lock,wb:v.wb,stops,brightness:bounds(Math.pow(2,stops/2.2),.12,5),grain:bounds(Math.log2(iso/100)/8,0,1)*.28,hasSample:v.hasSample,autoStops:v.autoStops};}
+const wbOptions=[['auto','자동 · 중립 (TSD)'],['day','맑음 · 5500K'],['cloud','흐림 · 6500K'],['shade','그늘 · 7500K'],['tungsten','백열등 · 3200K'],['fluorescent','형광등 · 4200K']];
+// Educational approximation; no claim of DJI ISP or actual AWB algorithm.
+// The input is already tone-mapped satellite RGB, not RAW sensor data.
+// Subtle educational tint, no global hue rotation. Auto/day preserve source colours.
+const wbTints={auto:'transparent',day:'transparent',cloud:'rgba(255,184,110,.035)',shade:'rgba(255,173,90,.065)',tungsten:'rgba(112,166,255,.065)',fluorescent:'rgba(182,156,255,.035)'};
+const filter=v=>Math.abs(v.brightness-1)<.0005?'none':'brightness('+v.brightness.toFixed(4)+')';
+function tint(ctx,v,x=0,y=0,w=ctx.canvas.width,h=ctx.canvas.height){const color=wbTints[v.wb];if(!color||color==='transparent')return;ctx.save();ctx.filter='none';ctx.fillStyle=color;ctx.fillRect(x,y,w,h);ctx.restore();}
+// Static low-cost grain approximation: reusable tile, no per-frame pixel pass.
+const tile=d.createElement('canvas');tile.width=tile.height=64;const tc=tile.getContext('2d');let seed=719;const pix=tc.createImageData(64,64);for(let i=0;i<pix.data.length;i+=4){seed=(seed*1664525+1013904223)>>>0;const t=(seed>>>24)>127?255:0;pix.data[i]=pix.data[i+1]=pix.data[i+2]=t;pix.data[i+3]=90;}tc.putImageData(pix,0,0);
+const overlay=d.createElement('div');overlay.id='tsdExposureGrain';overlay.setAttribute('aria-hidden','true');overlay.style.backgroundImage='url('+tile.toDataURL()+')';$e('eoWrap').append(overlay);
+function grain(ctx,v){if(!v.grain)return;ctx.save();ctx.filter='none';ctx.globalAlpha=v.grain;ctx.fillStyle=ctx.createPattern(tile,'repeat');ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.restore();}
+function apply(){const v=snapshot();$e('eo').style.setProperty('--tsd-eo-exposure',filter(v));$e('eo').style.setProperty('--tsd-eo-wb',wbTints[v.wb]||'transparent');overlay.style.opacity=String(v.grain);button.textContent=(v.mode==='auto'?'AUTO':'M')+' · ISO '+v.iso+' · '+fmtShutter(v.shutter);$e('tsdExposureStatus').textContent=(v.lens==='wide'?'WIDE · F2.8':'ZOOM · F4.4')+' | '+(v.mode==='auto'?'EV '+fmtEV(v.ev)+(v.lock?' · AE 잠금':''):'M.M. '+fmtEV(bounds(v.stops-v.autoStops,-9.9,9.9)))+(v.mode==='auto'&&!v.hasSample?' · 측광 대기':'');const readout=rows.querySelector('[data-tsd-meter-readout]');if(readout&&v.mode==='auto')readout.textContent='자동 ISO '+v.iso+' / '+fmtShutter(v.shutter);}
+const meter=d.createElement('canvas');meter.width=32;meter.height=24;const mc=meter.getContext('2d',{willReadFrequently:true});
+function sample(source){const v=state(),now=performance.now();if(now-lastSample<1200||!source.width||!source.height||$e('eoWrap').hidden)return;lastSample=now;if(v.mode==='auto'&&v.lock)return;try{
+ mc.clearRect(0,0,32,24);mc.drawImage(source,0,0,32,24);const data=mc.getImageData(0,0,32,24).data;let sum=0,valid=0,black=0;const peaks=[];
+ for(let i=0;i<data.length;i+=4){if(data[i+3]<240)continue;const y=(.2126*data[i]+.7152*data[i+1]+.0722*data[i+2])/255;const peak=Math.max(data[i],data[i+1],data[i+2])/255;if(peak<.025){black++;continue;}sum+=y;valid++;peaks.push(peak);}
+ // Reject partially loaded or blank frames, rather than treating black tiles as darkness.
+ if(valid<32*24*.60||black>32*24*.35)return;
+ peaks.sort((a,b)=>a-b);const p98=peaks[Math.floor((peaks.length-1)*.98)];const mean=sum/valid;
+ // At EV 0 preserve ordinary source exposure, and never amplify by more than 10%.
+ const base=mean<.20?bounds(.20/mean,1,1.10):mean>.65?bounds(.65/mean,.85,1):1;
+ const safe=bounds(Math.min(base,.98/Math.max(p98,.01)),.85,1.10);
+ const desired=2.2*Math.log2(safe);
+ const next=v.hasSample?v.autoStops*.75+desired*.25:desired;
+ // Highlight protection acts immediately; brightening is gradual.
+ v.autoStops=Math.min(next,2.2*Math.log2(bounds(.98/Math.max(p98,.01),.85,1.10)));v.hasSample=true;apply();
+ }catch(e){/* retain last valid meter reading */}}
+
+function specs(){const v=state();const list=v.mode==='auto'?[['mode','노출 모드',[['auto','Auto'],['manual','M']]],['ev','EV 보정',evList.map(x=>[x,fmtEV(x)])],['lock','AE 잠금',[[false,'해제'],[true,'잠금']]]]:[['mode','노출 모드',[['auto','Auto'],['manual','M']]],['iso','ISO',isoList.map(x=>[x,String(x)])],['shutter','셔터 속도',shutterList.map(x=>[x,fmtShutter(x)])]];return list.concat([['wb','화이트밸런스 (TSD)',wbOptions]]);}
+function makeRow(label,value,action){const b=d.createElement('button');b.type='button';b.className='tsdOptionRow';for(const text of [label,value,'›']){const sp=d.createElement('span');sp.textContent=text;b.append(sp);}b.onclick=action;return b;}
+function renderRows(){panel.insertBefore(choices,$e('tsdExposureStatus'));rows.replaceChildren();for(const spec of specs()){const [key,label,options]=spec;const opt=options.find(x=>x[0]===state()[key]);const b=makeRow(label,opt?opt[1]:'—',()=>open(spec));b.dataset.exposureField=key;b.setAttribute('aria-expanded','false');b.lastElementChild.textContent='▾';rows.append(b);}const v=snapshot();if(v.mode==='auto'){const p=d.createElement('small');p.dataset.tsdMeterReadout='';p.textContent='자동 ISO '+v.iso+' / '+fmtShutter(v.shutter);rows.append(p);}rows.hidden=false;choices.hidden=true;}
+function menuAvailable(){return !strip.hidden&&panel.style.display!=='none'&&!button.hidden&&!d.querySelector('dialog[open]');}
+function closeChoice(restoreFocus=false){const previous=choice;choice=null;choices.hidden=true;choices.replaceChildren();renderRows();if(restoreFocus&&previous&&menuAvailable())rows.querySelector('[data-exposure-field="'+previous+'"]')?.focus({preventScroll:true});}
+function open(spec){if(!menuAvailable()||!specs().some(s=>s[0]===spec[0]))return;if(choice===spec[0]){closeChoice(true);return;}showChoice(spec);}
+// Rev15e: preserve the selected submenu after value changes, including mode changes.
+function showChoice(spec){const ownerLens=lens();choice=spec[0];rows.hidden=false;rows.querySelectorAll('[data-exposure-field]').forEach(b=>{const on=b.dataset.exposureField===choice;b.setAttribute('aria-expanded',String(on));b.lastElementChild.textContent=on?'▴':'▾';if(on)b.after(choices);});choices.hidden=false;choices.replaceChildren();for(const [value,label] of spec[2]){const b=d.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-pressed',String(state()[choice]===value));b.onclick=()=>{const key=spec[0];if(!b.isConnected||!choices.contains(b)||choices.hidden||!menuAvailable()||choice!==key||ownerLens!==lens()||!specs().some(s=>s[0]===key&&s[2].some(o=>o[0]===value)))return;const v=state();if(v[key]===value){b.focus({preventScroll:true});return;}const old=snapshot();if(key==='mode'&&value==='manual'&&v.mode!=='manual'){v.iso=old.iso;v.shutter=old.shutter;v.lock=false;}v[key]=value;if(key==='mode'&&value==='auto'&&old.mode!=='auto')v.lock=false;renderRows();const next=specs().find(s=>s[0]===key);if(next){showChoice(next);choices.querySelector('[aria-pressed="true"]')?.focus({preventScroll:true});}else closeChoice();apply();};choices.append(b);}}
+const obs=new MutationObserver(()=>{if(strip.hidden||panel.style.display==='none'){if(choice)closeChoice();}else if(!choice)renderRows();});obs.observe(strip,{attributes:true,attributeFilter:['hidden']});obs.observe(panel,{attributes:true,attributeFilter:['style']});
+const camObs=new MutationObserver(()=>{lastSample=-Infinity;closeChoice();apply();});for(const id of ['wide','zoomCamera','irCamera'])camObs.observe($e(id),{attributes:true,attributeFilter:['aria-pressed']});
+d.addEventListener('keydown',e=>{if(e.key==='Escape'&&choice&&menuAvailable()){e.preventDefault();e.stopImmediatePropagation();closeChoice(true);}},true);$e('tsdCamBack').addEventListener('click',e=>{if(choice&&menuAvailable()){e.preventDefault();e.stopImmediatePropagation();closeChoice(true);}},true);
+window.tsdExposure={snapshot,filter,grain,tint,sample};apply();
+})();
+</script>
+<script id="tsdRev8hThermalChoices">(function(){
+const d=document,strip=d.getElementById('cameraStrip');let active=null;
+const records=['palette','gain'].map(id=>{const select=d.getElementById(id),label=select.closest('label');const title=id==='palette'?'IR 팔레트':'IR 게인';const row=d.createElement('button');row.type='button';row.className='tsdOptionRow';row.dataset.thermalField=id;const name=d.createElement('span'),value=d.createElement('span'),arrow=d.createElement('span');name.textContent=title;row.append(name,value,arrow);for(const n of [...label.childNodes])if(n.nodeType===3)n.textContent='';select.hidden=true;const box=d.createElement('div');box.className='tsdInlineChoices';box.hidden=true;label.append(row,box);label.style.flexDirection='column';label.style.alignItems='stretch';const r={select,label,row,value,arrow,box};row.onclick=()=>{if(active===r){active=null;}else active=r;refresh();};select.addEventListener('change',refresh);return r;});
+function refresh(){for(const r of records){const on=active===r&&!strip.hidden&&r.label.style.display!=='none';r.value.textContent=r.select.selectedOptions[0]?.textContent||'—';r.arrow.textContent=on?'▴':'▾';r.row.setAttribute('aria-expanded',String(on));r.box.hidden=!on;r.box.replaceChildren();if(on)for(const opt of r.select.options){const b=d.createElement('button');b.type='button';b.textContent=opt.textContent;b.disabled=opt.disabled;b.setAttribute('aria-pressed',String(opt.selected));b.onclick=()=>{r.select.value=opt.value;r.select.dispatchEvent(new Event('change',{bubbles:true}));r.box.querySelector('[aria-pressed="true"]')?.focus({preventScroll:true});};r.box.append(b);}}}
+const obs=new MutationObserver(()=>{if(active&&(strip.hidden||active.label.style.display==='none'))active=null;refresh();});obs.observe(strip,{attributes:true,attributeFilter:['hidden']});for(const r of records){obs.observe(r.label,{attributes:true,attributeFilter:['style']});obs.observe(r.select,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled']});}
+d.addEventListener('keydown',e=>{if(e.key==='Escape'&&active&&!strip.hidden){e.stopImmediatePropagation();active=null;refresh();}},true);refresh();
+})();</script>
+<script id="tsdRev8iVideo">(function(){
+const d=document,panel=d.getElementById('tsdVideoPanel'),rows=d.getElementById('tsdVideoRows'),strip=d.getElementById('cameraStrip');
+const cfg={wide:'fhd',zoom:'fhd',fps:tsdLowPower?15:30,format:'auto'};let open=null;
+const types={mp4:['video/mp4;codecs=avc1.420034','video/mp4;codecs=avc1.42001f'],webm:['video/webm;codecs=vp8','video/webm;codecs=vp9','video/webm']};
+const supported=k=>types[k].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||'';
+function mime(){return cfg.format==='webm'?supported('webm'):cfg.format==='mp4'?supported('mp4'):supported('mp4')||supported('webm');}
+function lens(){return eoLens==='zoom'?'zoom':'wide';}
+function contextKey(){return captureIndices().join(',')+'|'+lens();}
+let context=contextKey();
+function settings(indices){return {fps:tsdLowPower?15:cfg.fps,mime:mime(),tracks:indices.map(index=>{const hi=!tsdLowPower&&cfg[lens()]==='4k';const nominal=index?6:hi?85:30;return {index,width:index?640:hi?3840:1920,height:index?512:hi?2160:1080,nominalMbps:nominal,bitrate:(index?2:hi?8:4)*1000000};})};}
+function render(){const keyNow=contextKey();if(context!==keyNow){context=keyNow;open=null;}const indices=captureIndices(),ir=indices.length===1&&indices[0]===1,locked=!!recording||savingRecording;const specs=[['size','동영상 해상도',ir?[['ir','640 × 512']]:[['fhd','FHD · 1920 × 1080'],['4k','4K · 3840 × 2160',tsdLowPower]],ir?'ir':cfg[lens()]],['fps','녹화 프레임',[[30,'30 FPS (M3T)',tsdLowPower],[15,'15 FPS (TSD 경량)']],cfg.fps],['format','저장 형식',[['auto','자동 (MP4 우선)'],['mp4','MP4 / H.264',!supported('mp4')],['webm','WebM (TSD)',!supported('webm')]],cfg.format]];rows.replaceChildren();for(const [key,title,opts,value] of specs){const row=d.createElement('button');row.type='button';row.className='tsdOptionRow';row.dataset.videoField=key;row.disabled=locked||opts.length===1;row.setAttribute('aria-expanded',String(open===key));for(const t of [title,opts.find(o=>o[0]===value)?.[1]||'—',open===key?'▴':'▾']){const sp=d.createElement('span');sp.textContent=t;row.append(sp);}row.onclick=()=>{if(strip.hidden||panel.style.display==='none'||recording||savingRecording||!row.isConnected||contextKey()!==keyNow)return;open=open===key?null:key;render();};rows.append(row);if(open===key&&!row.disabled){const box=d.createElement('div');box.className='tsdInlineChoices';for(const [v,label,disabled] of opts){const b=d.createElement('button');b.type='button';b.textContent=label;b.disabled=!!disabled;b.setAttribute('aria-pressed',String(v===value));b.onclick=()=>{if(recording||savingRecording||strip.hidden||panel.style.display==='none'||!b.isConnected||b.disabled||open!==key||contextKey()!==keyNow)return;if(key==='size')cfg[lens()]=v;else cfg[key]=v;render();};box.append(b);}rows.append(box);}}
+const x=settings(indices);d.getElementById('tsdVideoStatus').textContent=(locked?'녹화/저장 중 · 설정 잠금 · ':'')+(x.mime?(x.mime.startsWith('video/mp4')?'MP4 / H.264':'WebM'):'녹화 미지원')+' · '+x.fps+' FPS 목표 · '+x.tracks.map(t=>(t.index?'IR':'EO')+' '+t.width+'×'+t.height).join(' / ');d.getElementById('tsdVideoNote').textContent='실기기 '+x.tracks.map(t=>t.nominalMbps+' Mbps').join(' + ')+' / TSD 인코딩 목표 '+x.tracks.map(t=>t.bitrate/1e6+' Mbps').join(' + ')+(tsdLowPower?' · 경량 모드: 4K/30FPS 제한':'')+' · 분당 약 '+(x.tracks.reduce((a,t)=>a+t.bitrate,0)*60/8e6).toFixed(0)+' MB · 최대 120초. 실제 FPS/용량은 장치 성능에 따라 달라집니다. IR 원본은 모의 회색조, 재생 시 팔레트 적용. 녹화는 지정 비율의 중앙 영역을 사용하며 표시 화면 가장자리가 일부 잘릴 수 있습니다.';}
+window.tsdVideo={settings,refresh:render};const obs=new MutationObserver(()=>{if(strip.hidden||panel.style.display==='none')open=null;render();});for(const [el,attrs] of [[strip,['hidden']],[panel,['style']],[d.getElementById('shutter'),['class']],[d.getElementById('wide'),['aria-pressed']],[d.getElementById('zoomCamera'),['aria-pressed']],[d.getElementById('irCamera'),['aria-pressed']],[d.getElementById('sbs'),['aria-pressed']]])obs.observe(el,{attributes:true,attributeFilter:attrs});d.addEventListener('keydown',e=>{if(e.key==='Escape'&&open&&!strip.hidden&&panel.style.display!=='none'){e.stopImmediatePropagation();open=null;render();}},true);render();
+})();</script><script id="tsdRev9aThermalAudit">(function(){const refresh=()=>refreshThermalRangeNote();refresh();setInterval(refresh,750);})();</script><script>
+(function(){
+ const el=id=>document.getElementById(id),state=tsdThermalOverlay;
+ function sync(){const [lo,hi]=thermalSensorRange();for(const id of ['tsdIsoMin','tsdIsoMax','tsdHeatThreshold']){el(id).min=lo;el(id).max=hi;}
+  state.min=clamp(state.min,lo,hi-1);state.max=clamp(state.max,state.min+1,hi);state.threshold=clamp(state.threshold,lo,hi);
+  el('tsdIsoMin').value=state.min;el('tsdIsoMax').value=state.max;el('tsdHeatThreshold').value=state.threshold;
+  for(const [key,id,fields] of [['iso','tsdIsoToggle','tsdIsoFields'],['alarm','tsdHeatToggle','tsdHeatFields']]){el(id).setAttribute('aria-pressed',String(state[key]));el(id).children[1].textContent=state[key]?'ON':'OFF';el(fields).hidden=!state[key];}
+  el('tsdIsoNote').textContent='모의 등온선 '+state.min+' ~ '+state.max+' °C · 노란색 강조';el('tsdHeatNote').textContent='모의 경보 ≥ '+state.threshold+' °C · 실제 열원 감지 아님';
+  tsdHeatStatus(false);tsdInvalidateOverlay();
+ }
+ el('tsdIsoToggle').onclick=()=>{state.iso=!state.iso;sync();};el('tsdHeatToggle').onclick=()=>{state.alarm=!state.alarm;sync();};
+ el('tsdIsoApply').onclick=()=>{const a=el('tsdIsoMin'),b=el('tsdIsoMax');if(!a.value||!b.value||!a.checkValidity()||!b.checkValidity()||Number(a.value)>=Number(b.value)){el('tsdIsoNote').textContent='센서 범위 안에서 최저 < 최고로 설정하세요.';return;}state.min=Number(a.value);state.max=Number(b.value);sync();};
+ el('tsdHeatApply').onclick=()=>{const t=el('tsdHeatThreshold');if(!t.value||!t.checkValidity()){el('tsdHeatNote').textContent='센서 범위 안의 온도를 입력하세요.';return;}state.threshold=Number(t.value);sync();};
+ el('gain').addEventListener('change',sync);for(const id of ['wide','zoomCamera','irCamera','sbs'])el(id).addEventListener('click',()=>tsdHeatStatus(false));sync();
+})();
+</script><script id="tsdRev11Survey">(function(){const e=id=>document.getElementById(id);function calc(){const h=Number(e('missionHeight').value),v=Number(e('missionSpeed').value),side=Number(e('tsdSideOverlap').value),front=Number(e('tsdFrontOverlap').value);if(['missionHeight','missionSpeed','tsdSideOverlap','tsdFrontOverlap'].some(id=>!e(id).value||!e(id).checkValidity())||h<=0||v<=0)return null;const d=2*h*Math.tan(84*Math.PI/360),w=d*4/5,l=d*3/5;return {w,l,spacing:w*(1-side/100),step:l*(1-front/100),sec:l*(1-front/100)/v};}function refresh(){const x=calc(),o=e('tsdSurveyResult');e('tsdSurveyOverlap').hidden=e('searchPattern').value!=='grid';e('tsdApplySurvey').disabled=!x||x.spacing<15||x.spacing>150||missionActive()||e('missionAltitudeMode').value!=='agl';o.textContent=x?'폭 '+x.w.toFixed(1)+'m · 길이 '+x.l.toFixed(1)+'m · 줄 '+x.spacing.toFixed(1)+'m · 촬영 '+x.step.toFixed(1)+'m / '+x.sec.toFixed(1)+'초'+(x.spacing<15||x.spacing>150?' · 기존 줄 간격 허용 범위(15~150m) 밖':''):'입력값 확인';}for(const id of ['missionHeight','missionSpeed','tsdSideOverlap','tsdFrontOverlap','searchPattern','missionAltitudeMode'])e(id).addEventListener('input',refresh);e('tsdSurveyOverlap').addEventListener('toggle',refresh);e('tsdApplySurvey').onclick=()=>{const x=calc();if(!x||missionActive()||e('searchPattern').value!=='grid'||e('missionAltitudeMode').value!=='agl'||x.spacing<15||x.spacing>150)return;e('missionSpacing').value=String(Math.floor(x.spacing));e('missionSpacing').dispatchEvent(new Event('input',{bubbles:true}));refresh();};refresh();})();</script><script id="tsdRev13Fixes">
+function tsdSaveVideoSensor(index,raw=false){if(!reviewEntry||reviewEntry.kind!=='video')return;const slot=reviewEntry.indices.indexOf(index);if(slot<0)return;const paletteBlob=index===1&&!raw?reviewEntry.exportFrames?.[slot]:null;const blob=paletteBlob||reviewEntry.frames[slot];if(!blob||!blob.size)return;const tag=index?(paletteBlob?'IR_palette':'IR_raw'):'EO';const ext=blob.type.startsWith('video/mp4')?'.mp4':blob.type.startsWith('video/webm')?'.webm':'.bin';download(blob,'TSD_'+reviewEntry.at.toISOString().replace(/[:.]/g,'-')+'_'+tag+ext);}
+// Rev15d: preserve the adjacent selection; never leave stale media controls after deletion.
+function tsdMediaListRefresh(preferred=0){
+  const list=$('mediaList');
+  list.replaceChildren(...recordings.map((e,i)=>new Option((i+1)+'. '+(e.kind==='photo'?'사진 ':'동영상 ')+e.at.toLocaleTimeString('ko-KR')+' · '+e.indices.map(k=>k?'IR':'EO').join('+'),i)));
+  if(!recordings.length){
+    reviewMeasure=false;$('reviewMeasure').setAttribute('aria-pressed','false');
+    $('reviewReading').value='';$('reviewSensor').replaceChildren();$('videoControls').hidden=true;
+    $('videoPlay').textContent='재생';$('videoSeek').value=0;$('videoTime').value='';
+    $('mediaInfo').textContent='저장된 촬영본이 없습니다';
+    loadReview(undefined);targetText('저장된 촬영본이 없습니다 · 다운로드 파일은 유지됩니다');return;
+  }
+  const index=Math.max(0,Math.min(recordings.length-1,Number.isInteger(preferred)?preferred:0));
+  list.selectedIndex=index;loadReview(recordings[index]);
+}
+$('tsdSaveEO').onclick=()=>tsdSaveVideoSensor(0);$('tsdSaveIR').onclick=()=>tsdSaveVideoSensor(1);$('tsdSaveIRRaw').onclick=()=>tsdSaveVideoSensor(1,true);
+$('tsdDeleteMedia').onclick=()=>{const i=recordings.indexOf(reviewEntry);if(i<0||!confirm('선택한 촬영본을 이 탭에서 삭제합니까? 다운로드된 파일은 삭제되지 않습니다.'))return;recordings.splice(i,1);tsdMediaListRefresh(i);};
+$('tsdClearMedia').onclick=()=>{if(!recordings.length||!confirm('현재 탭의 촬영본 '+recordings.length+'개를 모두 삭제합니까? 다운로드된 파일은 유지됩니다.'))return;recordings.length=0;tsdMediaEvicted=0;tsdVideoEvicted=0;tsdMediaListRefresh();};
+for(const b of document.querySelectorAll('[data-tsd-view]'))b.onclick=()=>{if(recording||savingRecording){targetText('녹화를 먼저 정지하세요');return;}if(split){split=false;}selectCamera(b.dataset.tsdView);};
+const updateSensorButtons=()=>{for(const b of document.querySelectorAll('[data-tsd-view]'))b.setAttribute('aria-pressed',String(!split&&activeCamera===b.dataset.tsdView));};
+const viewObserver=new MutationObserver(updateSensorButtons);for(const id of ['wide','zoomCamera','irCamera','sbs'])viewObserver.observe($(id),{attributes:true,attributeFilter:['aria-pressed']});updateSensorButtons();
+function tsdLowLight(canvas){const ctx=canvas.getContext('2d');const copy=document.createElement('canvas');copy.width=canvas.width;copy.height=canvas.height;const cc=copy.getContext('2d');if(!ctx||!cc)throw Error('저조도 캔버스 준비 실패');cc.drawImage(canvas,0,0);ctx.save();try{ctx.filter='brightness(1.24) contrast(.92)';ctx.drawImage(copy,0,0);}finally{ctx.restore();}}
+let tsdPanoBusy=false,tsdPanoJob=null;
+// Rev15s: invalidate pending capture and never restore an obsolete camera view.
+function tsdCancelPanorama(restore=false){const job=tsdPanoJob;if(!job)return;job.cancelled=true;job.restore=restore;job.abort?.();}
+function tsdPanoOwnsView(job){return tsdPanoJob===job&&job.revision===viewRevision&&maps[0]===job.map;}
+function tsdPanoValid(job){return tsdPanoOwnsView(job)&&!job.cancelled&&!document.hidden&&mediaMode==='photo'&&$('tsdPhotoMode').value==='panorama'&&activeCamera==='wide'&&!split&&!missionActive()&&!flight.assisted&&Math.abs(flight.speed||0)<=.2;}
+async function tsdPanorama(){
+ if(tsdPanoBusy||photoPending||recording||savingRecording||missionActive()||flight.assisted||split||activeCamera!=='wide'||Math.abs(flight.speed||0)>.2){targetText('파노라마: WIDE 독립 화면, 정지 상태에서 촬영하세요');return;}
+ const map=maps[0];if(!terrainOk[0]||!map?.getTerrain()){targetText('지도 로딩 후 촬영하세요');return;}
+ const before=cameraSnapshot(map),eye=cameraOrigin(map),tilt=map.getPitch()-90,meta=captureMeta([0]),frames=[];const exposure=window.tsdExposure?.snapshot();const job={map,revision:viewRevision,cancelled:false,restore:true,abort:null};tsdPanoJob=job;tsdPanoBusy=true;
+ const read=()=>new Promise((resolve,reject)=>{let timer,done=false;const finish=(err,frame)=>{if(done)return;done=true;clearTimeout(timer);map.off('render',onRender);job.abort=null;err?reject(err):resolve(frame);};const onRender=()=>{if(!tsdPanoValid(job)){finish(Error('촬영 조건 변경'));return;}if(!map.areTilesLoaded())return;try{const source=map.getCanvas(),canvas=createCaptureCanvas(source);drawSensorFrame(canvas.getContext('2d'),source,false,sensorCrop(0),exposure);finish(null,canvas);}catch(e){finish(e);}};job.abort=()=>finish(Error('촬영 취소'));timer=setTimeout(()=>finish(Error('지도 프레임 로딩 시간 초과')),5000);map.on('render',onRender);map.triggerRepaint();});
+ try{for(const offset of [-30,0,30]){if(!tsdPanoValid(job))throw Error('촬영 조건 변경');if(!applySensorView(eye,tilt,before.bearing+offset,before.zoom,[0]))throw Error('카메라 시점 적용 실패');frames.push(await read());if(!tsdPanoValid(job))throw Error('촬영 조건 변경');}
+ const canvas=document.createElement('canvas');const w=frames[0].width,h=frames[0].height,step=Math.round(w*.65);canvas.width=w+2*step;canvas.height=h;const ctx=canvas.getContext('2d');frames.forEach((frame,i)=>{ctx.save();if(i){const grad=ctx.createLinearGradient(i*step,0,i*step+w-step,0);grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(1,'#000');const layer=document.createElement('canvas');layer.width=canvas.width;layer.height=h;const c=layer.getContext('2d');c.drawImage(frame,i*step,0,w,h);c.globalCompositeOperation='destination-in';c.fillStyle=grad;c.fillRect(i*step,0,w,h);ctx.drawImage(layer,0,0);}else ctx.drawImage(frame,0,0,w,h);ctx.restore();});remember({kind:'photo',...meta,photoOutput:{...tsdPhotoSettings(),size:'native',mode:'panorama',notice:'3방향 단순 합성 · 측량용 아님'},exposure,frames:[canvas]});flash();clearCaptureNotice();
+ }catch(e){if(!job.cancelled&&tsdPanoOwnsView(job))targetText('파노라마 실패 · '+e.message);}finally{try{if(tsdPanoOwnsView(job)&&job.restore)restoreSensorViews([map],[before]);}finally{if(tsdPanoJob===job){tsdPanoJob=null;tsdPanoBusy=false;}}}
+}
+</script><script id="tsdRev14eTerrainAudit">(function(){
+  if(new URLSearchParams(location.search).get('tsdTerrainDebug')!=='1')return;
+  const box=document.createElement('pre');box.id='tsdTerrainDebug';box.setAttribute('aria-label','지형 렌더링 진단');
+  Object.assign(box.style,{position:'fixed',top:'110px',left:'70px',zIndex:'9999',background:'#101c2be8',color:'#fff',padding:'8px',fontSize:'11px',lineHeight:'1.4',pointerEvents:'none',whiteSpace:'pre-wrap',maxWidth:'320px'});document.body.append(box);
+  const f=v=>Number.isFinite(v)?v.toFixed(2):'미확인';
+  setInterval(()=>{if(document.hidden)return;const m=maps[selectedIndex()];if(!m||!flight.point){box.textContent='Rev14e · 지형 진단 / 기체 위치 대기';return;}
+    const raw=flight.ground,eye=cameraOrigin(m),surface=tsdVisibleSurface(m,flight.point),eyeGround=tsdVisibleSurface(m,eye),requested=aircraftLens();
+    box.textContent=['Rev14e · 지형 진단 / MapLibre '+maplibregl.version,'시뮬레이션 지면 '+f(raw)+' m / AGL '+f(flight.alt-raw)+' m','렌더링 지면 '+f(surface)+' m / 차이 '+f(Number.isFinite(surface)?surface-raw:null)+' m','요청 카메라 '+f(requested?.alt)+' m / 실제 카메라 '+f(eye.alt)+' m','실제 카메라 지면 여유 '+f(Number.isFinite(eyeGround)?eye.alt-eyeGround:null)+' m','FOV '+f(m.getVerticalFieldOfView())+'° / pitch '+f(m.getPitch())+'°','지도 zoom '+f(m.getZoom())+' / 타일 '+(m.areTilesLoaded()?'완료':'로딩 중'),'DEM 검사 '+terrainAudit.decoded+' / 거부 '+terrainAudit.rejected+' / 상위 실패 '+terrainAudit.parentFailures,'보정 표본 '+terrainAudit.repaired+' / 영상 누락 '+terrainAudit.missingImagery,'경계 표본쌍 '+terrainAudit.edgePairs+' / 최대 인접차 '+f(terrainAudit.edgeMax)+' m','경계 평균차 최대 '+f(terrainAudit.edgeMeanMax)+' m (경사 포함, 오류 확정 아님)'].join('\n');
+  },750);
+})();</script></body>
+</html>
